@@ -9,7 +9,7 @@ using TuanZi.Properties;
 namespace TuanZi
 {
     public static class Check
-    {
+    { 
         private static void Require<TException>(bool assertion, string message)
             where TException : Exception
         {
