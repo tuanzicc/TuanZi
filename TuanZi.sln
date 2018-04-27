@@ -19,11 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.Permissions", "TuanZ
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{1DA81505-58F4-4F34-8A99-6C0EDF73DE6A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Sample\Demo\Demo.csproj", "{CD444E35-4E72-46AD-828D-2A0BFD18EE24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo", "Sample\Demo\Demo.csproj", "{CD444E35-4E72-46AD-828D-2A0BFD18EE24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo.Web", "Sample\Demo.Web\Demo.Web.csproj", "{49803271-912A-4E82-990F-C358E94E3B10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Demo.Web", "Sample\Demo.Web\Demo.Web.csproj", "{49803271-912A-4E82-990F-C358E94E3B10}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.Nf", "TuanZi.Nf\TuanZi.Nf.csproj", "{DBAE60B0-4693-461F-A78A-2ED561765625}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "WebApplication1\WebApplication1.csproj", "{7D4B9D0A-559D-42D8-AE48-570FB4B275F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +73,10 @@ Global
 		{DBAE60B0-4693-461F-A78A-2ED561765625}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBAE60B0-4693-461F-A78A-2ED561765625}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBAE60B0-4693-461F-A78A-2ED561765625}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D4B9D0A-559D-42D8-AE48-570FB4B275F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D4B9D0A-559D-42D8-AE48-570FB4B275F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D4B9D0A-559D-42D8-AE48-570FB4B275F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D4B9D0A-559D-42D8-AE48-570FB4B275F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -78,6 +84,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CD444E35-4E72-46AD-828D-2A0BFD18EE24} = {1DA81505-58F4-4F34-8A99-6C0EDF73DE6A}
 		{49803271-912A-4E82-990F-C358E94E3B10} = {1DA81505-58F4-4F34-8A99-6C0EDF73DE6A}
+		{7D4B9D0A-559D-42D8-AE48-570FB4B275F0} = {1DA81505-58F4-4F34-8A99-6C0EDF73DE6A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BA0D008D-6F5B-4A40-AC28-D6E2A86AB7F3}

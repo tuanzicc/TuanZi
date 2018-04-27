@@ -21,5 +21,19 @@ namespace TuanZi.Json
             }
             return JsonConvert.SerializeObject(obj, settings);
         }
+
+        public static T ToJsonObject<T>(this string str)
+        {
+            if (str.IsNullOrWhiteSpace())
+                return default(T);
+            return JsonConvert.DeserializeObject<T>(str);
+        }
+
+        public static object ToJsonObject(this string str)
+        {
+            if (str.IsNullOrWhiteSpace())
+                return null;
+            return JsonConvert.DeserializeObject(str);
+        }
     }
 }
