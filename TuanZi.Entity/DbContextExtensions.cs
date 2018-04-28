@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using TuanZi.Audits;
 using TuanZi.Core;
 using TuanZi.Core.EntityInfos;
-
+using TuanZi.Exceptions;
 
 namespace TuanZi.Entity
 {
@@ -32,6 +32,24 @@ namespace TuanZi.Entity
             {
                 dbContext.Database.Migrate();
             }
+        }
+
+        public static int ExecuteSqlCommand(this IDbContext dbContext, string sql, params object[] parameters)
+        {
+            if (!(dbContext is DbContext context))
+            {
+                throw new TuanException($"The parameter dbContext is type of '{dbContext.GetType()}' and cannot be converted to DbContext");
+            }
+            return context.Database.ExecuteSqlCommand(new RawSqlString(sql), parameters);
+        }
+
+        public static Task<int> ExecuteSqlCommandAsync(this IDbContext dbContext, string sql, params object[] parameters)
+        {
+            if (!(dbContext is DbContext context))
+            {
+                throw new TuanException($"The parameter dbContext is type of '{dbContext.GetType()}' and cannot be converted to DbContext");
+            }
+            return context.Database.ExecuteSqlCommandAsync(new RawSqlString(sql), parameters);
         }
 
         public static IList<AuditEntity> GetAuditEntities(this DbContext context)

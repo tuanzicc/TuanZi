@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.AspNetCore.Infrastructure;
+using TuanZi.AspNetCore.Mvc.Filters;
 using TuanZi.Core.Modules;
 using TuanZi.Dependency;
 
@@ -16,6 +17,7 @@ namespace TuanZi.AspNetCore
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             services.AddSingleton<IScopedServiceResolver, RequestScopedServiceResolver>();
+            services.AddScoped<UnitOfWorkAttribute>();
 
             return services;
         }
