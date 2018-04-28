@@ -7,11 +7,11 @@ namespace TuanZi.Data
         static OperationResult()
         {
             Success = new OperationResult(OperationResultType.Success);
-            NoChanged = new OperationResult(OperationResultType.NoChanged);
+            NoChanges = new OperationResult(OperationResultType.NoChanges);
         }
 
         public OperationResult()
-            : this(OperationResultType.NoChanged)
+            : this(OperationResultType.NoChanges)
         { }
 
         public OperationResult(OperationResultType resultType)
@@ -28,7 +28,7 @@ namespace TuanZi.Data
 
         public static OperationResult Success { get; private set; }
 
-        public new static OperationResult NoChanged { get; private set; }
+        public new static OperationResult NoChanges { get; private set; }
     }
 
 
@@ -36,11 +36,11 @@ namespace TuanZi.Data
     {
         static OperationResult()
         {
-            NoChanged = new OperationResult<TData>(OperationResultType.NoChanged);
+            NoChanges = new OperationResult<TData>(OperationResultType.NoChanges);
         }
 
         public OperationResult()
-            : this(OperationResultType.NoChanged)
+            : this(OperationResultType.NoChanges)
         { }
 
         public OperationResult(OperationResultType resultType)
@@ -61,7 +61,7 @@ namespace TuanZi.Data
             set { _message = value; }
         }
 
-        public static OperationResult<TData> NoChanged { get; private set; }
+        public static OperationResult<TData> NoChanges { get; private set; }
 
         public bool Successed
         {

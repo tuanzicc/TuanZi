@@ -25,7 +25,7 @@ namespace TuanZi.AspNetCore.UI
             {
                 case OperationResultType.Success:
                     return AjaxResultType.Success;
-                case OperationResultType.NoChanged:
+                case OperationResultType.NoChanges:
                     return AjaxResultType.Info;
                 default:
                     return AjaxResultType.Error;

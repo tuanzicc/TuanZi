@@ -13,7 +13,7 @@ namespace TuanZi.Data
         QueryNull,
 
         [Description("No changes")]
-        NoChanged,
+        NoChanges,
 
         [Description("Success")]
         Success,

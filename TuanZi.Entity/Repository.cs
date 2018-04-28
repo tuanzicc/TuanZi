@@ -73,7 +73,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' added".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) added".FormatWith(dtos.Count))
-                : new OperationResult(OperationResultType.NoChanged);
+                : new OperationResult(OperationResultType.NoChanges);
         }
 
         public int Delete(params TEntity[] entities)
@@ -127,7 +127,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' deleted".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) deleted".FormatWith(ids.Count))
-                : new OperationResult(OperationResultType.NoChanged);
+                : new OperationResult(OperationResultType.NoChanges);
         }
 
         public int DeleteBatch(Expression<Func<TEntity, bool>> predicate)
@@ -183,7 +183,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' updated".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) updated".FormatWith(dtos.Count))
-                : new OperationResult(OperationResultType.NoChanged);
+                : new OperationResult(OperationResultType.NoChanges);
         }
 
         public int UpdateBatch(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
@@ -304,7 +304,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' added".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) added".FormatWith(dtos.Count))
-                : OperationResult.NoChanged;
+                : OperationResult.NoChanges;
         }
 
         public async Task<int> DeleteAsync(params TEntity[] entities)
@@ -360,7 +360,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' deleted".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) deleted".FormatWith(ids.Count))
-                : new OperationResult(OperationResultType.NoChanged);
+                : new OperationResult(OperationResultType.NoChanges);
         }
 
         public async Task<int> DeleteBatchAsync(Expression<Func<TEntity, bool>> predicate)
@@ -415,7 +415,7 @@ namespace TuanZi.Entity
                     names.Count > 0
                         ? "'{0}' updated".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) updated".FormatWith(dtos.Count))
-                : new OperationResult(OperationResultType.NoChanged);
+                : new OperationResult(OperationResultType.NoChanges);
         }
 
         public async Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)

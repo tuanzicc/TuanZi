@@ -183,7 +183,7 @@ namespace TuanZi.Security
                 await _moduleRepository.UpdateAsync(entity);
                 return new OperationResult(OperationResultType.Success, $"Module '{dto.Name}' created");
             }
-            return OperationResult.NoChanged;
+            return OperationResult.NoChanges;
         }
 
         public virtual async Task<OperationResult> UpdateModule(TModuleInputDto dto)
@@ -222,7 +222,7 @@ namespace TuanZi.Security
             }
             return await _moduleRepository.UpdateAsync(entity) > 0
                 ? new OperationResult(OperationResultType.Success, $"Module '{dto.Name}' updated")
-                : OperationResult.NoChanged;
+                : OperationResult.NoChanges;
         }
 
         public virtual async Task<OperationResult> DeleteModule(TModuleKey id)
@@ -242,7 +242,7 @@ namespace TuanZi.Security
 
             return await _moduleRepository.DeleteAsync(entity) > 0
                 ? new OperationResult(OperationResultType.Success, $"Module '{entity.Name}' deleted")
-                : OperationResult.NoChanged;
+                : OperationResult.NoChanges;
         }
 
         public virtual TModuleKey[] GetModuleTreeIds(params TModuleKey[] rootIds)
@@ -316,7 +316,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.Success,
                     $"Module '{module.Name}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
-            return OperationResult.NoChanged;
+            return OperationResult.NoChanges;
         }
 
         #endregion
@@ -379,7 +379,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.Success,
                     $"Role '{role.Name}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
-            return OperationResult.NoChanged;
+            return OperationResult.NoChanges;
         }
 
         public virtual TModuleKey[] GetRoleModuleIds(TRoleKey roleId)
@@ -447,7 +447,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.Success,
                     $"User '{user.UserName}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
-            return OperationResult.NoChanged;
+            return OperationResult.NoChanges;
         }
 
         public virtual TModuleKey[] GetUserSelfModuleIds(TUserKey userId)
