@@ -16,10 +16,13 @@ namespace TuanZi.Audits
     public class NullAuditStore : IAuditStore
     {
         public void SetAuditDatas(IEnumerable<AuditEntity> auditDatas)
-        { }
+        {
+            throw new System.Exception(auditDatas.ToJsonString());
+        }
 
         public Task SetAuditDatasAsync(IEnumerable<AuditEntity> auditDatas, CancellationToken cancelToken = default(CancellationToken))
         {
+            throw new System.Exception(auditDatas.ToJsonString());
             return Task.FromResult(0);
         }
     }

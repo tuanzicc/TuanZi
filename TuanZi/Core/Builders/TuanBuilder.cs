@@ -14,29 +14,29 @@ namespace TuanZi.Core.Builders
     {
         public TuanBuilder()
         {
-            AddModules = new List<Type>();
-            ExceptModules = new List<Type>();
+            Modules = new List<Type>();
+            ExcludedModules = new List<Type>();
         }
 
-        public IEnumerable<Type> AddModules { get; private set; }
+        public IEnumerable<Type> Modules { get; private set; }
 
-        public IEnumerable<Type> ExceptModules { get; private set; }
+        public IEnumerable<Type> ExcludedModules { get; private set; }
 
         public Action<TuanOptions> OptionsAction { get; private set; }
 
         public ITuanBuilder AddModule<TModule>() where TModule : TuanModule
         {
-            List<Type> list = AddModules.ToList();
+            List<Type> list = Modules.ToList();
             list.AddIfNotExist(typeof(TModule));
-            AddModules = list;
+            Modules = list;
             return this;
         }
 
-        public ITuanBuilder ExceptModule<TModule>() where TModule : TuanModule
+        public ITuanBuilder ExcludeModule<TModule>() where TModule : TuanModule
         {
-            List<Type> list = ExceptModules.ToList();
+            List<Type> list = ExcludedModules.ToList();
             list.AddIfNotExist(typeof(TModule));
-            ExceptModules = list;
+            ExcludedModules = list;
             return this;
         }
 

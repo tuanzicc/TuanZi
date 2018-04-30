@@ -9,15 +9,15 @@ namespace TuanZi.Core.Builders
 {
     public interface ITuanBuilder
     {
-        IEnumerable<Type> AddModules { get; }
+        IEnumerable<Type> Modules { get; }
 
-        IEnumerable<Type> ExceptModules { get; }
+        IEnumerable<Type> ExcludedModules { get; }
 
         Action<TuanOptions> OptionsAction { get; }
 
         ITuanBuilder AddModule<TModule>() where TModule : TuanModule;
 
-        ITuanBuilder ExceptModule<TModule>() where TModule : TuanModule;
+        ITuanBuilder ExcludeModule<TModule>() where TModule : TuanModule;
 
         ITuanBuilder AddOptions(Action<TuanOptions>optionsAction);
     }

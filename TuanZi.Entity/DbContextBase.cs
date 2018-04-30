@@ -18,22 +18,19 @@ namespace TuanZi.Entity
     public abstract class DbContextBase<TDbContext> : DbContext, IDbContext
     {
         private readonly IEntityConfigurationTypeFinder _typeFinder;
-        private readonly TuanDbContextOptions _TuanDbOptions;
-
-        /// <summary>
-        /// Initializes a new instance of the <see  cref="DbContextBase{TDbContext}"/> class.
-        /// </summary>
+        private readonly TuanDbContextOptions _osharpDbOptions;
+        
         protected DbContextBase(DbContextOptions options, IEntityConfigurationTypeFinder typeFinder)
             : base(options)
         {
             _typeFinder = typeFinder;
-            IOptionsMonitor<TuanOptions> TuanOptions = ServiceLocator.Instance.GetService<IOptionsMonitor<TuanOptions>>();
-            if (TuanOptions != null)
+            IOptionsMonitor<TuanOptions> osharpOptions = ServiceLocator.Instance.GetService<IOptionsMonitor<TuanOptions>>();
+            if (osharpOptions != null)
             {
-                _TuanDbOptions = TuanOptions.CurrentValue.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
+                _osharpDbOptions = osharpOptions.CurrentValue.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
             }
         }
-
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             IEntityRegister[] registers = _typeFinder.GetEntityRegisters(typeof(TDbContext));
@@ -65,7 +62,7 @@ namespace TuanZi.Entity
         public override int SaveChanges()
         {
             IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled)
+            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -74,7 +71,7 @@ namespace TuanZi.Entity
             {
                 AuditEntityEventData eventData = new AuditEntityEventData(auditEntities);
                 IEventBus eventBus = ServiceLocator.Instance.GetService<IEventBus>();
-                eventBus.Publish(this, eventData);
+                eventBus.PublishSync(this, eventData);
             }
             return count;
         }
@@ -109,7 +106,7 @@ namespace TuanZi.Entity
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled)
+            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -123,4 +120,5 @@ namespace TuanZi.Entity
             return count;
         }
     }
+
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-
+using System.Linq;
 
 namespace TuanZi.AspNetCore.Http
 {
@@ -27,6 +27,16 @@ namespace TuanZi.AspNetCore.Http
                 return request.Form[key];
             }
             return null;
+        }
+
+        public static string GetClientIp(this HttpContext context)
+        {
+            string ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (string.IsNullOrEmpty(ip))
+            {
+                ip = context.Connection.RemoteIpAddress.ToString();
+            }
+            return ip;
         }
     }
 }

@@ -109,22 +109,22 @@ namespace TuanZi.EventBuses
 
         #region Implementation of IEventPublisher
 
-        public virtual void Publish<TEventData>(TEventData eventData) where TEventData : IEventData
+        public virtual void PublishSync<TEventData>(TEventData eventData) where TEventData : IEventData
         {
-            Publish<TEventData>(null, eventData);
+            PublishSync<TEventData>(null, eventData);
         }
 
-        public virtual void Publish<TEventData>(object eventSource, TEventData eventData) where TEventData : IEventData
+        public virtual void PublishSync<TEventData>(object eventSource, TEventData eventData) where TEventData : IEventData
         {
-            Publish(typeof(TEventData), eventSource, eventData);
+            PublishSync(typeof(TEventData), eventSource, eventData);
         }
 
-        public virtual void Publish(Type eventType, IEventData eventData)
+        public virtual void PublishSync(Type eventType, IEventData eventData)
         {
-            Publish(eventType, null, eventData);
+            PublishSync(eventType, null, eventData);
         }
 
-        public virtual void Publish(Type eventType, object eventSource, IEventData eventData)
+        public virtual void PublishSync(Type eventType, object eventSource, IEventData eventData)
         {
             eventData.EventSource = eventSource;
 
@@ -174,22 +174,19 @@ namespace TuanZi.EventBuses
             {
                 return;
             }
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    handler.Handle(eventData);
-                }
-                catch (Exception ex)
-                {
-                    string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
-                    _Logger.LogError(ex, msg);
-                }
-                finally
-                {
-                    factory.ReleaseHandler(handler);
-                }
-            });
+                handler.Handle(eventData);
+            }
+            catch (Exception ex)
+            {
+                string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
+                _Logger.LogError(ex, msg);
+            }
+            finally
+            {
+                factory.ReleaseHandler(handler);
+            }
         }
 
         protected virtual Task InvokeHandlerAsync(IEventHandlerFactory factory, Type eventType, IEventData eventData)
@@ -220,4 +217,5 @@ namespace TuanZi.EventBuses
 
         #endregion
     }
+    
 }
