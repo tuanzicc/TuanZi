@@ -65,12 +65,12 @@ namespace TuanZi.EventBuses
             }
             foreach (Type handlerType in handlerTypes)
             {
-                Type handlerInterface = handlerType.GetInterface("IEventHandler`1"); 
+                Type handlerInterface = handlerType.GetInterface("IEventHandler`1");
                 if (handlerInterface == null)
                 {
                     continue;
                 }
-                Type eventType = handlerInterface.GetGenericArguments()[0]; 
+                Type eventType = handlerInterface.GetGenericArguments()[0];
                 IEventHandlerFactory factory = new IocEventHandlerFactory(handlerType);
                 _EventStore.Add(eventType, factory);
             }
@@ -217,5 +217,5 @@ namespace TuanZi.EventBuses
 
         #endregion
     }
-    
+
 }
