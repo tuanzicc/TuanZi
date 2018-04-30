@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TuanZi.AspNetCore.Http.Extensions;
+using TuanZi.AspNetCore.Http;
 
 namespace TuanZi.AspNetCore.Infrastructure
 {

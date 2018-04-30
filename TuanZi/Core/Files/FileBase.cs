@@ -16,6 +16,7 @@ namespace TuanZi.Core.Files
         public string Description { get; set; }
         public string ContentType { get; set; }
         public long ContentLength { get; set; }
+        public string Extension { get; set; }
         public string Hash { get; set; }
         public byte[] Binary { get; set; }
         public string Path { get; set; }

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace TuanZi.AspNetCore.Http.Extensions
+namespace TuanZi.AspNetCore.Http
 {
     public static class ServiceLocatorExtensions
     {

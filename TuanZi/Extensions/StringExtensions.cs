@@ -579,6 +579,11 @@ namespace TuanZi
             return kq * q / (kq * q + kr * r + ks * s);
         }
 
+        public static bool HasValue(this string value)
+        {
+            return !string.IsNullOrWhiteSpace(value);
+        }
+
         #endregion
     }
 }

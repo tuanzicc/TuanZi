@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text;
 
 namespace TuanZi.Collections
@@ -22,6 +23,40 @@ namespace TuanZi.Collections
             {
                 collection.Add(value);
             }
+        }
+
+        public static void AddRange(this NameValueCollection initial, NameValueCollection other)
+        {
+            initial.CheckNotNull("initial");
+
+            if (other == null)
+                return;
+
+            foreach (var item in other.AllKeys)
+            {
+                initial.Add(item, other[item]);
+            }
+        }
+
+        public static void AddRange<T>(this ICollection<T> initial, IEnumerable<T> other)
+        {
+            if (other == null)
+                return;
+
+            var list = initial as List<T>;
+
+            if (list != null)
+            {
+                list.AddRange(other);
+                return;
+            }
+
+            other.Each(x => initial.Add(x));
+        }
+
+        public static bool IsNullOrEmpty<T>(this ICollection<T> source)
+        {
+            return (source == null || source.Count == 0);
         }
     }
 }

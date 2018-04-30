@@ -107,5 +107,13 @@ namespace TuanZi.Collections
             return source.ThenBy(sortCondition.SortField, sortCondition.ListSortDirection);
         }
 
+        public static void Each<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (T t in source)
+            {
+                action(t);
+            }
+        }
+
     }
 }
