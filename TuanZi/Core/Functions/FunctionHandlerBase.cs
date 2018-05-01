@@ -161,7 +161,7 @@ namespace TuanZi.Core.Functions
             foreach (TFunction item in dbItems.Except(removeItems))
             {
                 bool isUpdate = false;
-                TFunction function = functions.Single(m =>
+                TFunction function = functions.FirstOrDefault(m =>
                     string.Equals(m.Area, item.Area, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(m.Controller, item.Controller, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(m.Action, item.Action, StringComparison.OrdinalIgnoreCase));

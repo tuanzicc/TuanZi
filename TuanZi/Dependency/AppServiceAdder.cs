@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -75,7 +75,10 @@ namespace TuanZi.Dependency
         private static Type[] GetImplementedInterfaces(Type type)
         {
             Type[] exceptInterfaces = { typeof(IDisposable) };
-            Type[] interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
+            TypeFilter theFilter = new TypeFilter(InterfaceFilter);
+            Type[] interfaceTypes = type.FindInterfaces(theFilter,type.BaseType).Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
+            if(interfaceTypes.Length==0)
+                interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
             for (int index = 0; index < interfaceTypes.Length; index++)
             {
                 Type interfaceType = interfaceTypes[index];
@@ -85,6 +88,25 @@ namespace TuanZi.Dependency
                 }
             }
             return interfaceTypes;
+        }
+
+        //https://social.msdn.microsoft.com/Forums/en-US/1e59cb2d-a919-453f-8356-503e33816a57/how-to-get-type-of-interfaces-that-class-implements?forum=csharplanguage
+        public static bool InterfaceFilter(Type typeObj, Object criteriaObj)
+        {
+            // 1. "typeObj" is a Type object of an interface supported by class B.
+            // 2. "criteriaObj" will be a Type object of the base class of B : 
+            // i.e. the Type object of class A.
+            Type baseClassType = (Type)criteriaObj;
+            // Obtain an array of the interfaces supported by the base class A.
+            Type[] interfaces_array = baseClassType.GetInterfaces();
+            for (int i = 0; i < interfaces_array.Length; i++)
+            {
+                // If typeObj is an interface supported by the base class, skip it.
+                if (typeObj.ToString() == interfaces_array[i].ToString())
+                    return false;
+            }
+
+            return true;
         }
     }
 }
