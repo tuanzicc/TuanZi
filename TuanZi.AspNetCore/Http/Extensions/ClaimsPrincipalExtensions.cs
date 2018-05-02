@@ -15,5 +15,13 @@ namespace TuanZi.AspNetCore.Http
 
             return principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
+
+        public static TKey GetUserId<TKey>(this ClaimsPrincipal principal)
+        {
+            if (principal == null)
+                throw new ArgumentNullException(nameof(principal));
+
+            return (principal.FindFirst(ClaimTypes.NameIdentifier)?.Value).CastTo<TKey>();
+        }
     }
 }

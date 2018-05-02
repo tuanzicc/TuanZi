@@ -21,7 +21,7 @@ namespace TuanZi
 {
     public static class StringExtensions
     {
-        #region 正则表达式
+        #region pattern
 
         public static bool IsMatch(this string value, string pattern, bool isContains = true)
         {
@@ -238,7 +238,7 @@ namespace TuanZi
 
         #endregion
 
-        #region 其他操作
+        #region others
 
         [DebuggerStepThrough]
         public static bool IsNullOrEmpty(this string value)
@@ -582,6 +582,15 @@ namespace TuanZi
         public static bool HasValue(this string value)
         {
             return !string.IsNullOrWhiteSpace(value);
+        }
+
+
+        public static Guid ToGuid(this string value)
+        {
+            Guid gid;
+            if (value.IsEmpty() || !Guid.TryParse(value.ToString(), out gid))
+                return Guid.Empty;
+            return gid;
         }
 
         #endregion

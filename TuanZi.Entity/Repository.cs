@@ -76,6 +76,54 @@ namespace TuanZi.Entity
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
+        public int Recycle(params TEntity[] entities)
+        {
+            Check.NotNull(entities, nameof(entities));
+            foreach (var entity in entities)
+            {
+                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.LogicDelete);
+            }
+            return Update(entities);
+        }
+
+        public int Recycle(TKey key)
+        {
+            CheckEntityKey(key, nameof(key));
+            TEntity entity = _dbSet.Find(key);
+            return entity == null ? 0 : Recycle(entity);
+        }
+
+        public int Recycle(Expression<Func<TEntity, bool>> predicate)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            TEntity[] entities = _dbSet.Where(predicate).ToArray();
+            return Recycle(entities);
+        }
+
+        public int Restore(params TEntity[] entities)
+        {
+            Check.NotNull(entities, nameof(entities));
+            foreach (var entity in entities)
+            {
+                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.Restore);
+            }
+            return Update(entities);
+        }
+
+        public int Restore(TKey key)
+        {
+            CheckEntityKey(key, nameof(key));
+            TEntity entity = _dbSet.Find(key);
+            return entity == null ? 0 : Restore(entity);
+        }
+
+        public int Restore(Expression<Func<TEntity, bool>> predicate)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            TEntity[] entities = _dbSet.Where(predicate).ToArray();
+            return Restore(entities);
+        }
+
         public int Delete(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
@@ -305,6 +353,56 @@ namespace TuanZi.Entity
                         ? "'{0}' added".FormatWith(names.ExpandAndToString())
                         : "{0} record(s) added".FormatWith(dtos.Count))
                 : OperationResult.NoChanges;
+        }
+
+        public async Task<int> RecycleAsync(params TEntity[] entities)
+        {
+            Check.NotNull(entities, nameof(entities));
+            foreach (var entity in entities)
+            {
+                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.LogicDelete);
+            }
+            _dbSet.UpdateRange(entities);
+            return await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> RecycleAsync(TKey key)
+        {
+            CheckEntityKey(key, nameof(key));
+            TEntity entity = _dbSet.Find(key);
+            return entity == null ? 0 : await RecycleAsync(entity);
+        }
+
+        public async Task<int> RecycleAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            TEntity[] entities = _dbSet.Where(predicate).ToArray();
+            return await RecycleAsync(entities);
+        }
+
+        public async Task<int> RestoreAsync(params TEntity[] entities)
+        {
+            Check.NotNull(entities, nameof(entities));
+            foreach (var entity in entities)
+            {
+                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.Restore);
+            }
+            _dbSet.UpdateRange(entities);
+            return await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<int> RestoreAsync(TKey key)
+        {
+            CheckEntityKey(key, nameof(key));
+            TEntity entity = _dbSet.Find(key);
+            return entity == null ? 0 : await RestoreAsync(entity);
+        }
+
+        public async Task<int> RestoreAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            TEntity[] entities = _dbSet.Where(predicate).ToArray();
+            return await RestoreAsync(entities);
         }
 
         public async Task<int> DeleteAsync(params TEntity[] entities)
