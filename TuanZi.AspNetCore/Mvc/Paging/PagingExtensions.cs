@@ -63,8 +63,6 @@ namespace TuanZi.Collections
 
         public static Task<IPagedList<T>> ToPagedListAsync<T>(this IQueryable<T> source, int? pageIndex, int? pageSize = null, int? totalCount = null)
         {
-            int currentPageIndex = pageIndex.HasValue ? pageIndex.Value - 1 : 0;
-
             return Task.Run(() =>
             {
                 return source.ToPagedList(pageIndex, pageSize, totalCount);
