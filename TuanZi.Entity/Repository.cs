@@ -40,7 +40,15 @@ namespace TuanZi.Entity
             return _dbContext.SaveChanges();
         }
 
-        public OperationResult Insert<TInputDto>(ICollection<TInputDto> dtos,
+        public int Insert<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
+        {
+            Check.NotNull(dto, nameof(dto));
+            TEntity entity = dto.MapTo<TEntity>();
+            _dbSet.Add(entity);
+            return _dbContext.SaveChanges();
+        }
+
+        public OperationResult InsertBatch<TInputDto>(ICollection<TInputDto> dtos,
             Action<TInputDto> checkAction = null,
             Func<TInputDto, TEntity, TEntity> updateFunc = null) where TInputDto : IInputDto<TKey>
         {
@@ -193,7 +201,18 @@ namespace TuanZi.Entity
             return _dbContext.SaveChanges();
         }
 
-        public OperationResult Update<TEditDto>(ICollection<TEditDto> dtos,
+        public int Update<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
+        {
+            Check.NotNull(dto, nameof(dto));
+            TEntity entity = _dbSet.Find(dto.Id);
+            if (entity == null)
+                return 0;
+            entity = dto.MapTo(entity);
+            _dbSet.Update(entity);
+            return _dbContext.SaveChanges();
+        }
+
+        public OperationResult UpdateBatch<TEditDto>(ICollection<TEditDto> dtos,
             Action<TEditDto, TEntity> checkAction = null,
             Func<TEditDto, TEntity, TEntity> updateFunc = null) where TEditDto : IInputDto<TKey>
         {
@@ -319,7 +338,15 @@ namespace TuanZi.Entity
             return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<OperationResult> InsertAsync<TInputDto>(ICollection<TInputDto> dtos,
+        public async Task<int> InsertAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
+        {
+            Check.NotNull(dto, nameof(dto));
+            TEntity entity = dto.MapTo<TEntity>();
+            _dbSet.Add(entity);
+            return await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<OperationResult> InsertBatchAsync<TInputDto>(ICollection<TInputDto> dtos,
             Func<TInputDto, Task> checkAction = null,
             Func<TInputDto, TEntity, Task<TEntity>> updateFunc = null) where TInputDto : IInputDto<TKey>
         {
@@ -476,7 +503,18 @@ namespace TuanZi.Entity
             return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<OperationResult> UpdateAsync<TEditDto>(ICollection<TEditDto> dtos,
+        public async Task<int> UpdateAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
+        {
+            Check.NotNull(dto, nameof(dto));
+            TEntity entity = await _dbSet.FindAsync(dto.Id);
+            if (entity == null)
+                return 0;
+            entity = dto.MapTo(entity);
+            _dbSet.Update(entity);
+            return await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<OperationResult> UpdateBatchAsync<TEditDto>(ICollection<TEditDto> dtos,
             Func<TEditDto, TEntity, Task> checkAction = null,
             Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null) where TEditDto : IInputDto<TKey>
         {

@@ -21,7 +21,8 @@ namespace TuanZi.Entity
 
         int Insert(params TEntity[] entities);
 
-        OperationResult Insert<TInputDto>(ICollection<TInputDto> dtos,
+        int Insert<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>;
+        OperationResult InsertBatch<TInputDto>(ICollection<TInputDto> dtos,
             Action<TInputDto> checkAction = null,
             Func<TInputDto, TEntity, TEntity> updateFunc = null)
             where TInputDto : IInputDto<TKey>;
@@ -40,7 +41,8 @@ namespace TuanZi.Entity
         int DeleteBatch(Expression<Func<TEntity, bool>> predicate);
 
         int Update(params TEntity[] entities);
-        OperationResult Update<TEditDto>(ICollection<TEditDto> dtos,
+        int Update<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>;
+        OperationResult UpdateBatch<TEditDto>(ICollection<TEditDto> dtos,
             Action<TEditDto, TEntity> checkAction = null,
             Func<TEditDto, TEntity, TEntity> updateFunc = null)
             where TEditDto : IInputDto<TKey>;
@@ -60,8 +62,8 @@ namespace TuanZi.Entity
         #region Asynchronous
 
         Task<int> InsertAsync(params TEntity[] entities);
-
-        Task<OperationResult> InsertAsync<TInputDto>(ICollection<TInputDto> dtos,
+        Task<int> InsertAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>;
+        Task<OperationResult> InsertBatchAsync<TInputDto>(ICollection<TInputDto> dtos,
             Func<TInputDto, Task> checkAction = null,
             Func<TInputDto, TEntity, Task<TEntity>> updateFunc = null)
             where TInputDto : IInputDto<TKey>;
@@ -80,7 +82,8 @@ namespace TuanZi.Entity
         Task<int> DeleteBatchAsync(Expression<Func<TEntity, bool>> predicate);
 
         Task<int> UpdateAsync(TEntity entity);
-        Task<OperationResult> UpdateAsync<TEditDto>(ICollection<TEditDto> dtos,
+        Task<int> UpdateAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>;
+        Task<OperationResult> UpdateBatchAsync<TEditDto>(ICollection<TEditDto> dtos,
             Func<TEditDto, TEntity, Task> checkAction = null,
             Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null)
             where TEditDto : IInputDto<TKey>;

@@ -86,7 +86,7 @@ namespace TuanZi.Security
         public virtual Task<OperationResult> UpdateFunctions(params TFunctionInputDto[] dtos)
         {
             Check.NotNull(dtos, nameof(dtos));
-            return _functionRepository.UpdateAsync(dtos,
+            return _functionRepository.UpdateBatchAsync(dtos,
                 async (dto, entity) =>
                 {
                     if (dto.AuditEntityEnabled && !dto.AuditOperationEnabled && !entity.AuditOperationEnabled && !entity.AuditEntityEnabled)
@@ -121,7 +121,7 @@ namespace TuanZi.Security
         public virtual Task<OperationResult> UpdateEntityInfos(params TEntityInfoInputDto[] dtos)
         {
             Check.NotNull(dtos, nameof(dtos));
-            return _entityInfoRepository.UpdateAsync(dtos);
+            return _entityInfoRepository.UpdateBatchAsync(dtos);
         }
 
         #endregion
