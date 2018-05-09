@@ -22,6 +22,14 @@ namespace TuanZi.Core.Options
         public void Configure(TuanOptions options)
         {
             SetDbContextOptionses(options);
+
+            //MailSender
+            IConfigurationSection section = _configuration.GetSection("Tuan:MailSender");
+            MailSenderOptions sender = section.Get<MailSenderOptions>();
+            if (sender != null)
+            {
+                options.MailSender = sender;
+            }
         }
 
         private void SetDbContextOptionses(TuanOptions options)

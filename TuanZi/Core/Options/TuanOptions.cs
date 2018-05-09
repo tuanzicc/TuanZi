@@ -17,6 +17,8 @@ namespace TuanZi.Core.Options
 
         public IDictionary<string, TuanDbContextOptions> DbContextOptionses { get; }
 
+        public MailSenderOptions MailSender { get; set; }
+
         public TuanDbContextOptions GetDbContextOptions(Type dbContextType)
         {
             return DbContextOptionses.Values.SingleOrDefault(m => m.DbContextType == dbContextType);

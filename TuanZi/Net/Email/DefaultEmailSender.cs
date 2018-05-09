@@ -9,11 +9,19 @@ using System.IO;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using TuanZi.Collections;
+using TuanZi.Dependency;
+using TuanZi.Core.Options;
+using TuanZi.Exceptions;
 
 namespace TuanZi.Net.Email
 {
-    public class DefaultEmailSender : IEmailSender
+    public class DefaultEmailSender : IEmailSender, ISingletonDependency
     {
+        private readonly IServiceProvider _provider;
+        public DefaultEmailSender(IServiceProvider provider)
+        {
+            _provider = provider;
+        }
 
         protected virtual MailMessage BuildMailMessage(EmailMessage original)
         {
@@ -88,6 +96,38 @@ namespace TuanZi.Net.Email
 				msg.Dispose();
 			});
 		}
+
+
+        public Task SendEmailAsync(string email, string subject, string body)
+        {
+            TuanOptions options = _provider.GetTuanOptions();
+            MailSenderOptions mailSender = options.MailSender;
+            if (mailSender == null)
+            {
+                throw new TuanException("Mail option does not exist, configure Tuan.MailSender node in appsetting.json");
+            }
+
+            string host = mailSender.Host,
+                displayName = mailSender.SenderDisplayName,
+                userName = mailSender.SenderUserName,
+                password = mailSender.SenderPassword;
+            SmtpClient client = new SmtpClient(host)
+            {
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(userName, password)
+            };
+
+            string fromEmail = userName.Contains("@") ? userName : "{0}@{1}".FormatWith(userName, client.Host.Replace("smtp.", ""));
+            MailMessage mail = new MailMessage
+            {
+                From = new MailAddress(fromEmail, displayName),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true
+            };
+            mail.To.Add(email);
+            return client.SendMailAsync(mail);
+        }
 
         #endregion
 
