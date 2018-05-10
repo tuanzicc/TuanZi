@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using TuanZi.Exceptions;
@@ -49,7 +50,7 @@ namespace TuanZi.Entity
             return await repository.TrackQuery(predicate).UpdateAsync(updateExpression, interceptAction);
         }
 
-        public static IEnumerable<TEntity> FromSql<TEntity, TKey>(this IRepository<TEntity, TKey> repository, string sql, params object[] parameters)
+        public static IQueryable<TEntity> FromSql<TEntity, TKey>(this IRepository<TEntity, TKey> repository, string sql, params object[] parameters)
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {

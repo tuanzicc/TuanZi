@@ -41,6 +41,11 @@ namespace TuanZi.AutoMapper
                 cfg.AddProfile(mapTuple as Profile);
             }
 
+           // var profiles = provider.GetServices<IMapProfileTypeFinder>();
+
+      
+
+
             Mapper.Initialize(cfg);
 
             IMapper mapper = provider.GetService<IMapper>();
