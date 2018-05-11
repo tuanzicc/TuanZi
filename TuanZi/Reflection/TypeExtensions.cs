@@ -154,5 +154,32 @@ namespace TuanZi.Reflection
             Type baseType = typeof(TBaseType);
             return type.IsBaseOn(baseType);
         }
+
+
+
+        public static bool HasProperty(this object obj, string name)
+        {
+            return obj.GetType().GetProperty(name) != null;
+
+        }
+
+        public static object GetPropertyValue(this object obj, string name)
+        {
+            var prop = obj.GetType().GetProperty(name);
+            if (prop != null)
+                return prop.GetValue(obj);
+
+            return null;
+
+        }
+
+        public static void SetPropertyValue(this object obj, string name, object value)
+        {
+            var prop = obj.GetType().GetProperty(name);
+            if (prop != null)
+            {
+                prop.SetValue(obj, value);
+            }
+        }
     }
 }

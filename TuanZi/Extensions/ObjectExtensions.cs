@@ -126,26 +126,7 @@ namespace TuanZi
             }
         }
 
-        public static object GetPropertyValue(this object obj, string name)
-        {
-            var prop = obj.GetType().GetProperty(name);
-            if (prop != null)
-                return prop.GetValue(obj);
-
-            return null;
-
-        }
-
-        public static void SetPropertyValue(this object obj, string name, object value)
-        {
-            var prop = obj.GetType().GetProperty(name);
-            if (prop != null)
-            {
-                prop.SetValue(obj, value);
-            }
-
-
-        }
+        
 
         public static string ToStringSafe(this object obj)
         {
