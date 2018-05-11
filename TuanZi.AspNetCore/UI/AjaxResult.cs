@@ -6,11 +6,11 @@
             : this(null)
         { }
 
-        public AjaxResult(string content, AjaxResultType type = AjaxResultType.Info, object data = null)
+        public AjaxResult(string content, AjaxResultType type = AjaxResultType.Success, object data = null)
             : this(content, data, type)
         { }
 
-        public AjaxResult(string content, object data, AjaxResultType type = AjaxResultType.Info)
+        public AjaxResult(string content, object data, AjaxResultType type = AjaxResultType.Success)
         {
             Type = type.ToString();
             Content = content;

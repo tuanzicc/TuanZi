@@ -15,5 +15,7 @@ namespace TuanZi.Security
 
         [DisplayName("User ID")]
         public TUserKey UserId { get; set; }
+
+        public bool Disabled { get; set; }
     }
 }

@@ -7,8 +7,6 @@ namespace TuanZi.Core.Functions
 {
     public interface IFunction : ILockable
     {
-        Guid Id { get; set; }
-
         string Name { get; set; }
 
         string Area { get; set; }
@@ -20,7 +18,7 @@ namespace TuanZi.Core.Functions
         bool IsController { get; set; }
 
         bool IsAjax { get; set; }
-        
+
         FunctionAccessType AccessType { get; set; }
 
         bool IsAccessTypeChanged { get; set; }

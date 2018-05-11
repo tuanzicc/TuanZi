@@ -2,12 +2,15 @@
 {
     public enum AjaxResultType
     {
-        Info,
+        Info = 203,
 
-        Success,
+        Success = 200,
 
-        Warning,
+        Error = 500,
 
-        Error
+        UnAuth = 401,
+
+        Forbidden = 403
+
     }
 }
