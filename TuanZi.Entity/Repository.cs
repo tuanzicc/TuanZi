@@ -506,7 +506,7 @@ namespace TuanZi.Entity
         public async Task<int> UpdateAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
         {
             Check.NotNull(dto, nameof(dto));
-            TEntity entity = await _dbSet.FindAsync(dto.Id);
+            TEntity entity = await _dbSet.FirstOrDefaultAsync(m => m.Id.ToString() == dto.Id.ToString());
             if (entity == null)
                 return 0;
             entity = dto.MapTo(entity);
