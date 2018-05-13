@@ -11,17 +11,19 @@ using TuanZi.Secutiry.Claims;
 
 namespace TuanZi.Secutiry
 {
+  
     public abstract class FunctionAuthorizationBase<TFunction> : IFunctionAuthorization
         where TFunction : class, IFunction, IEntity<Guid>
     {
-        protected FunctionAuthorizationBase()
+        protected readonly IFunctionAuthCache FunctionAuthCache;
+
+        protected FunctionAuthorizationBase(IFunctionAuthCache functionAuthCache)
         {
+            FunctionAuthCache = functionAuthCache;
             SuperRoleName = "System administrator";
         }
 
         protected virtual string SuperRoleName { get; }
-
-        public IFunctionAuthCache FunctionAuthCache { get; set; }
 
         public AuthorizationResult Authorize(IFunction function)
         {
@@ -61,7 +63,7 @@ namespace TuanZi.Secutiry
 
         protected virtual AuthorizationResult AuthorizeRoleLimit(IFunction function, IPrincipal principal)
         {
-            if (!(principal.Identity is ClaimsIdentity identity))
+            if(!(principal.Identity is ClaimsIdentity identity))
             {
                 return new AuthorizationResult(AuthorizationStatus.Error, "The current user ID IIdentity is not in the correct format. Only the Identity of the ClaimsIdentity type is supported.");
             }

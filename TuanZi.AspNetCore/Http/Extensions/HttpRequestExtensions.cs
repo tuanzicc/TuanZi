@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using System;
 using System.Linq;
 
 namespace TuanZi.AspNetCore.Http
@@ -9,11 +10,14 @@ namespace TuanZi.AspNetCore.Http
         public static bool IsAjaxRequest(this HttpRequest request)
         {
             Check.NotNull(request, nameof(request));
-            if (request.Headers != null)
-            {
-                return request.Headers["X-Requested-With"] == "XMLHttpRequest";
-            }
-            return false;
+            bool? flag = request.Headers?["X-Requested-With"].ToString()?.Equals("XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+            return flag.HasValue && flag.Value;
+        }
+
+        public static bool IsJsonContextType(this HttpRequest request)
+        {
+            Check.NotNull(request, nameof(request));
+            return request.Headers?["Content-Type"].ToString()?.IndexOf("application/json", StringComparison.OrdinalIgnoreCase) > -1;
         }
 
         public static string Params(this HttpRequest request, string key)

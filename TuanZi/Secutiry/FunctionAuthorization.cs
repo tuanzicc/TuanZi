@@ -4,5 +4,9 @@
 namespace TuanZi.Secutiry
 {
     public class FunctionAuthorization : FunctionAuthorizationBase<Function>
-    { }
+    {
+        public FunctionAuthorization(IFunctionAuthCache functionAuthCache)
+           : base(functionAuthCache)
+        { }
+    }
 }

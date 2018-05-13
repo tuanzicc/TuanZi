@@ -10,7 +10,10 @@
 
         UnAuth = 401,
 
-        Forbidden = 403
+        Forbidden = 403,
 
+        NoFound = 404,
+
+        Locked = 423
     }
 }
