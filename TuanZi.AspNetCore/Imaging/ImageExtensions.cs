@@ -46,13 +46,23 @@ namespace TuanZi.AspNetCore.Imaging
 
         public static Image Crop(this Image i, int width, int height, InterpolationMode interpolationMode)
         {
-            return i.Resize(width, height, ImageExtensions.GetMode(i.Width, i.Height, width, height, true), interpolationMode);
+            if (width <= 0)
+                width = height;
+            if (height <= 0)
+                height = width;
+
+            if (width + height <= 0)
+                return (Image)i.Clone();
+
+            return i.Resize(width, height, GetMode(i.Width, i.Height, width, height, true), interpolationMode);
         }
 
         public static Image ResizeMaxW(this Image i, int maxWidth)
         {
             if (i.Width > maxWidth)
             {
+
+                
                 return i.ResizeW(maxWidth, InterpolationMode.Bilinear);
             }
             else
@@ -78,7 +88,7 @@ namespace TuanZi.AspNetCore.Imaging
 
         public static Image ResizeW(this Image i, int width, Color background, InterpolationMode interpolationMode)
         {
-            return i.Resize(width, ((int)(float)width / i.Width * i.Height), background, interpolationMode);
+            return i.Resize(width, (int)((float)width / i.Width * i.Height), background, interpolationMode);
         }
 
         public static Image ResizeMaxH(this Image i, int maxHeight)
@@ -136,7 +146,8 @@ namespace TuanZi.AspNetCore.Imaging
 
         public static Image Resize(this Image i, int width, int height, Color background, InterpolationMode interpolationMode)
         {
-            return i.Resize(width, height, background, ImageExtensions.GetMode(i.Width, i.Height, width, height, false), interpolationMode);
+
+            return i.Resize(width, height, background, GetMode(i.Width, i.Height, width, height, false), interpolationMode);
         }
 
         public static Image Resize(this Image i, int width, int height, ResizeMode mode, InterpolationMode interpolationMode)
