@@ -12,13 +12,6 @@ namespace TuanZi.AspNetCore.Imaging
     public static class ImageExtensions
     {
        
-
-        /// <summary>
-        /// 是否包括透明像素
-        /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception">操作失败</exception>
         public static bool HasTransparentPixel(this Image i)
         {
             using (Bitmap bitmap = new Bitmap(i))
