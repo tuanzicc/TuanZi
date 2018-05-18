@@ -26,7 +26,7 @@ namespace TuanZi.Collections
 
 
       
-			PageSize = pageSize.HasValue?(int)pageSize : Int32.MaxValue;
+			PageSize = pageSize.HasValue?(int)pageSize : realTotalCount;
 			PageIndex = index;
 			TotalItemCount = totalCount.HasValue ? totalCount.Value : realTotalCount;
 			PageCount = TotalItemCount > 0 ? (int)Math.Ceiling(TotalItemCount / (double)PageSize) : 0;
