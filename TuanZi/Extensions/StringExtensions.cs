@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -234,6 +235,19 @@ namespace TuanZi
         {
             string pattern = isRestrict ? @"^[1][3-8]\d{9}$" : @"^[1]\d{10}$";
             return value.IsMatch(pattern);
+        }
+
+        public static bool IsBase64(this string value)
+        {
+            try
+            {
+                byte[] converted = Convert.FromBase64String(value);
+                return value.EndsWith("=");
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -591,6 +605,101 @@ namespace TuanZi
             if (value.IsEmpty() || !Guid.TryParse(value.ToString(), out gid))
                 return Guid.Empty;
             return gid;
+        }
+
+        #endregion
+
+
+
+        #region Encrypt & Decrypt
+
+        private static byte[] CryptIV = { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };
+        private static string[] CryptKeys = { "MTA2ZWI4YjJjYjE0ZDNiZTJjMTRhMWI5NWQwZGZlYmU=", "NTQwOWZmNjdkNzhmYzQ3MWYxYzNhNWUwOGI1ZGEwMWY=", "ZjMxODFjNTc1NzhlZmNmYjVmZWQyZGQ0N2FmYjBjNDQ=", "NGMwOTQ3N2I0NTY4OTcxYzgyNTk5MDc3Mzc0OTFmNzc=", "ZTI2YTViNzc3NWE1ODk4NTAyYTMxZGU2YzE1ODk2MWM=", "YjY5MDEyZTAyNTFmNzA0YWI3NTM5OTkyZDNjODE2NjU=" };
+        public static string Encrypt(this string encryptString, object encryptKey = null, bool redo = false)
+        {
+            if (encryptString.IsNullOrEmpty())
+                return encryptString;
+            try
+            {
+                if (!redo)
+                    encryptString = encryptString.Decrypt(encryptKey.ToStringSafe());
+
+                var key = encryptKey + CryptKeys[new Random().Next(0, CryptKeys.Length)];
+
+                var hashmd5 = new MD5CryptoServiceProvider();
+                var keyArray = new MD5CryptoServiceProvider().ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
+                hashmd5.Clear();
+                var toEncryptArray = UTF8Encoding.UTF8.GetBytes(encryptString);
+                var tdes = new AesCryptoServiceProvider();
+                tdes.Key = keyArray;
+                tdes.Mode = CipherMode.ECB;
+                tdes.Padding = PaddingMode.PKCS7;
+                var cTransform = tdes.CreateEncryptor();
+                var resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                tdes.Clear();
+                return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+            }
+            catch
+            {
+                return encryptString;
+            }
+        }
+
+        public static string Decrypt(this string decryptString, object decryptKey = null)
+        {
+            if (decryptString.IsNullOrEmpty())
+                return decryptString;
+
+            var index = -1;
+            while (index++ < CryptKeys.Length)
+            {
+                try
+                {
+                    var str = HttpUtility.UrlDecode(decryptString).Replace(' ', '+');
+
+                    var inputByteArray = Convert.FromBase64String(decryptString);
+
+                    var key = decryptKey + CryptKeys[index];
+
+                    var hashmd5 = new MD5CryptoServiceProvider();
+                    var keyArray = hashmd5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
+                    var tdes = new AesCryptoServiceProvider();
+                    tdes.Key = keyArray;
+                    tdes.Mode = CipherMode.ECB;
+                    tdes.Padding = PaddingMode.PKCS7;
+                    var cTransform = tdes.CreateDecryptor();
+                    var resultArray = cTransform.TransformFinalBlock(inputByteArray, 0, inputByteArray.Length);
+                    tdes.Clear();
+                    decryptString = UTF8Encoding.UTF8.GetString(resultArray);
+                    break;
+                }
+                catch { continue; }
+
+            }
+            return decryptString;
+
+        }
+
+
+        public static string Masked(this string source, int start, int count)
+        {
+            return source.Masked('x', start, count);
+        }
+
+        public static string Masked(this string source, char maskValue, int start, int count)
+        {
+            if (source.IsNullOrEmpty())
+                return source;
+
+            if (count > source.Length || count<0)
+                count = source.Length-1;
+
+            var firstPart = source.Substring(0, start);
+            var lastPart = source.Substring(start + count);
+            var middlePart = new string(maskValue, count);
+
+            return firstPart + middlePart + lastPart;
+
         }
 
         #endregion
