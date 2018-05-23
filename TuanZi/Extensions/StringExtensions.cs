@@ -613,70 +613,32 @@ namespace TuanZi
 
         #region Encrypt & Decrypt
 
-        private static byte[] CryptIV = { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };
-        private static string[] CryptKeys = { "MTA2ZWI4YjJjYjE0ZDNiZTJjMTRhMWI5NWQwZGZlYmU=", "NTQwOWZmNjdkNzhmYzQ3MWYxYzNhNWUwOGI1ZGEwMWY=", "ZjMxODFjNTc1NzhlZmNmYjVmZWQyZGQ0N2FmYjBjNDQ=", "NGMwOTQ3N2I0NTY4OTcxYzgyNTk5MDc3Mzc0OTFmNzc=", "ZTI2YTViNzc3NWE1ODk4NTAyYTMxZGU2YzE1ODk2MWM=", "YjY5MDEyZTAyNTFmNzA0YWI3NTM5OTkyZDNjODE2NjU=" };
-        public static string Encrypt(this string encryptString, object encryptKey = null, bool redo = false)
+       public static string EncryptAes(this string source, object key, bool needIV = false)
         {
-            if (encryptString.IsNullOrEmpty())
-                return encryptString;
+            if (source.IsNullOrEmpty())
+                return source;
             try
             {
-                if (!redo)
-                    encryptString = encryptString.Decrypt(encryptKey.ToStringSafe());
-
-                var key = encryptKey + CryptKeys[new Random().Next(0, CryptKeys.Length)];
-
-                var hashmd5 = new MD5CryptoServiceProvider();
-                var keyArray = new MD5CryptoServiceProvider().ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
-                hashmd5.Clear();
-                var toEncryptArray = UTF8Encoding.UTF8.GetBytes(encryptString);
-                var tdes = new AesCryptoServiceProvider();
-                tdes.Key = keyArray;
-                tdes.Mode = CipherMode.ECB;
-                tdes.Padding = PaddingMode.PKCS7;
-                var cTransform = tdes.CreateEncryptor();
-                var resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-                tdes.Clear();
-                return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+                return AesHelper.Encrypt(source, key.ToStringSafe(), needIV);
             }
             catch
             {
-                return encryptString;
+                return source;
             }
         }
 
-        public static string Decrypt(this string decryptString, object decryptKey = null)
+        public static string DecryptAes(this string source, object key, bool needIV = false)
         {
-            if (decryptString.IsNullOrEmpty())
-                return decryptString;
-
-            var index = -1;
-            while (index++ < CryptKeys.Length)
+            if (source.IsNullOrEmpty())
+                return source;
+            try
             {
-                try
-                {
-                    var str = HttpUtility.UrlDecode(decryptString).Replace(' ', '+');
-
-                    var inputByteArray = Convert.FromBase64String(decryptString);
-
-                    var key = decryptKey + CryptKeys[index];
-
-                    var hashmd5 = new MD5CryptoServiceProvider();
-                    var keyArray = hashmd5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
-                    var tdes = new AesCryptoServiceProvider();
-                    tdes.Key = keyArray;
-                    tdes.Mode = CipherMode.ECB;
-                    tdes.Padding = PaddingMode.PKCS7;
-                    var cTransform = tdes.CreateDecryptor();
-                    var resultArray = cTransform.TransformFinalBlock(inputByteArray, 0, inputByteArray.Length);
-                    tdes.Clear();
-                    decryptString = UTF8Encoding.UTF8.GetString(resultArray);
-                    break;
-                }
-                catch { continue; }
-
+                return AesHelper.Decrypt(source, key.ToStringSafe(), needIV);
             }
-            return decryptString;
+            catch
+            {
+                return source;
+            }
 
         }
 
