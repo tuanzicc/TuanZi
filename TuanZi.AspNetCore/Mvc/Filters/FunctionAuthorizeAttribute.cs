@@ -24,33 +24,19 @@ namespace TuanZi.AspNetCore.Mvc.Filters
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             Check.NotNull(context, nameof(context));
-
-            if (!(context.ActionDescriptor is ControllerActionDescriptor descriptor))
-            {
-                return;
-            }
-            if (descriptor.MethodInfo.IsDefined(typeof(AllowAnonymousAttribute), true))
-            {
-                return;
-            }
-            if (descriptor.ControllerTypeInfo.IsDefined(typeof(AllowAnonymousAttribute), false)
-                && !descriptor.MethodInfo.IsDefined(typeof(AuthorizeAttribute), true)
-                && !descriptor.MethodInfo.IsDefined(typeof(FunctionAuthorizeAttribute), true))
-            {
-                return;
-            }
             IFunction function = context.GetExecuteFunction();
-            AuthorizationResult result = AuthorizeCore(context.HttpContext, function);
+            AuthorizationResult result = AuthorizeCore(context, function);
             if (!result.IsOk)
             {
                 HandleUnauthorizedRequest(context, result);
             }
         }
 
-        protected virtual AuthorizationResult AuthorizeCore(HttpContext httpContext, IFunction function)
+        protected virtual AuthorizationResult AuthorizeCore(AuthorizationFilterContext context, IFunction function)
         {
-            IPrincipal user = httpContext.User;
-            IFunctionAuthorization authorization = ServiceLocator.Instance.GetService<IFunctionAuthorization>();
+            IPrincipal user = context.HttpContext.User;
+            IServiceProvider provider = context.HttpContext.RequestServices;
+            IFunctionAuthorization authorization = provider.GetService<IFunctionAuthorization>();
             AuthorizationResult result = authorization.Authorize(function, user);
             return result;
         }

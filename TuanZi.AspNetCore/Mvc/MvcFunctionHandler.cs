@@ -34,10 +34,10 @@ namespace TuanZi.AspNetCore.Mvc
                 throw new TuanException($"Type '{controllerType.FullName}' is not an MVC controller type");
             }
             FunctionAccessType accessType = controllerType.HasAttribute<LoginedAttribute>() || controllerType.HasAttribute<AuthorizeAttribute>()
-                ? FunctionAccessType.Logined
-                : controllerType.HasAttribute<RoleLimitAttribute>()
-                    ? FunctionAccessType.RoleLimit
-                    : FunctionAccessType.Anonymouse;
+               ? FunctionAccessType.Logined
+               : controllerType.HasAttribute<RoleLimitAttribute>()
+                   ? FunctionAccessType.RoleLimit
+                   : FunctionAccessType.Anonymouse;
             Function function = new Function()
             {
                 Name = controllerType.GetDescription(),
@@ -80,7 +80,7 @@ namespace TuanZi.AspNetCore.Mvc
         protected override bool IsIgnoreMethod(Function action, MethodInfo method, IEnumerable<Function> functions)
         {
             bool flag = base.IsIgnoreMethod(action, method, functions);
-            return flag && method.HasAttribute<HttpPostAttribute>();
+            return flag && method.HasAttribute<HttpPostAttribute>() || method.HasAttribute<NonActionAttribute>();
         }
     }
 }

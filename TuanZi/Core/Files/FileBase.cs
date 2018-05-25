@@ -10,7 +10,7 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Core.Files
 {
-    public abstract class FileBase<TKey> : EntityBase<TKey> where TKey : IEquatable<TKey>
+    public abstract class FileBase<TKey> : EntityBase<TKey>,ICreatedTime where TKey : IEquatable<TKey> 
     {
         public string Name { get; set; }
         public string Description { get; set; }
@@ -20,5 +20,6 @@ namespace TuanZi.Core.Files
         public string Hash { get; set; }
         public byte[] Binary { get; set; }
         public string Path { get; set; }
+        public DateTime CreatedTime { get; set; }
     }
 }

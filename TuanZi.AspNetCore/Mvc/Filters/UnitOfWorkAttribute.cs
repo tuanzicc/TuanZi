@@ -19,14 +19,22 @@ namespace TuanZi.AspNetCore.Mvc.Filters
             _unitOfWork = ServiceLocator.Instance.GetService<IUnitOfWork>();
         }
 
+        /// <inheritdoc />
         public override void OnResultExecuted(ResultExecutedContext context)
         {
             if (context.Result is JsonResult result)
             {
-                if (result.Value is AjaxResult ajax && ajax.Error())
+                if (result.Value is AjaxResult ajax && !ajax.Successed())
                 {
                     return;
                 }
+                _unitOfWork?.Commit();
+                return;
+            }
+      
+            if (context.HttpContext.Response.StatusCode >= 400)
+            {
+                return;
             }
             _unitOfWork?.Commit();
         }
