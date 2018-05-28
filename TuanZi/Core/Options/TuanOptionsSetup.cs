@@ -30,6 +30,18 @@ namespace TuanZi.Core.Options
             {
                 options.MailSender = sender;
             }
+
+            //JwtOptions
+            section = _configuration.GetSection("Tuan:Jwt");
+            JwtOptions jwt = section.Get<JwtOptions>();
+            if (jwt != null)
+            {
+                if (jwt.Secret == null)
+                {
+                    jwt.Secret = _configuration["JwtSecret"];
+                }
+                options.Jwt = jwt;
+            }
         }
 
         private void SetDbContextOptionses(TuanOptions options)

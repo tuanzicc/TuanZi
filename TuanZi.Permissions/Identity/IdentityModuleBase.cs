@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,14 +25,30 @@ namespace TuanZi.Identity
             services.AddScoped<IUserStore<TUser>, TUserStore>();
             services.AddScoped<IRoleStore<TRole>, TRoleStore>();
 
-            Action<IdentityOptions> setupAction = SetupAction();
-            IdentityBuilder builder = services.AddIdentity<TUser, TRole>(setupAction);
+            Action<IdentityOptions> identityOptionsAction = IdentityOptionsAction();
+            IdentityBuilder builder = services.AddIdentity<TUser, TRole>(identityOptionsAction);
             OnIdentityBuild(builder);
+
+            Action<CookieAuthenticationOptions> cookieOptionsAction = CookieOptionsAction();
+            if (cookieOptionsAction != null)
+            {
+                services.ConfigureApplicationCookie(cookieOptionsAction);
+            }
 
             return services;
         }
 
         protected virtual Action<IdentityOptions> SetupAction()
+        {
+            return null;
+        }
+
+        protected virtual Action<IdentityOptions> IdentityOptionsAction()
+        {
+            return null;
+        }
+
+        protected virtual Action<CookieAuthenticationOptions> CookieOptionsAction()
         {
             return null;
         }

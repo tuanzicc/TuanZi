@@ -36,6 +36,11 @@ namespace TuanZi.Entity
         public int Insert(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
+            for (int i = 0; i < entities.Length; i++)
+            {
+                TEntity entity = entities[i];
+                entities[i] = entity.CheckICreatedTime<TEntity, TKey>();
+            }
             _dbSet.AddRange(entities);
             return _dbContext.SaveChanges();
         }
@@ -44,6 +49,7 @@ namespace TuanZi.Entity
         {
             Check.NotNull(dto, nameof(dto));
             TEntity entity = dto.MapTo<TEntity>();
+            entity = entity.CheckICreatedTime<TEntity, TKey>();
             _dbSet.Add(entity);
             return _dbContext.SaveChanges();
         }
@@ -67,6 +73,7 @@ namespace TuanZi.Entity
                     {
                         entity = updateFunc(dto, entity);
                     }
+                    entity = entity.CheckICreatedTime<TEntity, TKey>();
                     _dbSet.Add(entity);
                 }
                 catch (Exception e)
@@ -333,7 +340,11 @@ namespace TuanZi.Entity
         public async Task<int> InsertAsync(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
-
+            for (int i = 0; i < entities.Length; i++)
+            {
+                TEntity entity = entities[i];
+                entities[i] = entity.CheckICreatedTime<TEntity, TKey>();
+            }
             await _dbSet.AddRangeAsync(entities);
             return await _dbContext.SaveChangesAsync();
         }
@@ -342,6 +353,7 @@ namespace TuanZi.Entity
         {
             Check.NotNull(dto, nameof(dto));
             TEntity entity = dto.MapTo<TEntity>();
+            entity = entity.CheckICreatedTime<TEntity, TKey>();
             _dbSet.Add(entity);
             return await _dbContext.SaveChangesAsync();
         }
@@ -365,6 +377,7 @@ namespace TuanZi.Entity
                     {
                         entity = await updateFunc(dto, entity);
                     }
+                    entity = entity.CheckICreatedTime<TEntity, TKey>();
                     await _dbSet.AddAsync(entity);
                 }
                 catch (Exception e)

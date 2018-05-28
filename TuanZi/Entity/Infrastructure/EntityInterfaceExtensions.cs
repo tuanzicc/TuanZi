@@ -8,13 +8,16 @@ namespace TuanZi.Entity
     public static class EntityInterfaceExtensions
     {
         public static TEntity CheckICreatedTime<TEntity, TKey>(this TEntity entity)
-            where TEntity : class, ICreatedTime
+            where TEntity : IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            Check.NotNull(entity, nameof(entity));
-            
-            entity.CreatedTime = DateTime.Now;
-            return entity;
+            if (!(entity is ICreatedTime))
+            {
+                return entity;
+            }
+            ICreatedTime entity1 = (ICreatedTime)entity;
+            entity1.CreatedTime = DateTime.Now;
+            return (TEntity)entity1;
         }
 
         public static bool IsEntityType(this Type type)
