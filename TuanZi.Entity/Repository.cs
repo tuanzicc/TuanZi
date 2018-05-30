@@ -203,7 +203,10 @@ namespace TuanZi.Entity
         public int Update(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
-
+            foreach (var entity in entities)
+            {
+                entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
+            }
             _dbSet.UpdateRange(entities);
             return _dbContext.SaveChanges();
         }
@@ -215,6 +218,7 @@ namespace TuanZi.Entity
             if (entity == null)
                 return 0;
             entity = dto.MapTo(entity);
+            entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
             _dbSet.Update(entity);
             return _dbContext.SaveChanges();
         }
@@ -243,6 +247,7 @@ namespace TuanZi.Entity
                     {
                         entity = updateFunc(dto, entity);
                     }
+                    entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
                     _dbSet.Update(entity);
                 }
                 catch (Exception e)
@@ -511,7 +516,7 @@ namespace TuanZi.Entity
         public async Task<int> UpdateAsync(TEntity entity)
         {
             Check.NotNull(entity, nameof(entity));
-
+            entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
             _dbSet.Update(entity);
             return await _dbContext.SaveChangesAsync();
         }
@@ -523,6 +528,7 @@ namespace TuanZi.Entity
             if (entity == null)
                 return 0;
             entity = dto.MapTo(entity);
+            entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
             _dbSet.Update(entity);
             return await _dbContext.SaveChangesAsync();
         }
@@ -550,6 +556,7 @@ namespace TuanZi.Entity
                     {
                         entity = await updateFunc(dto, entity);
                     }
+                    entity.CheckIgnoreEntry<TEntity, TKey>(_dbContext);
                     _dbSet.Update(entity);
                 }
                 catch (Exception e)

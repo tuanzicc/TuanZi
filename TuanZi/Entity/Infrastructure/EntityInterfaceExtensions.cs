@@ -5,7 +5,7 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Entity
 {
-    public static class EntityInterfaceExtensions
+    public static partial class EntityInterfaceExtensions
     {
         public static TEntity CheckICreatedTime<TEntity, TKey>(this TEntity entity)
             where TEntity : IEntity<TKey>
@@ -19,6 +19,7 @@ namespace TuanZi.Entity
             entity1.CreatedTime = DateTime.Now;
             return (TEntity)entity1;
         }
+
 
         public static bool IsEntityType(this Type type)
         {

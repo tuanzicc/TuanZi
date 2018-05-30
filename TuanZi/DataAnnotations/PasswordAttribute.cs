@@ -16,8 +16,8 @@ namespace TuanZi.DataAnnotations
             RequiredDigit = true;
             CanOnlyDigit = false;
             RequiredLowercase = false;
-            RequiredUppercase = true;
-            RequiredNonAlphanumeric = true;
+            RequiredUppercase = false;
+            RequiredNonAlphanumeric = false;
         }
 
         public int RequiredLength { get; set; }
