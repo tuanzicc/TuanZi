@@ -147,6 +147,23 @@ namespace TuanZi
             return result.IsMissing() ? null : result;
         }
 
+        public static string Cut(this string source, int length, string endStr = "...")
+        {
+            if (source.IsNullOrEmpty())
+                return source;
+            string temp = source;
+            if (source.Length <= length)
+            {
+                return temp;
+            }
+            temp = temp.Substring(0, length);
+            if (length < source.Length)
+            {
+                return temp + endStr;
+            }
+            return temp;
+        }
+
         public static bool IsEmail(this string value)
         {
             const string pattern = @"^[\w-]+(\.[\w-]+)*@[\w-]+(\.[\w-]+)+$";
@@ -598,6 +615,10 @@ namespace TuanZi
             return !string.IsNullOrWhiteSpace(value);
         }
 
+        public static bool Contains(this string source, string toCheck, StringComparison comp)
+        {
+            return source?.IndexOf(toCheck, comp) >= 0;
+        }
 
         public static Guid ToGuid(this string value)
         {
