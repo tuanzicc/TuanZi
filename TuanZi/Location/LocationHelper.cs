@@ -1,21 +1,22 @@
-﻿using GoogleMaps.LocationServices;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TuanZi.Asp.Utilities
+namespace TuanZi.Location
 {
-    public class LocationUtility
+    public class LocationHelper
     {
-        public static GeoLocation GetGeolocation(string address, string city, string province, string postalCode)
+        public static GeoLocation GetGeolocation(string address, string city, string province, string postalCode, string apiKey = null)
         {
             var location = new GeoLocation();
             try
             {
-                
-                var locationService = new GoogleLocationService("AIzaSyC-Pztde1OpSENwRlGZXdGrjrNX3LdDSFQ");
+                if (apiKey == null)
+                    apiKey = "AIzaSyC-Pztde1OpSENwRlGZXdGrjrNX3LdDSFQ";
+                var locationService = new GoogleLocationService(apiKey);
 
                 var point = locationService.GetLatLongFromAddress(string.Format("{0},{1},{2},{3}", address, city, province, postalCode));
                 if (point == null)
