@@ -3,25 +3,14 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http:
+      "applicationUrl": "http://localhost:61222/",
       "sslPort": 0
     }
   },
   "profiles": {
-    "IIS Express": {
+    "Start": {
       "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "Demo.Web": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "http:
+      "ErrorString": "After parsing a value an unexpected character was encountered: s. Path 'iisSettings.iisExpress.applicationUrl', line 7, position 7."
     }
   }
 }

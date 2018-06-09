@@ -3,14 +3,8 @@
 
 namespace TuanZi.Web
 {
-    /// <summary>
-    /// UserAgent辅助操作类
-    /// </summary>
     public static class UserAgentHelper
     {
-        /// <summary>
-        /// 根据 UserAgent 获取操作系统名称
-        /// </summary>
         public static string GetOperatingSystemName(string userAgent)
         {
             if (userAgent.Contains("NT 6.1"))
@@ -52,9 +46,6 @@ namespace TuanZi.Web
             return "Other OperatingSystem";
         }
 
-        /// <summary>
-        /// 根据 UserAgent 获取浏览器名称
-        /// </summary>
         public static string GetBrowserName(string userAgent)
         {
             if (userAgent.Contains("Maxthon"))

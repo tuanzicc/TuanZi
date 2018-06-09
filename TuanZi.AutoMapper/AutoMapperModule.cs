@@ -20,11 +20,9 @@ namespace TuanZi.AutoMapper
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton<MapperConfigurationExpression>(new MapperConfigurationExpression());
-
+            services.AddSingleton(new MapperConfigurationExpression());
             services.AddSingleton<IMapFromAttributeTypeFinder, MapFromAttributeTypeFinder>();
             services.AddSingleton<IMapToAttributeTypeFinder, MapToAttributeTypeFinder>();
-            services.AddSingleton<IMapTuple, MapAttributeProfile>();
             services.AddSingleton<IMapper, AutoMapperMapper>();
 
             return services;
@@ -33,17 +31,13 @@ namespace TuanZi.AutoMapper
         public override void UseModule(IServiceProvider provider)
         {
             MapperConfigurationExpression cfg = provider.GetService<MapperConfigurationExpression>() ?? new MapperConfigurationExpression();
+            
 
-            IMapTuple[] tuples = provider.GetServices<IMapTuple>().ToArray();
-            foreach (IMapTuple mapTuple in tuples)
-            {
-                mapTuple.CreateMap();
-                cfg.AddProfile(mapTuple as Profile);
-            }
+            var mapFromAttributeTypeFinder = provider.GetService<IMapFromAttributeTypeFinder>();
+            mapFromAttributeTypeFinder.FindAll().MapTypes(cfg);
 
-
-            GetType().Assembly.MapTypes(cfg);
-
+            var mapToAttributeTypeFinder = provider.GetService<IMapToAttributeTypeFinder>();
+            mapToAttributeTypeFinder.FindAll().MapTypes(cfg);
 
             Mapper.Initialize(cfg);
 
