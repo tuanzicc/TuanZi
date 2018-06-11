@@ -5,7 +5,7 @@ namespace TuanZi.Secutiry
 {
     public interface IFunctionAuthCache
     {
-        void BuildCaches();
+        void BuildRoleCaches();
 
         void RemoveFunctionCaches(params Guid[] functionIds);
 

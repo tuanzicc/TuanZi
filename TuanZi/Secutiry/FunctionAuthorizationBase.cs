@@ -15,7 +15,6 @@ namespace TuanZi.Secutiry
     public abstract class FunctionAuthorizationBase<TFunction> : IFunctionAuthorization
         where TFunction : class, IFunction, IEntity<Guid>
     {
-        protected readonly IFunctionAuthCache FunctionAuthCache;
 
         protected FunctionAuthorizationBase(IFunctionAuthCache functionAuthCache)
         {
@@ -23,13 +22,10 @@ namespace TuanZi.Secutiry
             SuperRoleName = "System administrator";
         }
 
+        protected IFunctionAuthCache FunctionAuthCache { get; }
+
         protected virtual string SuperRoleName { get; }
 
-        public AuthorizationResult Authorize(IFunction function)
-        {
-            IPrincipal principal = Thread.CurrentPrincipal;
-            return Authorize(function, principal);
-        }
 
         public AuthorizationResult Authorize(IFunction function, IPrincipal principal)
         {

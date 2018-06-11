@@ -31,6 +31,10 @@ namespace TuanZi.Entity
 
         public IUnitOfWork UnitOfWork { get; }
 
+        public IQueryable<TEntity> Entities => _dbSet.AsQueryable().AsNoTracking();
+
+        public IQueryable<TEntity> TrackEntities => _dbSet.AsQueryable();
+
         #region Synchronize
 
         public int Insert(params TEntity[] entities)
@@ -286,20 +290,9 @@ namespace TuanZi.Entity
 
             return _dbSet.Find(key);
         }
-
-        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null)
+        public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] includePropertySelectors)
         {
-            IQueryable<TEntity> query = _dbSet.AsQueryable();
-            if (predicate == null)
-            {
-                return query;
-            }
-            return query.Where(predicate);
-        }
-
-        public IQueryable<TEntity> Query(params Expression<Func<TEntity, object>>[] includePropertySelectors)
-        {
-            IQueryable<TEntity> query = _dbSet.AsQueryable();
+            IQueryable<TEntity> query = _dbSet.AsQueryable().AsNoTracking();
             if (includePropertySelectors != null && includePropertySelectors.Length > 0)
             {
                 foreach (Expression<Func<TEntity, object>> selector in includePropertySelectors)
@@ -310,17 +303,7 @@ namespace TuanZi.Entity
             return query.AsNoTracking();
         }
 
-        public IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate = null)
-        {
-            IQueryable<TEntity> query = _dbSet.AsQueryable();
-            if (predicate == null)
-            {
-                return query;
-            }
-            return query.Where(predicate);
-        }
-
-        public IQueryable<TEntity> TrackQuery(params Expression<Func<TEntity, object>>[] includePropertySelectors)
+        public IQueryable<TEntity> TrackInclude(params Expression<Func<TEntity, object>>[] includePropertySelectors)
         {
             IQueryable<TEntity> query = _dbSet.AsQueryable();
             if (includePropertySelectors != null && includePropertySelectors.Length > 0)
@@ -332,6 +315,7 @@ namespace TuanZi.Entity
             }
             return query;
         }
+
 
         #endregion
 

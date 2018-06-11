@@ -43,7 +43,7 @@ namespace TuanZi.Identity
 
         #region Implementation of IQueryableRoleStore<TRole>
 
-        public IQueryable<TRole> Roles => _roleRepository.Query();
+        public IQueryable<TRole> Roles => _roleRepository.Entities;
 
         #endregion
 
@@ -55,6 +55,14 @@ namespace TuanZi.Identity
             ThrowIfDisposed();
             Check.NotNull(role, nameof(role));
 
+            if (role.IsDefault)
+            {
+                string defaultRole = _roleRepository.Entities.Where(m => m.IsDefault).Select(m => m.Name).FirstOrDefault();
+                if (defaultRole != null)
+                {
+                    return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
+                }
+            }
             await _roleRepository.InsertAsync(role);
             return IdentityResult.Success;
         }
@@ -68,6 +76,14 @@ namespace TuanZi.Identity
             if (role.IsSystem)
             {
                 return new IdentityResult().Failed($"Role '{role.Name}' is a system role and cannot be updated");
+            }
+            if (role.IsDefault)
+            {
+                var defaultRole = _roleRepository.Entities.Where(m => m.IsDefault).Select(m => new { m.Id, m.Name }).FirstOrDefault();
+                if (defaultRole != null && !defaultRole.Id.Equals(role.Id))
+                {
+                    return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
+                }
             }
             await _roleRepository.UpdateAsync(role);
             return IdentityResult.Success;
@@ -160,7 +176,7 @@ namespace TuanZi.Identity
             ThrowIfDisposed();
             Check.NotNull(role, nameof(role));
 
-            IList<Claim> list = _roleClaimRepository.Query(m => m.RoleId.Equals(role.Id)).Select(n => new Claim(n.ClaimType, n.ClaimValue)).ToList();
+            IList<Claim> list = _roleClaimRepository.Entities.Where(m => m.RoleId.Equals(role.Id)).Select(n => new Claim(n.ClaimType, n.ClaimValue)).ToList();
             return Task.FromResult(list);
         }
 

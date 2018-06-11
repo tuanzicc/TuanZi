@@ -8,5 +8,6 @@ namespace TuanZi.Security.JwtBearer
     {
         public const string IsAdmin = "is-admin";
         public const string SecurityStamp = "security-stamp";
+        public const string HeadImage = "headimg";
     }
 }

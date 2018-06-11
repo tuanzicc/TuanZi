@@ -70,6 +70,11 @@ namespace TuanZi.Core.Functions
             }
         }
 
+        public void ClearCache()
+        {
+            _functions.Clear();
+        }
+
         protected virtual TFunction[] GetFunctions(Type[] functionTypes)
         {
             List<TFunction> functions = new List<TFunction>();
@@ -145,7 +150,7 @@ namespace TuanZi.Core.Functions
             {
                 throw new TuanException("The service of IRepository<,> is not found, please initialize the EntityModule module");
             }
-            TFunction[] dbItems = repository.TrackQuery().ToArray();
+            TFunction[] dbItems = repository.TrackEntities.ToArray();
 
             TFunction[] removeItems = dbItems.Except(functions,
                 EqualityHelper<TFunction>.CreateComparer(m => m.Area + m.Controller + m.Action)).ToArray();
@@ -213,7 +218,7 @@ namespace TuanZi.Core.Functions
         protected virtual TFunction[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
-            return repository.Query().ToArray();
+            return repository.Entities.ToArray();
         }
 
     }

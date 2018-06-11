@@ -3,7 +3,6 @@
 
 namespace TuanZi.Core.Functions
 {
-    [IgnoreDependency]
     public interface IFunctionHandler
     {
         void Initialize();
@@ -11,5 +10,7 @@ namespace TuanZi.Core.Functions
         IFunction GetFunction(string area, string controller, string action);
 
         void RefreshCache();
+
+        void ClearCache();
     }
 }

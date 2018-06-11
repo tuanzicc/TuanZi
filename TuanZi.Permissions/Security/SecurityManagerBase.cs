@@ -14,29 +14,31 @@ using TuanZi.Mapping;
 
 namespace TuanZi.Security
 { 
+
+
     public abstract class SecurityManagerBase<TFunction, TFunctionInputDto, TEntityInfo, TEntityInfoInputDto, TModule, TModuleInputDto, TModuleKey,
-        TModuleFunction, TModuleRole, TModuleUser, TUserRole, TRole, TRoleKey, TUser, TUserKey>
-        : IFunctionStore<TFunction, TFunctionInputDto>,
-        IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
-        IModuleStore<TModule, TModuleInputDto, TModuleKey>,
-        IModuleFunctionStore<TModuleFunction, TModuleKey>,
-        IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
-        IModuleUserStore<TModuleUser, TUserKey, TModuleKey>
-        where TFunction : IFunction, IEntity<Guid>
-        where TFunctionInputDto : FunctionInputDtoBase
-        where TEntityInfo : IEntityInfo, IEntity<Guid>
-        where TEntityInfoInputDto : EntityInfoInputDtoBase
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
-        where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
-        where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TUserRole : UserRoleBase<TUserKey, TRoleKey>
-        where TRole : RoleBase<TRoleKey>
-        where TUser : UserBase<TUserKey>
-        where TRoleKey : IEquatable<TRoleKey>
-        where TUserKey : IEquatable<TUserKey>
+       TModuleFunction, TModuleRole, TModuleUser, TUserRole, TRole, TRoleKey, TUser, TUserKey>
+       : IFunctionStore<TFunction, TFunctionInputDto>,
+       IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
+       IModuleStore<TModule, TModuleInputDto, TModuleKey>,
+       IModuleFunctionStore<TModuleFunction, TModuleKey>,
+       IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
+       IModuleUserStore<TModuleUser, TUserKey, TModuleKey>
+       where TFunction : IFunction, IEntity<Guid>
+       where TFunctionInputDto : FunctionInputDtoBase
+       where TEntityInfo : IEntityInfo, IEntity<Guid>
+       where TEntityInfoInputDto : EntityInfoInputDtoBase
+       where TModule : ModuleBase<TModuleKey>
+       where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
+       where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
+       where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
+       where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
+       where TModuleKey : struct, IEquatable<TModuleKey>
+       where TUserRole : UserRoleBase<TUserKey, TRoleKey>
+       where TRole : RoleBase<TRoleKey>
+       where TUser : UserBase<TUserKey>
+       where TRoleKey : IEquatable<TRoleKey>
+       where TUserKey : IEquatable<TUserKey>
     {
         private readonly IRepository<TFunction, Guid> _functionRepository;
         private readonly IRepository<TEntityInfo, Guid> _entityInfoRepository;
@@ -75,7 +77,7 @@ namespace TuanZi.Security
 
         public IQueryable<TFunction> Functions
         {
-            get { return _functionRepository.Query(); }
+            get { return _functionRepository.Entities; }
         }
 
         public virtual Task<bool> CheckFunctionExists(Expression<Func<TFunction, bool>> predicate, Guid id = default(Guid))
@@ -110,7 +112,7 @@ namespace TuanZi.Security
 
         public IQueryable<TEntityInfo> EntityInfos
         {
-            get { return _entityInfoRepository.Query(); }
+            get { return _entityInfoRepository.Entities; }
         }
 
         public virtual Task<bool> CheckEntityInfoExists(Expression<Func<TEntityInfo, bool>> predicate, Guid id = default(Guid))
@@ -130,7 +132,7 @@ namespace TuanZi.Security
 
         public IQueryable<TModule> Modules
         {
-            get { return _moduleRepository.Query(); }
+            get { return _moduleRepository.Entities; }
         }
 
         public virtual Task<bool> CheckModuleExists(Expression<Func<TModule, bool>> predicate, TModuleKey id = default(TModuleKey))
@@ -247,7 +249,7 @@ namespace TuanZi.Security
 
         public virtual TModuleKey[] GetModuleTreeIds(params TModuleKey[] rootIds)
         {
-            return rootIds.SelectMany(m => _moduleRepository.Query(n => n.TreePathString.Contains($"${m}$")).Select(n => n.Id)).Distinct().ToArray();
+            return rootIds.SelectMany(m => _moduleRepository.Entities.Where(n => n.TreePathString.Contains($"${m}$")).Select(n => n.Id)).Distinct().ToArray();
         }
 
         private static string GetModuleTreePath(TModuleKey currentId, string parentTreePath, string treePathItemFormat)
@@ -261,7 +263,7 @@ namespace TuanZi.Security
 
         public IQueryable<TModuleFunction> ModuleFunctions
         {
-            get { return _moduleFunctionRepository.Query(); }
+            get { return _moduleFunctionRepository.Entities; }
         }
 
         public virtual Task<bool> CheckModuleFunctionExists(Expression<Func<TModuleFunction, bool>> predicate, Guid id = default(Guid))
@@ -277,7 +279,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
             }
 
-            Guid[] existFunctionIds = _moduleFunctionRepository.Query(m => m.ModuleId.Equals(moduleId)).Select(m => m.FunctionId).ToArray();
+            Guid[] existFunctionIds = _moduleFunctionRepository.Entities.Where(m => m.ModuleId.Equals(moduleId)).Select(m => m.FunctionId).ToArray();
             Guid[] addFunctionIds = functionIds.Except(existFunctionIds).ToArray();
             Guid[] removeFunctionIds = existFunctionIds.Except(functionIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -301,8 +303,8 @@ namespace TuanZi.Security
                 {
                     continue;
                 }
-                TModuleFunction moduleFunction = _moduleFunctionRepository.Query(m => m.ModuleId.Equals(moduleId) && m.FunctionId == functionId)
-                    .FirstOrDefault();
+                TModuleFunction moduleFunction = _moduleFunctionRepository.Entities
+                    .FirstOrDefault(m => m.ModuleId.Equals(moduleId) && m.FunctionId == functionId);
                 if (moduleFunction == null)
                 {
                     continue;
@@ -325,7 +327,7 @@ namespace TuanZi.Security
 
         public IQueryable<TModuleRole> ModuleRoles
         {
-            get { return _moduleRoleRepository.Query(); }
+            get { return _moduleRoleRepository.Entities; }
         }
 
         public virtual Task<bool> CheckModuleRoleExists(Expression<Func<TModuleRole, bool>> predicate, Guid id = default(Guid))
@@ -341,7 +343,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"Role with ID '{roleId}' does not exist.");
             }
 
-            TModuleKey[] existModuleIds = _moduleRoleRepository.Query(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).ToArray();
+            TModuleKey[] existModuleIds = _moduleRoleRepository.Entities.Where(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).ToArray();
             TModuleKey[] addModuleIds = moduleIds.Except(existModuleIds).ToArray();
             TModuleKey[] removeModuleIds = existModuleIds.Except(moduleIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -365,7 +367,7 @@ namespace TuanZi.Security
                 {
                     return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
                 }
-                TModuleRole moduleRole = _moduleRoleRepository.Query(m => m.RoleId.Equals(roleId) && m.ModuleId.Equals(moduleId)).FirstOrDefault();
+                TModuleRole moduleRole = _moduleRoleRepository.Entities.FirstOrDefault(m => m.RoleId.Equals(roleId) && m.ModuleId.Equals(moduleId));
                 if (moduleRole == null)
                 {
                     continue;
@@ -384,7 +386,7 @@ namespace TuanZi.Security
 
         public virtual TModuleKey[] GetRoleModuleIds(TRoleKey roleId)
         {
-            TModuleKey[] moduleIds = _moduleRoleRepository.Query(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).Distinct().ToArray();
+            TModuleKey[] moduleIds = _moduleRoleRepository.Entities.Where(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).Distinct().ToArray();
             return GetModuleTreeIds(moduleIds);
         }
 
@@ -394,7 +396,7 @@ namespace TuanZi.Security
 
         public IQueryable<TModuleUser> ModuleUsers
         {
-            get { return _moduleUserRepository.Query(); }
+            get { return _moduleUserRepository.Entities; }
         }
 
         public virtual Task<bool> CheckModuleUserExists(Expression<Func<TModuleUser, bool>> predicate, Guid id = default(Guid))
@@ -410,7 +412,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"User with ID '{userId}' does not exists.");
             }
 
-            TModuleKey[] existModuleIds = _moduleUserRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).ToArray();
+            TModuleKey[] existModuleIds = _moduleUserRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).ToArray();
             TModuleKey[] addModuleIds = moduleIds.Except(existModuleIds).ToArray();
             TModuleKey[] removeModuleIds = existModuleIds.Except(moduleIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -434,7 +436,7 @@ namespace TuanZi.Security
                 {
                     return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
                 }
-                TModuleUser moduleUser = _moduleUserRepository.Query(m => m.ModuleId.Equals(moduleId) && m.UserId.Equals(userId)).FirstOrDefault();
+                TModuleUser moduleUser = _moduleUserRepository.Entities.FirstOrDefault(m => m.ModuleId.Equals(moduleId) && m.UserId.Equals(userId));
                 if (moduleUser == null)
                 {
                     continue;
@@ -452,7 +454,7 @@ namespace TuanZi.Security
 
         public virtual TModuleKey[] GetUserSelfModuleIds(TUserKey userId)
         {
-            TModuleKey[] moduleIds = _moduleUserRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).Distinct().ToArray();
+            TModuleKey[] moduleIds = _moduleUserRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).Distinct().ToArray();
             return GetModuleTreeIds(moduleIds);
         }
 
@@ -460,8 +462,8 @@ namespace TuanZi.Security
         {
             TModuleKey[] selfModuleIds = GetUserSelfModuleIds(userId);
 
-            TRoleKey[] roleIds = _userRoleRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.RoleId).ToArray();
-            TModuleKey[] roleModuleIds = roleIds.SelectMany(m => _moduleRoleRepository.Query(n => n.RoleId.Equals(m)).Select(n => n.ModuleId))
+            TRoleKey[] roleIds = _userRoleRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.RoleId).ToArray();
+            TModuleKey[] roleModuleIds = roleIds.SelectMany(m => _moduleRoleRepository.Entities.Where(n => n.RoleId.Equals(m)).Select(n => n.ModuleId))
                 .Distinct().ToArray();
             roleModuleIds = GetModuleTreeIds(roleModuleIds);
 

@@ -14,7 +14,7 @@ using TuanZi.Reflection;
 
 namespace TuanZi.AspNetCore.Mvc
 {
-    public class MvcFunctionHandler : FunctionHandlerBase<Function, MvcFunctionHandler>, IMvcFunctionHandler
+    public class MvcFunctionHandler: FunctionHandlerBase<Function, MvcFunctionHandler>
     {
         public MvcFunctionHandler(IServiceProvider applicationServiceProvider)
             : base(applicationServiceProvider)

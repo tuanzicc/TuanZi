@@ -16,6 +16,8 @@ namespace TuanZi.Entity
         where TKey : IEquatable<TKey>
     {
         IUnitOfWork UnitOfWork { get; }
+        IQueryable<TEntity> Entities { get; }
+        IQueryable<TEntity> TrackEntities { get; }
 
         #region Synchronize
 
@@ -52,10 +54,9 @@ namespace TuanZi.Entity
 
         TEntity Get(TKey key);
 
-        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null);
-        IQueryable<TEntity> Query(params Expression<Func<TEntity, object>>[] includePropertySelectors);
-        IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>>predicate = null);
-        IQueryable<TEntity> TrackQuery(params Expression<Func<TEntity, object>>[] includePropertySelectors);
+        IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] includePropertySelectors);
+        IQueryable<TEntity> TrackInclude(params Expression<Func<TEntity, object>>[] includePropertySelectors);
+        
 
         #endregion
 
@@ -87,6 +88,7 @@ namespace TuanZi.Entity
             Func<TEditDto, TEntity, Task> checkAction = null,
             Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null)
             where TEditDto : IInputDto<TKey>;
+
         Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity,TEntity>>updateExpression);
 
         Task<bool> CheckExistsAsync(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey));

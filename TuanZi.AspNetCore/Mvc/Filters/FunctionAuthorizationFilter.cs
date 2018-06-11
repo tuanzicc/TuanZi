@@ -20,7 +20,7 @@ using AuthorizationResult = TuanZi.Secutiry.AuthorizationResult;
 
 namespace TuanZi.AspNetCore.Mvc.Filters
 {
-    public class FunctionAuthorizeAttribute : ActionFilterAttribute, IAuthorizationFilter
+    public class FunctionAuthorizationFilter : ActionFilterAttribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {

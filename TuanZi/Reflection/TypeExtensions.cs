@@ -75,7 +75,7 @@ namespace TuanZi.Reflection
             return member.Name;
         }
 
-        public static bool HasAttribute<T>(this MemberInfo memberInfo, bool inherit = false) where T : Attribute
+        public static bool HasAttribute<T>(this MemberInfo memberInfo, bool inherit = true) where T : Attribute
         {
             return memberInfo.IsDefined(typeof(T), inherit);
         }

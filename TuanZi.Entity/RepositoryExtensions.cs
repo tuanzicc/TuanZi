@@ -13,12 +13,12 @@ namespace TuanZi.Entity
     public static class RepositoryExtensions
     {
         public static int UpdateBatchAndIntercept<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
-            Expression<Func<TEntity, bool>> predicate,
-            Action<BatchDelete> interceptAction)
-            where TEntity : class, IEntity<TKey>
-            where TKey : IEquatable<TKey>
+             Expression<Func<TEntity, bool>> predicate,
+             Action<BatchDelete> interceptAction)
+             where TEntity : class, IEntity<TKey>
+             where TKey : IEquatable<TKey>
         {
-            return repository.TrackQuery(predicate).Delete(interceptAction);
+            return repository.TrackEntities.Where(predicate).Delete(interceptAction);
         }
 
         public static async Task<int> UpdateBatchAndInterceptAsync<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
@@ -27,7 +27,7 @@ namespace TuanZi.Entity
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return await repository.TrackQuery(predicate).DeleteAsync(interceptAction);
+            return await repository.TrackEntities.Where(predicate).DeleteAsync(interceptAction);
         }
 
         public static int UpdateBatchAndIntercept<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
@@ -37,17 +37,17 @@ namespace TuanZi.Entity
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return repository.TrackQuery(predicate).Update(updateExpression, interceptAction);
+            return repository.TrackEntities.Where(predicate).Update(updateExpression, interceptAction);
         }
 
-       public static async Task<int> UpdateBatchAndInterceptAsync<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
+        public static async Task<int> UpdateBatchAndInterceptAsync<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
             Expression<Func<TEntity, bool>> predicate,
             Expression<Func<TEntity, TEntity>> updateExpression,
             Action<BatchUpdate> interceptAction)
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return await repository.TrackQuery(predicate).UpdateAsync(updateExpression, interceptAction);
+            return await repository.TrackEntities.Where(predicate).UpdateAsync(updateExpression, interceptAction);
         }
 
         public static IQueryable<TEntity> FromSql<TEntity, TKey>(this IRepository<TEntity, TKey> repository, string sql, params object[] parameters)

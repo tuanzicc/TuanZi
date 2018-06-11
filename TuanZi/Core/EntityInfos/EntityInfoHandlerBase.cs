@@ -82,7 +82,7 @@ namespace TuanZi.Core.EntityInfos
             {
                 throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Module module");
             }
-            TEntityInfo[] dbItems = repository.TrackQuery().ToArray();
+            TEntityInfo[] dbItems = repository.TrackEntities.ToArray();
 
             TEntityInfo[] removeItems = dbItems.Except(entityInfos, EqualityHelper<TEntityInfo>.CreateComparer(m => m.TypeName)).ToArray();
             int removeCount = removeItems.Length;
@@ -140,7 +140,7 @@ namespace TuanZi.Core.EntityInfos
         protected virtual TEntityInfo[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
-            return repository.Query().ToArray();
+            return repository.Entities.ToArray();
         }
 
     }
