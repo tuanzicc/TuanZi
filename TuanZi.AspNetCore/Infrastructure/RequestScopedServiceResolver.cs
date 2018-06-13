@@ -20,6 +20,11 @@ namespace TuanZi.AspNetCore.Infrastructure
 
         public bool ResolveEnabled => _httpContextAccessor.HttpContext != null;
 
+        public IServiceProvider ScopedProvider
+        {
+            get { return _httpContextAccessor.HttpContext.RequestServices; }
+        }
+
         public T GetService<T>()
         {
             return _httpContextAccessor.HttpContext.RequestServices.GetService<T>();

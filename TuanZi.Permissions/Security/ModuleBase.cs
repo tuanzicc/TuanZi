@@ -20,6 +20,9 @@ namespace TuanZi.Security
         [DisplayName("Remark")]
         public string Remark { get; set; }
 
+        [Required]
+        public string Code { get; set; }
+
         [DisplayName("Order Code")]
         public double OrderCode { get; set; }
 
@@ -31,10 +34,8 @@ namespace TuanZi.Security
         {
             get
             {
-                return TreePathIds == null
-                    ? new TModuleKey[0]
-                    : TreePathString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(m => m.Trim('$').CastTo<TModuleKey>()).ToArray();
+                return TreePathString?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(m => m.Trim('$').CastTo<TModuleKey>()).ToArray() ?? new TModuleKey[0];
             }
         }
 

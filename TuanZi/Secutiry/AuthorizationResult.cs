@@ -1,8 +1,10 @@
-﻿using TuanZi.Data;
+﻿using System.Diagnostics;
+using TuanZi.Data;
 
 
 namespace TuanZi.Secutiry
 {
+    [DebuggerDisplay("{ResultType}-{Message}")]
     public sealed class AuthorizationResult : TuanResult<AuthorizationStatus>
     {
         public AuthorizationResult(AuthorizationStatus status)

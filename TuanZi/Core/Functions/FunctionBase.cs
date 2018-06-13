@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
-
+using System.Diagnostics;
 using TuanZi.Entity;
 
 
 namespace TuanZi.Core.Functions
 {
+    [DebuggerDisplay("{Name}[{Area}/{Controller}/{Action}]")]
     public abstract class FunctionBase : EntityBase<Guid>, IFunction
     {
         public string Name { get; set; }

@@ -18,14 +18,12 @@ namespace TuanZi.Core.Functions
         where TFunction : class, IEntity<Guid>, IFunction, new()
     {
         private readonly List<TFunction> _functions = new List<TFunction>();
-        private readonly IServiceProvider _provider;
         private readonly ILogger<TFunctionHandler> _logger;
 
-        protected FunctionHandlerBase(IServiceProvider applicationServiceProvider)
+        protected FunctionHandlerBase(ILoggerFactory loggerFactory, IAllAssemblyFinder allAssemblyFinder)
         {
-            _provider = applicationServiceProvider;
-            _logger = applicationServiceProvider.GetService<ILogger<TFunctionHandler>>();
-            AllAssemblyFinder = applicationServiceProvider.GetService<IAllAssemblyFinder>();
+            _logger = loggerFactory.CreateLogger<TFunctionHandler>();
+            AllAssemblyFinder = allAssemblyFinder;
         }
 
         protected IAllAssemblyFinder AllAssemblyFinder { get; }
@@ -41,11 +39,11 @@ namespace TuanZi.Core.Functions
             Type[] functionTypes = FunctionTypeFinder.FindAll(true);
             TFunction[] functions = GetFunctions(functionTypes);
 
-            using (IServiceScope scope = _provider.CreateScope())
+            ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
-                SyncToDatabase(scope.ServiceProvider, functions);
-            }
-            
+                SyncToDatabase(provider, functions);
+            });
+
             RefreshCache();
         }
 
@@ -63,11 +61,11 @@ namespace TuanZi.Core.Functions
 
         public void RefreshCache()
         {
-            using (IServiceScope scope = _provider.CreateScope())
+            ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
                 _functions.Clear();
-                _functions.AddRange(GetFromDatabase(scope.ServiceProvider)); 
-            }
+                _functions.AddRange(GetFromDatabase(provider));
+            });
         }
 
         public void ClearCache()
@@ -166,10 +164,18 @@ namespace TuanZi.Core.Functions
             foreach (TFunction item in dbItems.Except(removeItems))
             {
                 bool isUpdate = false;
-                TFunction function = functions.FirstOrDefault(m =>
-                    string.Equals(m.Area, item.Area, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(m.Controller, item.Controller, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(m.Action, item.Action, StringComparison.OrdinalIgnoreCase));
+                TFunction function;
+                try
+                {
+                    function = functions.Single(m =>
+                        string.Equals(m.Area, item.Area, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(m.Controller, item.Controller, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(m.Action, item.Action, StringComparison.OrdinalIgnoreCase));
+                }
+                catch (InvalidOperationException)
+                {
+                    throw new TuanException($"Found more than one '{item.Area}-{item.Controller}-{item.Action}' function information that is not allowed");
+                }
                 if (function == null)
                 {
                     continue;

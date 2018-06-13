@@ -17,7 +17,7 @@ namespace TuanZi.Core.Options
         private static void BuildConfiguration()
         {
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json").AddJsonFile("appsettings.Development.json");
+                .AddJsonFile("appsettings.json").AddJsonFile("appsettings.Development.json", true);
             _configuration = builder.Build();
         }
 
