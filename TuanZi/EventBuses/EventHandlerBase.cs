@@ -34,6 +34,9 @@ namespace TuanZi.EventBuses
 
         public abstract void Handle(TEventData eventData);
 
-        public abstract Task HandleAsync(TEventData eventData, CancellationToken cancelToken = default(CancellationToken));
+        public virtual Task HandleAsync(TEventData eventData, CancellationToken cancelToken = default(CancellationToken))
+        {
+            throw new NotSupportedException("Current event handler does not support asynchronous event handling");
+        }
     }
 }

@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 
 
 namespace TuanZi.Core.EntityInfos
 {
     public class EntityInfoHandler : EntityInfoHandlerBase<EntityInfo, EntityInfoHandler>
     {
-        public EntityInfoHandler(IServiceProvider serviceProvider)
-            : base(serviceProvider)
+        public EntityInfoHandler(ILoggerFactory loggerFactory)
+            : base(loggerFactory)
         { }
     }
 }

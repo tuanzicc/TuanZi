@@ -12,22 +12,24 @@ using TuanZi.Exceptions;
 
 namespace TuanZi.Core.EntityInfos
 {
+ 
+
+
+
     public abstract class EntityInfoHandlerBase<TEntityInfo, TEntityInfoHandler> : IEntityInfoHandler
-        where TEntityInfo : class, IEntityInfo, IEntity<Guid>, new()
+     where TEntityInfo : class, IEntityInfo, IEntity<Guid>, new()
     {
         private readonly List<TEntityInfo> _entityInfos = new List<TEntityInfo>();
-        private readonly IServiceProvider _provider;
         private readonly ILogger _logger;
 
-        protected EntityInfoHandlerBase(IServiceProvider applicationServiceProvider)
+        protected EntityInfoHandlerBase(ILoggerFactory loggerFactory)
         {
-            _provider = applicationServiceProvider;
-            _logger = applicationServiceProvider.GetService<ILogger<TEntityInfoHandler>>();
+            _logger = loggerFactory.CreateLogger<TEntityInfoHandler>();
         }
 
         public void Initialize()
         {
-            IEntityTypeFinder entityTypeFinder = _provider.GetService<IEntityTypeFinder>();
+            IEntityTypeFinder entityTypeFinder = ServiceLocator.Instance.GetService<IEntityTypeFinder>();
             Type[] entityTypes = entityTypeFinder.FindAll(true);
 
             foreach (Type entityType in entityTypes)
@@ -41,10 +43,10 @@ namespace TuanZi.Core.EntityInfos
                 _entityInfos.Add(entityInfo);
             }
 
-            using (IServiceScope scope = _provider.CreateScope())
+            ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
-                SyncToDatabase(scope.ServiceProvider, _entityInfos);
-            }
+                SyncToDatabase(provider, _entityInfos);
+            });
 
             RefreshCache();
         }
@@ -68,11 +70,11 @@ namespace TuanZi.Core.EntityInfos
 
         public void RefreshCache()
         {
-            using (IServiceScope scope = _provider.CreateScope())
+            ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
                 _entityInfos.Clear();
-                _entityInfos.AddRange(GetFromDatabase(scope.ServiceProvider));
-            }
+                _entityInfos.AddRange(GetFromDatabase(provider));
+            });
         }
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, List<TEntityInfo> entityInfos)

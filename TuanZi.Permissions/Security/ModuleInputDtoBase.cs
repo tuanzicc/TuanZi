@@ -18,6 +18,9 @@ namespace TuanZi.Security
         [DisplayName("Remark")]
         public string Remark { get; set; }
 
+        [Required]
+        public string Code { get; set; }
+
         [DisplayName("Order Code")]
         public double OrderCode { get; set; }
 

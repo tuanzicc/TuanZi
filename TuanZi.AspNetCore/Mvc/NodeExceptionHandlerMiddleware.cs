@@ -38,7 +38,7 @@ namespace TuanZi.AspNetCore.Mvc
                 {
                     context.Response.StatusCode = 500;
                     context.Response.Clear();
-                    context.Response.ContentType = "applicaton/json";
+                    context.Response.ContentType = "application/json; charset=utf-8";
                     await context.Response.WriteAsync(new AjaxResult(ex.Message, AjaxResultType.Error).ToJsonString());
                     return;
                 }

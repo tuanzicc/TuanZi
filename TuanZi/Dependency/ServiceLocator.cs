@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Dependency;
-
+using TuanZi.Exceptions;
 
 namespace TuanZi
 {
@@ -19,6 +19,19 @@ namespace TuanZi
         { }
 
         public static ServiceLocator Instance => InstanceLazy.Value;
+
+        public bool IsProviderEnabled => _provider != null;
+
+        public IServiceProvider ScopedProvider
+        {
+            get
+            {
+                IScopedServiceResolver scopedResolver = _provider.GetService<IScopedServiceResolver>();
+                return scopedResolver != null && scopedResolver.ResolveEnabled
+                    ? scopedResolver.ScopedProvider
+                    : null;
+            }
+        }
 
         internal void TrySetServiceCollection(IServiceCollection services)
         {
@@ -35,6 +48,52 @@ namespace TuanZi
             if (_provider == null)
             {
                 _provider = provider;
+            }
+        }
+
+        public void ExcuteScopedWork(Action<IServiceProvider> action)
+        {
+            if (_provider == null)
+            {
+                throw new TuanException("Root-level IServiceProvider does not exist and cannot perform Scoped services");
+            }
+            IServiceProvider scopedProvider = ScopedProvider;
+            IServiceScope newScope = null;
+            if (scopedProvider == null)
+            {
+                newScope = _provider.CreateScope();
+                scopedProvider = newScope.ServiceProvider;
+            }
+            try
+            {
+                action(scopedProvider);
+            }
+            finally
+            {
+                newScope?.Dispose();
+            }
+        }
+
+        public TResult ExcuteScopedWork<TResult>(Func<IServiceProvider, TResult> func)
+        {
+            if (_provider == null)
+            {
+                throw new TuanException("Root-level IServiceProvider does not exist and cannot perform Scoped services");
+            }
+            IServiceProvider scopedProvider = ScopedProvider;
+            IServiceScope newScope = null;
+            if (scopedProvider == null)
+            {
+                newScope = _provider.CreateScope();
+                scopedProvider = newScope.ServiceProvider;
+            }
+            try
+            {
+                return func(scopedProvider);
+            }
+            finally
+            {
+                newScope?.Dispose();
             }
         }
 

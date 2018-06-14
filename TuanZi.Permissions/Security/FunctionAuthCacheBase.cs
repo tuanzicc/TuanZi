@@ -30,23 +30,20 @@ namespace TuanZi.Security
         where TUserKey : IEquatable<TUserKey>
     {
         private readonly IDistributedCache _cache;
-        private readonly IServiceProvider _serviceProvider;
 
-        protected FunctionAuthCacheBase(IServiceProvider serviceProvider)
+        protected FunctionAuthCacheBase(IDistributedCache cache)
         {
-            _serviceProvider = serviceProvider;
-            _cache = serviceProvider.GetService<IDistributedCache>();
+            _cache = cache;
         }
 
         public virtual void BuildRoleCaches()
         {
-            TFunction[] functions;
-            using (var scope = _serviceProvider.CreateScope())
+            TFunction[] functions = ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
-                IServiceProvider scopedProvider = scope.ServiceProvider;
-                IRepository<TFunction, Guid> functionRepository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
-                functions = functionRepository.Entities.ToArray();
-            }
+                IRepository<TFunction, Guid> functionRepository = provider.GetService<IRepository<TFunction, Guid>>();
+                return functionRepository.Entities.ToArray();
+            });
+
             foreach (TFunction function in functions)
             {
                 GetFunctionRoles(function.Id);
@@ -79,17 +76,16 @@ namespace TuanZi.Security
             {
                 return roleNames;
             }
-            using (var scope = _serviceProvider.CreateScope())
+            roleNames = ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
-                IServiceProvider scopedProvider = scope.ServiceProvider;
-                IRepository<TModuleFunction, Guid> moduleFunctionRepository = scopedProvider.GetService<IRepository<TModuleFunction, Guid>>();
+                IRepository<TModuleFunction, Guid> moduleFunctionRepository = provider.GetService<IRepository<TModuleFunction, Guid>>();
                 TModuleKey[] moduleIds = moduleFunctionRepository.Entities.Where(m => m.FunctionId.Equals(functionId)).Select(m => m.ModuleId).Distinct()
                     .ToArray();
-                IRepository<TModuleRole, Guid> moduleRoleRepository = scopedProvider.GetService<IRepository<TModuleRole, Guid>>();
+                IRepository<TModuleRole, Guid> moduleRoleRepository = provider.GetService<IRepository<TModuleRole, Guid>>();
                 TRoleKey[] roleIds = moduleRoleRepository.Entities.Where(m => moduleIds.Contains(m.ModuleId)).Select(m => m.RoleId).Distinct().ToArray();
-                IRepository<TRole, TRoleKey> roleRepository = scopedProvider.GetService<IRepository<TRole, TRoleKey>>();
-                roleNames = roleRepository.Entities.Where(m => roleIds.Contains(m.Id)).Select(m => m.Name).Distinct().ToArray();
-            }
+                IRepository<TRole, TRoleKey> roleRepository = provider.GetService<IRepository<TRole, TRoleKey>>();
+                return roleRepository.Entities.Where(m => roleIds.Contains(m.Id)).Select(m => m.Name).Distinct().ToArray();
+            });
             if (roleNames.Length > 0)
             {
                 _cache.Set(key, roleNames);
@@ -105,23 +101,23 @@ namespace TuanZi.Security
             {
                 return functionIds;
             }
-            using (var scope = _serviceProvider.CreateScope())
+            functionIds = ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
-                IServiceProvider scopedProvider = scope.ServiceProvider;
-                IRepository<TUser, TUserKey> userRepository = scopedProvider.GetService<IRepository<TUser, TUserKey>>();
+                IRepository<TUser, TUserKey> userRepository = provider.GetService<IRepository<TUser, TUserKey>>();
                 TUserKey userId = userRepository.Entities.Where(m => m.UserName == userName).Select(m => m.Id).FirstOrDefault();
-                if (userId.Equals(default(TUserKey)))
+                if (Equals(userId, default(TUserKey)))
                 {
                     return new Guid[0];
                 }
-                IRepository<TModuleUser, Guid> moduleUserRepository = scopedProvider.GetService<IRepository<TModuleUser, Guid>>();
+                IRepository<TModuleUser, Guid> moduleUserRepository = provider.GetService<IRepository<TModuleUser, Guid>>();
                 TModuleKey[] moduleIds = moduleUserRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).Distinct().ToArray();
-                IRepository<TModule, TModuleKey> moduleRepository = scopedProvider.GetService<IRepository<TModule, TModuleKey>>();
+                IRepository<TModule, TModuleKey> moduleRepository = provider.GetService<IRepository<TModule, TModuleKey>>();
                 moduleIds = moduleIds.Select(m => moduleRepository.Entities.Where(n => n.TreePathString.Contains("$" + m + "$"))
                     .Select(n => n.Id)).SelectMany(m => m).Distinct().ToArray();
-                IRepository<TModuleFunction, Guid> moduleFunctionRepository = scopedProvider.GetService<IRepository<TModuleFunction, Guid>>();
-                functionIds = moduleFunctionRepository.Entities.Where(m => moduleIds.Contains(m.ModuleId)).Select(m => m.FunctionId).Distinct().ToArray();
-            }
+                IRepository<TModuleFunction, Guid> moduleFunctionRepository = provider.GetService<IRepository<TModuleFunction, Guid>>();
+                return moduleFunctionRepository.Entities.Where(m => moduleIds.Contains(m.ModuleId)).Select(m => m.FunctionId).Distinct().ToArray();
+            });
+
             if (functionIds.Length > 0)
             {
                 _cache.Set(key, functionIds);

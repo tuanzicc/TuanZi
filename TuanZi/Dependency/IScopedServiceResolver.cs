@@ -10,6 +10,8 @@ namespace TuanZi.Dependency
     {
         bool ResolveEnabled { get; }
 
+        IServiceProvider ScopedProvider { get; }
+
         T GetService<T>();
 
         object GetService(Type serviceType);

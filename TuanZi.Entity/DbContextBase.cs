@@ -24,10 +24,13 @@ namespace TuanZi.Entity
             : base(options)
         {
             _typeFinder = typeFinder;
-            IOptionsMonitor<TuanOptions> tuanOptions = ServiceLocator.Instance.GetService<IOptionsMonitor<TuanOptions>>();
-            if (tuanOptions != null)
+            if (ServiceLocator.Instance.IsProviderEnabled)
             {
-                _tuanDbOptions = tuanOptions.CurrentValue.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
+                IOptions <TuanOptions> tuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
+                if (tuanOptions != null)
+                {
+                    _tuanDbOptions = tuanOptions.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
+                }
             }
         }
         

@@ -55,5 +55,17 @@ namespace TuanZi.Extensions
                 obj =>
                 { });
         }
+
+        public static void TryFinally<T>(this T source, Action<T> action, Action<T> finallyAction) where T : class
+        {
+            try
+            {
+                action(source);
+            }
+            finally
+            {
+                finallyAction(source);
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ using System.Reflection;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.Extensions.Logging;
 using TuanZi.AspNetCore.Mvc.Filters;
 using TuanZi.Core;
 using TuanZi.Core.Functions;
@@ -16,10 +16,10 @@ namespace TuanZi.AspNetCore.Mvc
 {
     public class MvcFunctionHandler: FunctionHandlerBase<Function, MvcFunctionHandler>
     {
-        public MvcFunctionHandler(IServiceProvider applicationServiceProvider)
-            : base(applicationServiceProvider)
+        public MvcFunctionHandler(ILoggerFactory loggerFactory, IAllAssemblyFinder allAssemblyFinder)
+            : base(loggerFactory, allAssemblyFinder)
         {
-            FunctionTypeFinder = new MvcControllerTypeFinder(AllAssemblyFinder);
+            FunctionTypeFinder = new MvcControllerTypeFinder(allAssemblyFinder);
             MethodInfoFinder = new PublicInstanceMethodInfoFinder();
         }
 

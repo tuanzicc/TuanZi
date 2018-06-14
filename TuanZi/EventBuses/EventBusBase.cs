@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
-
+using TuanZi.Exceptions;
 using TuanZi.EventBuses.Internal;
 using TuanZi.Reflection;
 
@@ -170,6 +170,10 @@ namespace TuanZi.EventBuses
         protected void InvokeHandler(IEventHandlerFactory factory, Type eventType, IEventData eventData)
         {
             IEventHandler handler = factory.GetHandler();
+            if (handler == null)
+            {
+                throw new TuanException($"Event handler for event '{eventData.GetType()}' cannot be found");
+            }
             if (!handler.CanHandle(eventData))
             {
                 return;
