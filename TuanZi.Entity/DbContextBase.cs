@@ -18,16 +18,16 @@ namespace TuanZi.Entity
     public abstract class DbContextBase<TDbContext> : DbContext, IDbContext
     {
         private readonly IEntityConfigurationTypeFinder _typeFinder;
-        private readonly TuanDbContextOptions _osharpDbOptions;
+        private readonly TuanDbContextOptions _tuanDbOptions;
         
         protected DbContextBase(DbContextOptions options, IEntityConfigurationTypeFinder typeFinder)
             : base(options)
         {
             _typeFinder = typeFinder;
-            IOptionsMonitor<TuanOptions> osharpOptions = ServiceLocator.Instance.GetService<IOptionsMonitor<TuanOptions>>();
-            if (osharpOptions != null)
+            IOptionsMonitor<TuanOptions> tuanOptions = ServiceLocator.Instance.GetService<IOptionsMonitor<TuanOptions>>();
+            if (tuanOptions != null)
             {
-                _osharpDbOptions = osharpOptions.CurrentValue.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
+                _tuanDbOptions = tuanOptions.CurrentValue.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == typeof(TDbContext));
             }
         }
         
@@ -62,7 +62,7 @@ namespace TuanZi.Entity
         public override int SaveChanges()
         {
             IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled)
+            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -106,7 +106,7 @@ namespace TuanZi.Entity
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled)
+            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
