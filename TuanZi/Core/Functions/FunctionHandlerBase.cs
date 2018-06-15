@@ -161,6 +161,7 @@ namespace TuanZi.Core.Functions
             repository.Insert(addItems);
 
             int updateCount = 0;
+            return;
             foreach (TFunction item in dbItems.Except(removeItems))
             {
                 bool isUpdate = false;
@@ -171,6 +172,7 @@ namespace TuanZi.Core.Functions
                         string.Equals(m.Area, item.Area, StringComparison.OrdinalIgnoreCase)
                         && string.Equals(m.Controller, item.Controller, StringComparison.OrdinalIgnoreCase)
                         && string.Equals(m.Action, item.Action, StringComparison.OrdinalIgnoreCase));
+
                 }
                 catch (InvalidOperationException)
                 {
