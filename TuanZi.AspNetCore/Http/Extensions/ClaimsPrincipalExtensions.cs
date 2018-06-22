@@ -23,5 +23,21 @@ namespace TuanZi.AspNetCore.Http
 
             return (principal.FindFirst(ClaimTypes.NameIdentifier)?.Value).CastTo<TKey>();
         }
+
+        public static TKey GetAppId<TKey>(this ClaimsPrincipal principal)
+        {
+            if (principal == null)
+                throw new ArgumentNullException(nameof(principal));
+
+            return (principal.FindFirst(ClaimTypes.PrimaryGroupSid)?.Value).CastTo<TKey>();
+        }
+
+        public static TKey GetClaimValue<TKey>(this ClaimsPrincipal principal, string claimKey)
+        {
+            if (principal == null)
+                throw new ArgumentNullException(nameof(principal));
+
+            return (principal.FindFirst(claimKey)?.Value).CastTo<TKey>();
+        }
     }
 }
