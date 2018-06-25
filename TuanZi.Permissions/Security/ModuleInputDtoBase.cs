@@ -24,6 +24,6 @@ namespace TuanZi.Security
         [DisplayName("Order Code")]
         public double OrderCode { get; set; }
 
-        public TModuleKey ParentId { get; set; }
+        public TModuleKey? ParentId { get; set; }
     }
 }
