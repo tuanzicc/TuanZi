@@ -11,7 +11,7 @@ namespace TuanZi.Threading.Asyncs
         private readonly AsyncSemaphore _semaphore;
 
         public AsyncLock()
-        {
+        { 
             _semaphore = new AsyncSemaphore(1);
             _releaser = Task.FromResult(new Releaser(this));
         }
