@@ -7,6 +7,7 @@ using System.Reflection;
 
 using TuanZi;
 using TuanZi.Exceptions;
+using TuanZi.Extensions;
 using TuanZi.Properties;
 using TuanZi.Reflection;
 

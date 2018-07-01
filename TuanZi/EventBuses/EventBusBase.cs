@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging;
 using TuanZi.Exceptions;
 using TuanZi.EventBuses.Internal;
 using TuanZi.Reflection;
-
+using TuanZi.Data;
+using TuanZi.Extensions;
 
 namespace TuanZi.EventBuses
 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using TuanZi.Extensions;
 using TuanZi.Filter;
 
 namespace TuanZi.Collections

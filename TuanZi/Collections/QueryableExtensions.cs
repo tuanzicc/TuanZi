@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using TuanZi.Extensions;
 using TuanZi.Filter;
 
 namespace TuanZi.Collections

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Secutiry
 {

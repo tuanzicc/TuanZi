@@ -6,7 +6,7 @@ using System.Reflection;
 using TuanZi.Reflection;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class EnumExtensions
     {

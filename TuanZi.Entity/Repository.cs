@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 using TuanZi.Collections;
 using TuanZi.Data;
+using TuanZi.Extensions;
 using TuanZi.Mapping;
 
 using Z.EntityFramework.Plus;

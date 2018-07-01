@@ -1,4 +1,6 @@
-﻿using TuanZi.Reflection;
+﻿using System.Linq;
+using TuanZi.Extensions;
+using TuanZi.Reflection;
 
 namespace TuanZi.Data
 {
@@ -66,6 +68,15 @@ namespace TuanZi.Data
         public bool Successed
         {
             get { return ResultType == OperationResultType.Success; }
+        }
+
+        public bool Errored
+        {
+            get
+            {
+                bool contains = new[] { OperationResultType.ValidError, OperationResultType.QueryNull, OperationResultType.Error }.Contains(ResultType);
+                return contains;
+            }
         }
     }
 }

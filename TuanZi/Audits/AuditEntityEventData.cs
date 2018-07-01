@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using TuanZi.Data;
 using TuanZi.EventBuses;
 
 

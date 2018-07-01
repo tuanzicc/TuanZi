@@ -24,7 +24,7 @@ module.exports = function (grunt) {
     'select2/selection/stopPropagation'
   ].concat(includes);
 
-  var i18nModules = [];
+  var i18nPacks = [];
   var i18nPaths = {};
 
   var i18nFiles = grunt.file.expand({
@@ -50,7 +50,7 @@ module.exports = function (grunt) {
     var file = i18nFiles[i];
     var name = file.split('.')[0];
 
-    i18nModules.push({
+    i18nPacks.push({
       name: name
     });
 
@@ -290,7 +290,7 @@ module.exports = function (grunt) {
           baseUrl: 'src/js/select2/i18n',
           dir: 'dist/js/i18n',
           paths: i18nPaths,
-          modules: i18nModules,
+          modules: i18nPacks,
           namespace: 'S2',
           wrap: {
             start: minifiedBanner + grunt.file.read('src/js/banner.start.js'),

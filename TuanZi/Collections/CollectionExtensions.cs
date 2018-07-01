@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using TuanZi.Data;
+using TuanZi.Extensions;
 
 namespace TuanZi.Collections
 {

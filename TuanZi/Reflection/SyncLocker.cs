@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Utility.Reflection
 {

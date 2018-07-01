@@ -1,14 +1,10 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -18,7 +14,7 @@ using TuanZi.Collections;
 using TuanZi.Secutiry;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class StringExtensions
     {
@@ -359,6 +355,11 @@ namespace TuanZi
         {
             json.CheckNotNull("json");
             return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        public static object FromJsonString(this string json, Type type)
+        {
+            return JsonConvert.DeserializeObject(json, type);
         }
 
         public static string AddUrlQuery(this string url, params string[] queries)

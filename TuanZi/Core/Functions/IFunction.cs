@@ -5,7 +5,7 @@ using TuanZi.Entity;
 
 namespace TuanZi.Core.Functions
 {
-    public interface IFunction : ILockable
+    public interface IFunction : IEntity<Guid>, ILockable
     {
         string Name { get; set; }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class RandomExtensions
     {

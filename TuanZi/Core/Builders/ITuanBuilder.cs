@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using TuanZi.Core.Modules;
+using TuanZi.Core.Packs;
 using TuanZi.Core.Options;
 
 
@@ -9,15 +9,15 @@ namespace TuanZi.Core.Builders
 {
     public interface ITuanBuilder
     {
-        IEnumerable<Type> Modules { get; }
+        IEnumerable<Type> Packs { get; }
 
-        IEnumerable<Type> ExcludedModules { get; }
+        IEnumerable<Type> ExcludedPacks { get; }
 
         Action<TuanOptions> OptionsAction { get; }
 
-        ITuanBuilder AddModule<TModule>() where TModule : TuanModule;
+        ITuanBuilder AddPack<TPack>() where TPack : TuanPack;
 
-        ITuanBuilder ExcludeModule<TModule>() where TModule : TuanModule;
+        ITuanBuilder ExcludePack<TPack>() where TPack : TuanPack;
 
         ITuanBuilder AddOptions(Action<TuanOptions>optionsAction);
     }

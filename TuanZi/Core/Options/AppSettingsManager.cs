@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
 using Microsoft.Extensions.Configuration;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Core.Options
 {

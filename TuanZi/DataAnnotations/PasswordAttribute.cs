@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.DataAnnotations
 {

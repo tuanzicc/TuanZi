@@ -23,6 +23,9 @@ namespace TuanZi.Identity
         [DisplayName("Normalized UserName")]
         public string NormalizedUserName { get; set; }
 
+        [DisplayName("Nick Name")]
+        public string NickName { get; set; }
+
         [Required]
         [DisplayName("Email")]
         public string Email { get; set; }

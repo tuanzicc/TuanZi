@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TuanZi.AspNetCore.Http;
 using TuanZi.AspNetCore.UI;
 using TuanZi.Core.Functions;
+using TuanZi.Data;
 using TuanZi.Secutiry;
 
 using AuthorizationResult = TuanZi.Secutiry.AuthorizationResult;
@@ -20,7 +21,7 @@ using AuthorizationResult = TuanZi.Secutiry.AuthorizationResult;
 
 namespace TuanZi.AspNetCore.Mvc.Filters
 {
-    public class FunctionAuthorizationFilter : ActionFilterAttribute, IAuthorizationFilter
+    public class FunctionAuthorizationFilter : Attribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {
@@ -80,6 +81,5 @@ namespace TuanZi.AspNetCore.Mvc.Filters
                 context.HttpContext.Response.StatusCode = 200;
             }
         }
-
     }
 }

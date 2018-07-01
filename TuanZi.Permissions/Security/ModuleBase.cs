@@ -7,7 +7,7 @@ using System.Linq;
 
 using TuanZi.Collections;
 using TuanZi.Entity;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Security
 {

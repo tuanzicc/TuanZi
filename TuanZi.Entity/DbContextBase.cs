@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 
 using TuanZi.Audits;
 using TuanZi.Core.Options;
+using TuanZi.Dependency;
 using TuanZi.EventBuses;
 
 

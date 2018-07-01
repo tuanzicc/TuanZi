@@ -7,9 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Identity;
-
+using TuanZi.Data;
 using TuanZi.Entity;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Identity
 {
@@ -131,6 +131,20 @@ namespace TuanZi.Identity
             Check.NotNull(user, nameof(user));
 
             await _userRepository.InsertAsync(user);
+
+            int count = _userRepository.Entities.Count();
+            if (count == 1)
+            {
+                TRole adminRole = _roleRepository.Entities.FirstOrDefault();
+                if (adminRole != null)
+                {
+                    TUserRole userRole = new TUserRole() { UserId = user.Id, RoleId = adminRole.Id };
+                    await _userRoleRepository.InsertAsync(userRole);
+
+                    user.IsSystem = true;
+                    await _userRepository.UpdateAsync(user);
+                }
+            }
 
             TRole defaultRole = _roleRepository.Entities.FirstOrDefault(m => m.IsDefault);
             if (defaultRole != null)

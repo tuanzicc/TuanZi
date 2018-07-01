@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
-namespace TuanZi
+namespace TuanZi.Dependency
 {
     public sealed class ServiceLocator
     {
@@ -74,6 +74,29 @@ namespace TuanZi
             }
         }
 
+        public async Task ExcuteScopedWorkAsync(Func<IServiceProvider, Task> action)
+        {
+            if (_provider == null)
+            {
+                throw new TuanException("Root-level IServiceProvider does not exist and cannot perform Scoped services");
+            }
+            IServiceProvider scopedProvider = ScopedProvider;
+            IServiceScope newScope = null;
+            if (scopedProvider == null)
+            {
+                newScope = _provider.CreateScope();
+                scopedProvider = newScope.ServiceProvider;
+            }
+            try
+            {
+                await action(scopedProvider);
+            }
+            finally
+            {
+                newScope?.Dispose();
+            }
+        }
+
         public TResult ExcuteScopedWork<TResult>(Func<IServiceProvider, TResult> func)
         {
             if (_provider == null)
@@ -90,6 +113,29 @@ namespace TuanZi
             try
             {
                 return func(scopedProvider);
+            }
+            finally
+            {
+                newScope?.Dispose();
+            }
+        }
+
+        public async Task<TResult> ExcuteScopedWorkAsync<TResult>(Func<IServiceProvider, Task<TResult>> func)
+        {
+            if (_provider == null)
+            {
+                throw new TuanException("Root-level IServiceProvider does not exist and cannot perform Scoped services");
+            }
+            IServiceProvider scopedProvider = ScopedProvider;
+            IServiceScope newScope = null;
+            if (scopedProvider == null)
+            {
+                newScope = _provider.CreateScope();
+                scopedProvider = newScope.ServiceProvider;
+            }
+            try
+            {
+                return await func(scopedProvider);
             }
             finally
             {

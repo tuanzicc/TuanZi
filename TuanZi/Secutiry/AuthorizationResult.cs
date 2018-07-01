@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using TuanZi.Data;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Secutiry
 {

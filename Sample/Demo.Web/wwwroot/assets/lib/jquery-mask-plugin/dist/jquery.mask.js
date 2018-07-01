@@ -37,7 +37,7 @@
 
 'use strict';
 
-// UMD (Universal Module Definition) patterns for JavaScript modules that work everywhere.
+// UMD (Universal Pack Definition) patterns for JavaScript modules that work everywhere.
 // https://github.com/umdjs/umd/blob/master/jqueryPluginCommonjs.js
 (function (factory, jQuery, Zepto) {
 

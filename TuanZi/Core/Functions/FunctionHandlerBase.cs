@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using TuanZi.Collections;
+using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Exceptions;
 using TuanZi.Reflection;
@@ -132,8 +134,7 @@ namespace TuanZi.Core.Functions
             TFunction exist = GetFunction(functions, action.Area, action.Controller, action.Action, action.Name);
             return exist != null;
         }
-
-        protected abstract string GetArea(Type type);
+        
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, TFunction[] functions)
         {
@@ -146,7 +147,7 @@ namespace TuanZi.Core.Functions
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
             if (repository == null)
             {
-                throw new TuanException("The service of IRepository<,> is not found, please initialize the EntityModule module");
+                throw new TuanException("The service of IRepository<,> is not found, please initialize the EntityPack module");
             }
             TFunction[] dbItems = repository.TrackEntities.ToArray();
 

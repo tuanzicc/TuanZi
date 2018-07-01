@@ -255,7 +255,7 @@ var config = {
 	moduleStack: [],
 
 	// The first unnamed module
-	currentModule: {
+	currentPack: {
 		name: "",
 		tests: []
 	},
@@ -264,7 +264,7 @@ var config = {
 };
 
 // Push a loose unnamed module to the modules collection
-config.modules.push( config.currentModule );
+config.modules.push( config.currentPack );
 
 var loggingCallbacks = {};
 
@@ -391,7 +391,7 @@ extend( QUnit, {
 	// Call on start of module test to prepend name to all tests
 	module: function( name, testEnvironment, executeNow ) {
 		var module, moduleFns;
-		var currentModule = config.currentModule;
+		var currentPack = config.currentPack;
 
 		if ( arguments.length === 2 ) {
 			if ( objectType( testEnvironment ) === "function" ) {
@@ -411,7 +411,7 @@ extend( QUnit, {
 			delete testEnvironment.teardown;
 		}
 
-		module = createModule();
+		module = createPack();
 
 		moduleFns = {
 			beforeEach: setHook( module, "beforeEach" ),
@@ -420,29 +420,29 @@ extend( QUnit, {
 
 		if ( objectType( executeNow ) === "function" ) {
 			config.moduleStack.push( module );
-			setCurrentModule( module );
+			setCurrentPack( module );
 			executeNow.call( module.testEnvironment, moduleFns );
 			config.moduleStack.pop();
-			module = module.parentModule || currentModule;
+			module = module.parentPack || currentPack;
 		}
 
-		setCurrentModule( module );
+		setCurrentPack( module );
 
-		function createModule() {
-			var parentModule = config.moduleStack.length ?
+		function createPack() {
+			var parentPack = config.moduleStack.length ?
 				config.moduleStack.slice( -1 )[ 0 ] : null;
-			var moduleName = parentModule !== null ?
-				[ parentModule.name, name ].join( " > " ) : name;
+			var moduleName = parentPack !== null ?
+				[ parentPack.name, name ].join( " > " ) : name;
 			var module = {
 				name: moduleName,
-				parentModule: parentModule,
+				parentPack: parentPack,
 				tests: [],
 				moduleId: generateHash( moduleName )
 			};
 
 			var env = {};
-			if ( parentModule ) {
-				extend( env, parentModule.testEnvironment );
+			if ( parentPack ) {
+				extend( env, parentPack.testEnvironment );
 				delete env.beforeEach;
 				delete env.afterEach;
 			}
@@ -453,8 +453,8 @@ extend( QUnit, {
 			return module;
 		}
 
-		function setCurrentModule( module ) {
-			config.currentModule = module;
+		function setCurrentPack( module ) {
+			config.currentPack = module;
 		}
 
 	},
@@ -681,17 +681,17 @@ function done() {
 	config.autorun = true;
 
 	// Log the last module results
-	if ( config.previousModule ) {
+	if ( config.previousPack ) {
 		runLoggingCallbacks( "moduleDone", {
-			name: config.previousModule.name,
-			tests: config.previousModule.tests,
+			name: config.previousPack.name,
+			tests: config.previousPack.tests,
 			failed: config.moduleStats.bad,
 			passed: config.moduleStats.all - config.moduleStats.bad,
 			total: config.moduleStats.all,
 			runtime: now() - config.moduleStats.started
 		} );
 	}
-	delete config.previousModule;
+	delete config.previousPack;
 
 	runtime = now() - config.started;
 	passed = config.stats.all - config.stats.bad;
@@ -727,7 +727,7 @@ function Test( settings ) {
 	this.assertions = [];
 	this.semaphore = 0;
 	this.usedAsync = false;
-	this.module = config.currentModule;
+	this.module = config.currentPack;
 	this.stack = sourceFromStacktrace( 3 );
 
 	// Register unique strings
@@ -762,25 +762,25 @@ Test.prototype = {
 		if (
 
 			// Emit moduleStart when we're switching from one module to another
-			this.module !== config.previousModule ||
+			this.module !== config.previousPack ||
 
-				// They could be equal (both undefined) but if the previousModule property doesn't
+				// They could be equal (both undefined) but if the previousPack property doesn't
 				// yet exist it means this is the first test in a suite that isn't wrapped in a
 				// module, in which case we'll just emit a moduleStart event for 'undefined'.
 				// Without this, reporters can get testStart before moduleStart  which is a problem.
-				!hasOwn.call( config, "previousModule" )
+				!hasOwn.call( config, "previousPack" )
 		) {
-			if ( hasOwn.call( config, "previousModule" ) ) {
+			if ( hasOwn.call( config, "previousPack" ) ) {
 				runLoggingCallbacks( "moduleDone", {
-					name: config.previousModule.name,
-					tests: config.previousModule.tests,
+					name: config.previousPack.name,
+					tests: config.previousPack.tests,
 					failed: config.moduleStats.bad,
 					passed: config.moduleStats.all - config.moduleStats.bad,
 					total: config.moduleStats.all,
 					runtime: now() - config.moduleStats.started
 				} );
 			}
-			config.previousModule = this.module;
+			config.previousPack = this.module;
 			config.moduleStats = { all: 0, bad: 0, started: now() };
 			runLoggingCallbacks( "moduleStart", {
 				name: this.module.name,
@@ -877,8 +877,8 @@ Test.prototype = {
 		var hooks = [];
 
 		function processHooks( test, module ) {
-			if ( module.parentModule ) {
-				processHooks( test, module.parentModule );
+			if ( module.parentPack ) {
+				processHooks( test, module.parentPack );
 			}
 			if ( module.testEnvironment &&
 				QUnit.objectType( module.testEnvironment[ handler ] ) === "function" ) {
@@ -1081,20 +1081,20 @@ Test.prototype = {
 			module = config.module && config.module.toLowerCase(),
 			fullName = ( this.module.name + ": " + this.testName );
 
-		function moduleChainNameMatch( testModule ) {
-			var testModuleName = testModule.name ? testModule.name.toLowerCase() : null;
-			if ( testModuleName === module ) {
+		function moduleChainNameMatch( testPack ) {
+			var testPackName = testPack.name ? testPack.name.toLowerCase() : null;
+			if ( testPackName === module ) {
 				return true;
-			} else if ( testModule.parentModule ) {
-				return moduleChainNameMatch( testModule.parentModule );
+			} else if ( testPack.parentPack ) {
+				return moduleChainNameMatch( testPack.parentPack );
 			} else {
 				return false;
 			}
 		}
 
-		function moduleChainIdMatch( testModule ) {
-			return inArray( testModule.moduleId, config.moduleId ) > -1 ||
-				testModule.parentModule && moduleChainIdMatch( testModule.parentModule );
+		function moduleChainIdMatch( testPack ) {
+			return inArray( testPack.moduleId, config.moduleId ) > -1 ||
+				testPack.parentPack && moduleChainIdMatch( testPack.parentPack );
 		}
 
 		// Internally-generated tests are always valid
@@ -2616,16 +2616,16 @@ function setUrl( params ) {
 }
 
 function applyUrlParams() {
-	var selectedModule,
+	var selectedPack,
 		modulesList = id( "qunit-modulefilter" ),
 		filter = id( "qunit-filter-input" ).value;
 
-	selectedModule = modulesList ?
+	selectedPack = modulesList ?
 		decodeURIComponent( modulesList.options[ modulesList.selectedIndex ].value ) :
 		undefined;
 
 	window.location = setUrl( {
-		module: ( selectedModule === "" ) ? undefined : selectedModule,
+		module: ( selectedPack === "" ) ? undefined : selectedPack,
 		filter: ( filter === "" ) ? undefined : filter,
 
 		// Remove moduleId and testId filters
@@ -2683,7 +2683,7 @@ function toolbarLooseFilter() {
 	return filter;
 }
 
-function toolbarModuleFilterHtml() {
+function toolbarPackFilterHtml() {
 	var i,
 		moduleFilterHtml = "";
 
@@ -2691,10 +2691,10 @@ function toolbarModuleFilterHtml() {
 		return false;
 	}
 
-	moduleFilterHtml += "<label for='qunit-modulefilter'>Module: </label>" +
+	moduleFilterHtml += "<label for='qunit-modulefilter'>Pack: </label>" +
 		"<select id='qunit-modulefilter' name='modulefilter'><option value='' " +
 		( QUnit.urlParams.module === undefined ? "selected='selected'" : "" ) +
-		">< All Modules ></option>";
+		">< All Packs ></option>";
 
 	for ( i = 0; i < modulesList.length; i++ ) {
 		moduleFilterHtml += "<option value='" +
@@ -2707,10 +2707,10 @@ function toolbarModuleFilterHtml() {
 	return moduleFilterHtml;
 }
 
-function toolbarModuleFilter() {
+function toolbarPackFilter() {
 	var toolbar = id( "qunit-testrunner-toolbar" ),
 		moduleFilter = document.createElement( "span" ),
-		moduleFilterHtml = toolbarModuleFilterHtml();
+		moduleFilterHtml = toolbarPackFilterHtml();
 
 	if ( !toolbar || !moduleFilterHtml ) {
 		return false;
@@ -2730,7 +2730,7 @@ function appendToolbar() {
 	if ( toolbar ) {
 		toolbar.appendChild( toolbarUrlConfigContainer() );
 		toolbar.appendChild( toolbarLooseFilter() );
-		toolbarModuleFilter();
+		toolbarPackFilter();
 	}
 }
 

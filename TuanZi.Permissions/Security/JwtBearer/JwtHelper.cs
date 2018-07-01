@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using TuanZi.Core.Options;
+using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
 

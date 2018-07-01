@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TuanZi.AspNetCore.Http;
+using TuanZi.Dependency;
 
 namespace TuanZi.AspNetCore.Infrastructure
 {
@@ -14,7 +15,7 @@ namespace TuanZi.AspNetCore.Infrastructure
             {
                 return false;
             }
-            const string name = TuanConstants.VerifyCodeSessionKey;
+            const string name = TuanConstants.VerifyCodeKeyPrefix;
             ISession session = ServiceLocator.Instance.HttpContext().Session;
             string sessionCode = session.GetString(name);
             bool fited = sessionCode != null && sessionCode.Equals(code, StringComparison.OrdinalIgnoreCase);
@@ -27,7 +28,7 @@ namespace TuanZi.AspNetCore.Infrastructure
 
         public static void SetCode(string code)
         {
-            const string name = TuanConstants.VerifyCodeSessionKey;
+            const string name = TuanConstants.VerifyCodeKeyPrefix;
             ServiceLocator.Instance.HttpContext().Session.SetString(name, code);
         }
     }

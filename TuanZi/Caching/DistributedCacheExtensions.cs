@@ -8,7 +8,10 @@ using Microsoft.Extensions.Caching.Distributed;
 
 using TuanZi.Collections;
 using TuanZi.Core.Functions;
+using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Entity;
+using TuanZi.Extensions;
 using TuanZi.Filter;
 using TuanZi.Mapping;
 using TuanZi.Properties;

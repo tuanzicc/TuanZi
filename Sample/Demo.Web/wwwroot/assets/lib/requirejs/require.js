@@ -161,10 +161,10 @@ var requirejs, require, define;
      *
      * @returns {Error}
      */
-    function makeError(id, msg, err, requireModules) {
+    function makeError(id, msg, err, requirePacks) {
         var e = new Error(msg + '\nhttp://requirejs.org/docs/errors.html#' + id);
         e.requireType = id;
-        e.requireModules = requireModules;
+        e.requirePacks = requirePacks;
         if (err) {
             e.originalError = err;
         }
@@ -194,7 +194,7 @@ var requirejs, require, define;
     }
 
     function newContext(contextName) {
-        var inCheckLoaded, Module, context, handlers,
+        var inCheckLoaded, Pack, context, handlers,
             checkLoadedTimeoutId,
             config = {
                 //Defaults. Do not set a default for map
@@ -397,11 +397,11 @@ var requirejs, require, define;
 
         /**
          * Creates a module mapping that includes plugin prefix, module
-         * name, and path. If parentModuleMap is provided it will
+         * name, and path. If parentPackMap is provided it will
          * also normalize the name via require.normalize()
          *
          * @param {String} name the module name
-         * @param {String} [parentModuleMap] parent module map
+         * @param {String} [parentPackMap] parent module map
          * for the module name, used to resolve relative names.
          * @param {Boolean} isNormalized: is the ID already normalized.
          * This is true if this call is done for a define() module ID.
@@ -410,10 +410,10 @@ var requirejs, require, define;
          *
          * @returns {Object}
          */
-        function makeModuleMap(name, parentModuleMap, isNormalized, applyMap) {
-            var url, pluginModule, suffix, nameParts,
+        function makePackMap(name, parentPackMap, isNormalized, applyMap) {
+            var url, pluginPack, suffix, nameParts,
                 prefix = null,
-                parentName = parentModuleMap ? parentModuleMap.name : null,
+                parentName = parentPackMap ? parentPackMap.name : null,
                 originalName = name,
                 isDefine = true,
                 normalizedName = '';
@@ -431,15 +431,15 @@ var requirejs, require, define;
 
             if (prefix) {
                 prefix = normalize(prefix, parentName, applyMap);
-                pluginModule = getOwn(defined, prefix);
+                pluginPack = getOwn(defined, prefix);
             }
 
             //Account for relative paths if there is a base name.
             if (name) {
                 if (prefix) {
-                    if (pluginModule && pluginModule.normalize) {
+                    if (pluginPack && pluginPack.normalize) {
                         //Plugin is loaded, use its normalize method.
-                        normalizedName = pluginModule.normalize(name, function (name) {
+                        normalizedName = pluginPack.normalize(name, function (name) {
                             return normalize(name, parentName, applyMap);
                         });
                     } else {
@@ -473,14 +473,14 @@ var requirejs, require, define;
             //If the id is a plugin id that cannot be determined if it needs
             //normalization, stamp it with a unique ID so two matching relative
             //ids that may conflict can be separate.
-            suffix = prefix && !pluginModule && !isNormalized ?
+            suffix = prefix && !pluginPack && !isNormalized ?
                      '_unnormalized' + (unnormalizedCounter += 1) :
                      '';
 
             return {
                 prefix: prefix,
                 name: normalizedName,
-                parentMap: parentModuleMap,
+                parentMap: parentPackMap,
                 unnormalized: !!suffix,
                 url: url,
                 originalName: originalName,
@@ -491,12 +491,12 @@ var requirejs, require, define;
             };
         }
 
-        function getModule(depMap) {
+        function getPack(depMap) {
             var id = depMap.id,
                 mod = getOwn(registry, id);
 
             if (!mod) {
-                mod = registry[id] = new context.Module(depMap);
+                mod = registry[id] = new context.Pack(depMap);
             }
 
             return mod;
@@ -512,7 +512,7 @@ var requirejs, require, define;
                     fn(defined[id]);
                 }
             } else {
-                mod = getModule(depMap);
+                mod = getPack(depMap);
                 if (mod.error && name === 'error') {
                     fn(mod.error);
                 } else {
@@ -522,7 +522,7 @@ var requirejs, require, define;
         }
 
         function onError(err, errback) {
-            var ids = err.requireModules,
+            var ids = err.requirePacks,
                 notified = false;
 
             if (errback) {
@@ -719,7 +719,7 @@ var requirejs, require, define;
             inCheckLoaded = false;
         }
 
-        Module = function (map) {
+        Pack = function (map) {
             this.events = getOwn(undefEvents, map.id) || {};
             this.map = map;
             this.shim = getOwn(config.shim, map.id);
@@ -735,7 +735,7 @@ var requirejs, require, define;
             */
         };
 
-        Module.prototype = {
+        Pack.prototype = {
             init: function (depMaps, factory, errback, options) {
                 options = options || {};
 
@@ -839,7 +839,7 @@ var requirejs, require, define;
                     return;
                 }
 
-                var err, cjsModule,
+                var err, cjsPack,
                     id = this.map.id,
                     depExports = this.depExports,
                     exports = this.exports,
@@ -871,9 +871,9 @@ var requirejs, require, define;
                             // then will not have a return value anyway. Favor
                             // module.exports assignment over exports object.
                             if (this.map.isDefine && exports === undefined) {
-                                cjsModule = this.module;
-                                if (cjsModule) {
-                                    exports = cjsModule.exports;
+                                cjsPack = this.module;
+                                if (cjsPack) {
+                                    exports = cjsPack.exports;
                                 } else if (this.usingExports) {
                                     //exports already set the defined value.
                                     exports = this.exports;
@@ -890,7 +890,7 @@ var requirejs, require, define;
                                 if ((this.events.error && this.map.isDefine) ||
                                     req.onError !== defaultOnError) {
                                     err.requireMap = this.map;
-                                    err.requireModules = this.map.isDefine ? [this.map.id] : null;
+                                    err.requirePacks = this.map.isDefine ? [this.map.id] : null;
                                     err.requireType = this.map.isDefine ? 'define' : 'require';
                                     return onError((this.error = err));
                                 } else if (typeof console !== 'undefined' &&
@@ -948,7 +948,7 @@ var requirejs, require, define;
                 var map = this.map,
                     id = map.id,
                     //Map already normalized the prefix.
-                    pluginMap = makeModuleMap(map.prefix);
+                    pluginMap = makePackMap(map.prefix);
 
                 //Mark this as a dependency for this plugin, so it
                 //can be traced for cycles.
@@ -975,7 +975,7 @@ var requirejs, require, define;
 
                         //prefix and name should already be normalized, no need
                         //for applying map config again either.
-                        normalizedMap = makeModuleMap(map.prefix + '!' + name,
+                        normalizedMap = makePackMap(map.prefix + '!' + name,
                                                       this.map.parentMap);
                         on(normalizedMap,
                             'defined', bind(this, function (value) {
@@ -1020,7 +1020,7 @@ var requirejs, require, define;
                     load.error = bind(this, function (err) {
                         this.inited = true;
                         this.error = err;
-                        err.requireModules = [id];
+                        err.requirePacks = [id];
 
                         //Remove temp unnormalized modules for this module,
                         //since they will never be resolved otherwise now.
@@ -1038,7 +1038,7 @@ var requirejs, require, define;
                     load.fromText = bind(this, function (text, textAlt) {
                         /*jslint evil: true */
                         var moduleName = map.name,
-                            moduleMap = makeModuleMap(moduleName),
+                            moduleMap = makePackMap(moduleName),
                             hasInteractive = useInteractive;
 
                         //As of 2.1.0, support just passing the text, to reinforce
@@ -1057,7 +1057,7 @@ var requirejs, require, define;
 
                         //Prime the system by creating a module instance for
                         //it.
-                        getModule(moduleMap);
+                        getPack(moduleMap);
 
                         //Transfer any config to this other module.
                         if (hasProp(config.config, id)) {
@@ -1117,7 +1117,7 @@ var requirejs, require, define;
                     if (typeof depMap === 'string') {
                         //Dependency needs to be converted to a depMap
                         //and wired up to this module.
-                        depMap = makeModuleMap(depMap,
+                        depMap = makePackMap(depMap,
                                                (this.map.isDefine ? this.map : this.map.parentMap),
                                                false,
                                                !this.skipMap);
@@ -1191,17 +1191,17 @@ var requirejs, require, define;
                 });
                 if (name === 'error') {
                     //Now that the error handler was triggered, remove
-                    //the listeners, since this broken Module instance
+                    //the listeners, since this broken Pack instance
                     //can stay around for a while in the registry.
                     delete this.events[name];
                 }
             }
         };
 
-        function callGetModule(args) {
+        function callGetPack(args) {
             //Skip modules already defined.
             if (!hasProp(defined, args[0])) {
-                getModule(makeModuleMap(args[0], null, true)).init(args[1], args[2]);
+                getPack(makePackMap(args[0], null, true)).init(args[1], args[2]);
             }
         }
 
@@ -1257,7 +1257,7 @@ var requirejs, require, define;
                 } else {
                     //args are id, deps, factory. Should be normalized by the
                     //define() function.
-                    callGetModule(args);
+                    callGetPack(args);
                 }
             }
             context.defQueueMap = {};
@@ -1271,8 +1271,8 @@ var requirejs, require, define;
             urlFetched: urlFetched,
             defQueue: defQueue,
             defQueueMap: {},
-            Module: Module,
-            makeModuleMap: makeModuleMap,
+            Pack: Pack,
+            makePackMap: makePackMap,
             nextTick: req.nextTick,
             onError: onError,
 
@@ -1369,7 +1369,7 @@ var requirejs, require, define;
                     //late to modify them, and ignore unnormalized ones
                     //since they are transient.
                     if (!mod.inited && !mod.map.unnormalized) {
-                        mod.map = makeModuleMap(id, null, true);
+                        mod.map = makePackMap(id, null, true);
                     }
                 });
 
@@ -1422,11 +1422,11 @@ var requirejs, require, define;
                         }
 
                         //Normalize module name, if it contains . or ..
-                        map = makeModuleMap(deps, relMap, false, true);
+                        map = makePackMap(deps, relMap, false, true);
                         id = map.id;
 
                         if (!hasProp(defined, id)) {
-                            return onError(makeError('notloaded', 'Module name "' +
+                            return onError(makeError('notloaded', 'Pack name "' +
                                         id +
                                         '" has not been loaded yet for context: ' +
                                         contextName +
@@ -1444,7 +1444,7 @@ var requirejs, require, define;
                         //require call, collect them.
                         intakeDefines();
 
-                        requireMod = getModule(makeModuleMap(null, relMap));
+                        requireMod = getPack(makePackMap(null, relMap));
 
                         //Store if map config should be applied to this require
                         //call for dependencies.
@@ -1486,11 +1486,11 @@ var requirejs, require, define;
                     },
 
                     defined: function (id) {
-                        return hasProp(defined, makeModuleMap(id, relMap, false, true).id);
+                        return hasProp(defined, makePackMap(id, relMap, false, true).id);
                     },
 
                     specified: function (id) {
-                        id = makeModuleMap(id, relMap, false, true).id;
+                        id = makePackMap(id, relMap, false, true).id;
                         return hasProp(defined, id) || hasProp(registry, id);
                     }
                 });
@@ -1502,7 +1502,7 @@ var requirejs, require, define;
                         //fix for #408
                         takeGlobalQueue();
 
-                        var map = makeModuleMap(id, relMap, true),
+                        var map = makePackMap(id, relMap, true),
                             mod = getOwn(registry, id);
 
                         mod.undefed = true;
@@ -1547,7 +1547,7 @@ var requirejs, require, define;
             enable: function (depMap) {
                 var mod = getOwn(registry, depMap.id);
                 if (mod) {
-                    getModule(depMap).enable();
+                    getPack(depMap).enable();
                 }
             },
 
@@ -1580,11 +1580,11 @@ var requirejs, require, define;
                         found = true;
                     }
 
-                    callGetModule(args);
+                    callGetPack(args);
                 }
                 context.defQueueMap = {};
 
-                //Do this after the cycle of callGetModule in case the result
+                //Do this after the cycle of callGetPack in case the result
                 //of those calls/init calls changes the registry.
                 mod = getOwn(registry, moduleName);
 
@@ -1601,7 +1601,7 @@ var requirejs, require, define;
                     } else {
                         //A script that does not call define(), so just simulate
                         //the call for it.
-                        callGetModule([moduleName, (shim.deps || []), shim.exportsFn]);
+                        callGetPack([moduleName, (shim.deps || []), shim.exportsFn]);
                     }
                 }
 
@@ -1616,7 +1616,7 @@ var requirejs, require, define;
              * internal API, not a public one. Use toUrl for the public API.
              */
             nameToUrl: function (moduleName, ext, skipExt) {
-                var paths, syms, i, parentModule, url,
+                var paths, syms, i, parentPack, url,
                     parentPath, bundleId,
                     pkgMain = getOwn(config.pkgs, moduleName);
 
@@ -1648,9 +1648,9 @@ var requirejs, require, define;
                     //registered for it. Start with most specific name
                     //and work up from it.
                     for (i = syms.length; i > 0; i -= 1) {
-                        parentModule = syms.slice(0, i).join('/');
+                        parentPack = syms.slice(0, i).join('/');
 
-                        parentPath = getOwn(paths, parentModule);
+                        parentPath = getOwn(paths, parentPack);
                         if (parentPath) {
                             //If an array, it means there are a few choices,
                             //Choose the one that is desired

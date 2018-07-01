@@ -2,7 +2,7 @@
 using System;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     using System.Text;
     public static class StringBuilderExtensions
