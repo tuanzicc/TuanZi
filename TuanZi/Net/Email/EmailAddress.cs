@@ -2,6 +2,7 @@
 using System;
 using System.Net.Mail;
 using System.Text;
+using TuanZi.Extensions;
 
 namespace TuanZi.Net.Email
 {

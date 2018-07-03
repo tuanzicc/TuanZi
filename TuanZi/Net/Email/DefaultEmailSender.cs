@@ -12,6 +12,8 @@ using TuanZi.Collections;
 using TuanZi.Dependency;
 using TuanZi.Core.Options;
 using TuanZi.Exceptions;
+using TuanZi.Extensions;
+using TuanZi.Core;
 
 namespace TuanZi.Net.Email
 {

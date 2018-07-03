@@ -7,7 +7,7 @@ using System.Linq;
 using TuanZi.Properties;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class ParamterCheckExtensions
     {

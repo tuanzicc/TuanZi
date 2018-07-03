@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using TuanZi.Audits;
 using TuanZi.Core;
 using TuanZi.Core.EntityInfos;
+using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
 namespace TuanZi.Entity

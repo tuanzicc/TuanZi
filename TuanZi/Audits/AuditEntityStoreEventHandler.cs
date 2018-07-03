@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using TuanZi.EventBuses;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Audits
 {

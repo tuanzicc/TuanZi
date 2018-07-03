@@ -1,7 +1,7 @@
 ﻿
 using System;
 using System.IO;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.IO
 {

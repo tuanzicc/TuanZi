@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using TuanZi.Extensions;
 using TuanZi.Reflection;
 
 namespace TuanZi.Develop.T4
@@ -20,7 +21,7 @@ namespace TuanZi.Develop.T4
             Namespace = @namespace;
             if (moduleNamePattern != null)
             {
-                ModuleName = @namespace.Match(moduleNamePattern);
+                PackName = @namespace.Match(moduleNamePattern);
             }
             Name = modelType.Name;
             Description = modelType.GetDescription();
@@ -36,7 +37,7 @@ namespace TuanZi.Develop.T4
 
         public Type KeyType { get; private set; }
         
-        public string ModuleName { get; private set; }
+        public string PackName { get; private set; }
 
         public string Namespace { get; private set; }
 

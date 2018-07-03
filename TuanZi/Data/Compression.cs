@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using TuanZi.Extensions;
 
 namespace TuanZi.Data
 {

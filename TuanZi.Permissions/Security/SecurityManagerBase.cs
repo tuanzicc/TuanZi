@@ -9,6 +9,7 @@ using TuanZi.Core.Functions;
 using TuanZi.Data;
 using TuanZi.Entity;
 using TuanZi.EventBuses;
+using TuanZi.Extensions;
 using TuanZi.Identity;
 using TuanZi.Mapping;
 using TuanZi.Security.Events;
@@ -18,28 +19,28 @@ namespace TuanZi.Security
 
 
     public abstract class SecurityManagerBase<TFunction, TFunctionInputDto, TEntityInfo, TEntityInfoInputDto, TModule, TModuleInputDto, TModuleKey,
-            TModuleFunction, TModuleRole, TModuleUser, TUserRole, TRole, TRoleKey, TUser, TUserKey>
-        : IFunctionStore<TFunction, TFunctionInputDto>,
-          IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
-          IModuleStore<TModule, TModuleInputDto, TModuleKey>,
-          IModuleFunctionStore<TModuleFunction, TModuleKey>,
-          IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
-          IModuleUserStore<TModuleUser, TUserKey, TModuleKey>
-        where TFunction : IFunction, IEntity<Guid>
-        where TFunctionInputDto : FunctionInputDtoBase
-        where TEntityInfo : IEntityInfo, IEntity<Guid>
-        where TEntityInfoInputDto : EntityInfoInputDtoBase
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
-        where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
-        where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TUserRole : UserRoleBase<TUserKey, TRoleKey>
-        where TRole : RoleBase<TRoleKey>
-        where TUser : UserBase<TUserKey>
-        where TRoleKey : IEquatable<TRoleKey>
-        where TUserKey : IEquatable<TUserKey>
+              TModuleFunction, TModuleRole, TModuleUser, TUserRole, TRole, TRoleKey, TUser, TUserKey>
+          : IFunctionStore<TFunction, TFunctionInputDto>,
+            IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
+            IModuleStore<TModule, TModuleInputDto, TModuleKey>,
+            IModuleFunctionStore<TModuleFunction, TModuleKey>,
+            IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
+            IModuleUserStore<TModuleUser, TUserKey, TModuleKey>
+          where TFunction : IFunction
+          where TFunctionInputDto : FunctionInputDtoBase
+          where TEntityInfo : IEntityInfo, IEntity<Guid>
+          where TEntityInfoInputDto : EntityInfoInputDtoBase
+          where TModule : ModuleBase<TModuleKey>
+          where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
+          where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
+          where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
+          where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
+          where TModuleKey : struct, IEquatable<TModuleKey>
+          where TUserRole : UserRoleBase<TUserKey, TRoleKey>
+          where TRole : RoleBase<TRoleKey>
+          where TUser : UserBase<TUserKey>
+          where TRoleKey : IEquatable<TRoleKey>
+          where TUserKey : IEquatable<TUserKey>
     {
         private readonly IRepository<TEntityInfo, Guid> _entityInfoRepository;
         private readonly IEventBus _eventBus;

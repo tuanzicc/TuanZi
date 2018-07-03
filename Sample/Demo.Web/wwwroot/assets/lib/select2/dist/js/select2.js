@@ -302,7 +302,7 @@ var requirejs, require, define;
     };
 
     main = function (name, deps, callback, relName) {
-        var cjsModule, depName, ret, map, i,
+        var cjsPack, depName, ret, map, i,
             args = [],
             callbackType = typeof callback,
             usingExports;
@@ -329,7 +329,7 @@ var requirejs, require, define;
                     usingExports = true;
                 } else if (depName === "module") {
                     //CommonJS module spec 1.1
-                    cjsModule = args[i] = handlers.module(name);
+                    cjsPack = args[i] = handlers.module(name);
                 } else if (hasProp(defined, depName) ||
                            hasProp(waiting, depName) ||
                            hasProp(defining, depName)) {
@@ -348,9 +348,9 @@ var requirejs, require, define;
                 //If setting exports via "module" is in play,
                 //favor that over return value and exports. After that,
                 //favor a non-undefined return value over exports use.
-                if (cjsModule && cjsModule.exports !== undef &&
-                        cjsModule.exports !== defined[name]) {
-                    defined[name] = cjsModule.exports;
+                if (cjsPack && cjsPack.exports !== undef &&
+                        cjsPack.exports !== defined[name]) {
+                    defined[name] = cjsPack.exports;
                 } else if (ret !== undef || !usingExports) {
                     //Use the return value from the function.
                     defined[name] = ret;

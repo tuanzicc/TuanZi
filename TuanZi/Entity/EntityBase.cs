@@ -2,7 +2,7 @@
 using System.ComponentModel;
 
 using TuanZi.Data;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Entity
 {

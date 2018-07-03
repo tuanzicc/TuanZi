@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 using TuanZi.Reflection;
 
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class ObjectExtensions
     {

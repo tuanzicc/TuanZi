@@ -13,16 +13,15 @@ using TuanZi.Entity;
 
 namespace TuanZi.Security
 {
-    
-    
     [IgnoreDependency]
     public interface IFunctionStore<TFunction, in TFunctionInputDto>
-        where TFunction : IFunction, IEntity<Guid>
-        where TFunctionInputDto : FunctionInputDtoBase
+       where TFunction : IFunction
+       where TFunctionInputDto : FunctionInputDtoBase
     {
         IQueryable<TFunction> Functions { get; }
-        
+
         Task<bool> CheckFunctionExists(Expression<Func<TFunction, bool>> predicate, Guid id = default(Guid));
+
         Task<OperationResult> UpdateFunctions(params TFunctionInputDto[] dtos);
 
     }

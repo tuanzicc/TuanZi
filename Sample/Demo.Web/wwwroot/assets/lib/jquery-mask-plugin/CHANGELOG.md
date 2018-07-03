@@ -370,7 +370,7 @@ Bugfixes:
 
 Changes:
 
-* UMD (Universal Module Definition) patterns for JavaScript modules
+* UMD (Universal Pack Definition) patterns for JavaScript modules
 
 Bugfixes:
 

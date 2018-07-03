@@ -17,9 +17,9 @@ namespace TuanZi.Reflection
         public static extern Int32 GetLastError();
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        public static extern bool FreeLibrary(IntPtr hModule);
+        public static extern bool FreeLibrary(IntPtr hPack);
 
         [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        public static extern IntPtr GetProcAddress(IntPtr hPack, string procName);
     }
 }

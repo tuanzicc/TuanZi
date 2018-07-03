@@ -45,11 +45,11 @@ Test.prototype = {
 		}
 	},
 	setup: function() {
-		if (this.module != config.previousModule) {
-			if ( this.previousModule ) {
+		if (this.module != config.previousPack) {
+			if ( this.previousPack ) {
 				QUnit.moduleDone( this.module, config.moduleStats.bad, config.moduleStats.all );
 			}
-			config.previousModule = this.module;
+			config.previousPack = this.module;
 			config.moduleStats = { all: 0, bad: 0 };
 			QUnit.moduleStart( this.module, this.moduleTestEnvironment );
 		}
@@ -235,9 +235,9 @@ var QUnit = {
 
 	// call on start of module test to prepend name to all tests
 	module: function(name, testEnvironment) {
-		config.previousModule = config.currentModule;
-		config.currentModule = name;
-		config.currentModuleTestEnviroment = testEnvironment;
+		config.previousPack = config.currentPack;
+		config.currentPack = name;
+		config.currentPackTestEnviroment = testEnvironment;
 	},
 
 	asyncTest: function(testName, expected, callback) {
@@ -262,18 +262,18 @@ var QUnit = {
 			expected = null;
 		}
 
-		if ( config.currentModule ) {
-			name = '<span class="module-name">' + config.currentModule + "</span>: " + name;
+		if ( config.currentPack ) {
+			name = '<span class="module-name">' + config.currentPack + "</span>: " + name;
 		}
 
-		if ( !validTest(config.currentModule + ": " + testName) ) {
+		if ( !validTest(config.currentPack + ": " + testName) ) {
 			return;
 		}
 
 		var test = new Test(name, testName, expected, testEnvironmentArg, async, callback);
-		test.previousModule = config.previousModule;
-		test.module = config.currentModule;
-		test.moduleTestEnvironment = config.currentModuleTestEnviroment;
+		test.previousPack = config.previousPack;
+		test.module = config.currentPack;
+		test.moduleTestEnvironment = config.currentPackTestEnviroment;
 		test.queue();
 	},
 
@@ -684,8 +684,8 @@ function done() {
 	config.autorun = true;
 
 	// Log the last module results
-	if ( config.currentModule ) {
-		QUnit.moduleDone( config.currentModule, config.moduleStats.bad, config.moduleStats.all );
+	if ( config.currentPack ) {
+		QUnit.moduleDone( config.currentPack, config.moduleStats.bad, config.moduleStats.all );
 	}
 
 	var banner = id("qunit-banner"),

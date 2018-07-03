@@ -71,7 +71,7 @@ namespace TuanZi.AspNetCore.Mvc
             return function;
         }
 
-        protected override string GetArea(Type type)
+        private static string GetArea(Type type)
         {
             AreaAttribute attribute = type.GetAttribute<AreaAttribute>(true);
             return attribute?.RouteValue;

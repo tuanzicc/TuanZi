@@ -3,6 +3,7 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using TuanZi.Collections;
+using TuanZi.Extensions;
 using TuanZi.Properties;
 
 

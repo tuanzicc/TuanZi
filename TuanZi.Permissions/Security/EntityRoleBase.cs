@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using TuanZi.Entity;
+using TuanZi.Extensions;
 using TuanZi.Filter;
 
 

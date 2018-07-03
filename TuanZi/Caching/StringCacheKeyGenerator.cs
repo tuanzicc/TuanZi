@@ -1,5 +1,5 @@
 ﻿using TuanZi.Collections;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Caching
 {

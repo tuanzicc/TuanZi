@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 using TuanZi.Collections;
 using TuanZi.Data;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Identity
 {

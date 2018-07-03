@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 
 using TuanZi.Collections;
-using TuanZi.Core.Modules;
+using TuanZi.Core.Packs;
 using TuanZi.Core.Options;
-
+using TuanZi.Data;
 
 namespace TuanZi.Core.Builders
 {
@@ -14,29 +14,29 @@ namespace TuanZi.Core.Builders
     {
         public TuanBuilder()
         {
-            Modules = new List<Type>();
-            ExcludedModules = new List<Type>();
+            Packs = new List<Type>();
+            ExcludedPacks = new List<Type>();
         }
 
-        public IEnumerable<Type> Modules { get; private set; }
+        public IEnumerable<Type> Packs { get; private set; }
 
-        public IEnumerable<Type> ExcludedModules { get; private set; }
+        public IEnumerable<Type> ExcludedPacks { get; private set; }
 
         public Action<TuanOptions> OptionsAction { get; private set; }
 
-        public ITuanBuilder AddModule<TModule>() where TModule : TuanModule
+        public ITuanBuilder AddPack<TPack>() where TPack : TuanPack
         {
-            List<Type> list = Modules.ToList();
-            list.AddIfNotExist(typeof(TModule));
-            Modules = list;
+            List<Type> list = Packs.ToList();
+            list.AddIfNotExist(typeof(TPack));
+            Packs = list;
             return this;
         }
 
-        public ITuanBuilder ExcludeModule<TModule>() where TModule : TuanModule
+        public ITuanBuilder ExcludePack<TPack>() where TPack : TuanPack
         {
-            List<Type> list = ExcludedModules.ToList();
-            list.AddIfNotExist(typeof(TModule));
-            ExcludedModules = list;
+            List<Type> list = ExcludedPacks.ToList();
+            list.AddIfNotExist(typeof(TPack));
+            ExcludedPacks = list;
             return this;
         }
 

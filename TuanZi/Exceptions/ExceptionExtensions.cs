@@ -4,7 +4,7 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 
 
-namespace TuanZi
+namespace TuanZi.Exceptions
 {
     public static class ExceptionExtensions
     {

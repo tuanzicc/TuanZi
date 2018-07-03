@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-
+using TuanZi.Data;
 
 namespace TuanZi.AspNetCore.Mvc.ModelBinding
 {

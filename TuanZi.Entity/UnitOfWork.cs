@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Core;
 using TuanZi.Core.Options;
 using TuanZi.Entity.Transactions;
 using TuanZi.Exceptions;
@@ -20,10 +20,12 @@ namespace TuanZi.Entity
         public UnitOfWork(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            HasCommited = false;
             ActiveTransactionInfos = new Dictionary<string, ActiveTransactionInfo>();
         }
 
         protected IDictionary<string, ActiveTransactionInfo> ActiveTransactionInfos { get; }
+        public bool HasCommited { get; private set; }
 
         public IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>
         {
@@ -72,6 +74,10 @@ namespace TuanZi.Entity
 
         public void Commit()
         {
+            if (HasCommited)
+            {
+                return;
+            }
             foreach (ActiveTransactionInfo transInfo in ActiveTransactionInfos.Values)
             {
                 transInfo.DbContextTransaction.Commit();
@@ -85,6 +91,7 @@ namespace TuanZi.Entity
                     attendedDbContext.Database.CommitTransaction();
                 }
             }
+            HasCommited = true;
         }
 
         private TuanDbContextOptions GetDbContextResolveOptions(Type dbContextType)

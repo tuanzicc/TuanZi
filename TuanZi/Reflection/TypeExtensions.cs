@@ -6,7 +6,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-
+using TuanZi.Data;
+using TuanZi.Extensions;
 
 namespace TuanZi.Reflection
 {

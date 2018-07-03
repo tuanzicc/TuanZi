@@ -2,8 +2,9 @@
 using Microsoft.Extensions.Primitives;
 using System;
 using System.Linq;
+using TuanZi.Data;
 
-namespace TuanZi.AspNetCore.Http
+namespace TuanZi.AspNetCore
 {
     public static class HttpRequestExtensions
     {

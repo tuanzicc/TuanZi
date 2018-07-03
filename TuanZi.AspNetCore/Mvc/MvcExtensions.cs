@@ -11,6 +11,7 @@ using TuanZi.Core.Functions;
 using TuanZi.Exceptions;
 using TuanZi.Secutiry;
 using TuanZi.Extensions;
+using TuanZi.Dependency;
 
 namespace TuanZi.AspNetCore.Mvc
 {

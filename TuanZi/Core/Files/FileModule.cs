@@ -1,15 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Core;
-using TuanZi.Core.Modules;
+using TuanZi.Core.Packs;
 using TuanZi.EventBuses;
 
 
 namespace TuanZi.Audits
 {
-    public class FileModule : TuanModule
+    public class FilePack : TuanPack
     {
-        public override ModuleLevel Level => ModuleLevel.Application;
+        public override PackLevel Level => PackLevel.Application;
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {

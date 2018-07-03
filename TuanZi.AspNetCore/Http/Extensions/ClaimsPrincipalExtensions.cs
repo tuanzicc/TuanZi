@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 using System.Text;
+using TuanZi.Extensions;
 
 namespace TuanZi.AspNetCore.Http
 {

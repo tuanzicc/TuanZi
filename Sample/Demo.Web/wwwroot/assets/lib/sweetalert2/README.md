@@ -48,7 +48,7 @@ To use:
 Or:
 
 ```js
-// ES6 Modules
+// ES6 Packs
 import { default as swal } from 'sweetalert2'
 
 // CommonJS

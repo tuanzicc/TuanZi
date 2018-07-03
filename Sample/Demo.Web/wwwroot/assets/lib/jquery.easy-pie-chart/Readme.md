@@ -22,7 +22,7 @@
 
 * Vanilla JS *(no dependencies)* (~872 bytes)
 * jQuery plugin (~921 bytes)
-* Angular Module (~983 bytes)
+* Angular Pack (~983 bytes)
 
 
 

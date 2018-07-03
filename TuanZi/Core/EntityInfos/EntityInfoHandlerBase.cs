@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using TuanZi.Collections;
+using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Exceptions;
 
@@ -82,7 +84,7 @@ namespace TuanZi.Core.EntityInfos
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
             if (repository == null)
             {
-                throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Module module");
+                throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Pack module");
             }
             TEntityInfo[] dbItems = repository.TrackEntities.ToArray();
 

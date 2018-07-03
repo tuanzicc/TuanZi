@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Caching;
 using TuanZi.Core.Functions;
+using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Identity;
 using TuanZi.Secutiry;
@@ -16,18 +17,18 @@ using TuanZi.Secutiry;
 namespace TuanZi.Security
 {
     public abstract class FunctionAuthCacheBase<TModuleFunction, TModuleRole, TModuleUser, TFunction, TModule, TModuleKey,
-        TRole, TRoleKey, TUser, TUserKey>
-        : IFunctionAuthCache
-        where TFunction : class, IFunction, IEntity<Guid>
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>
-        where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>
-        where TRole : RoleBase<TRoleKey>
-        where TRoleKey : IEquatable<TRoleKey>
-        where TUser : UserBase<TUserKey>
-        where TUserKey : IEquatable<TUserKey>
+       TRole, TRoleKey, TUser, TUserKey>
+       : IFunctionAuthCache
+       where TFunction : class, IFunction
+       where TModule : ModuleBase<TModuleKey>
+       where TModuleFunction : ModuleFunctionBase<TModuleKey>
+       where TModuleKey : struct, IEquatable<TModuleKey>
+       where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>
+       where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>
+       where TRole : RoleBase<TRoleKey>
+       where TRoleKey : IEquatable<TRoleKey>
+       where TUser : UserBase<TUserKey>
+       where TUserKey : IEquatable<TUserKey>
     {
         private readonly IDistributedCache _cache;
 

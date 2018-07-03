@@ -6,7 +6,7 @@ using System.Linq;
 using TuanZi.Properties;
 
 
-namespace TuanZi
+namespace TuanZi.Data
 {
     public static class Check
     { 

@@ -4,7 +4,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-
+using TuanZi.Data;
 
 namespace TuanZi.AspNetCore.Mvc.ModelBinding
 {

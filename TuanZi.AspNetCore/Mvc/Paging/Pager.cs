@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using TuanZi.AspNetCore.Http;
+using TuanZi.Extensions;
 
 namespace TuanZi.Collections
 {

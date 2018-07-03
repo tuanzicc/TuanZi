@@ -1,4 +1,6 @@
-﻿namespace TuanZi.Filter
+﻿using TuanZi.Extensions;
+
+namespace TuanZi.Filter
 {
     public class PageCondition
     {

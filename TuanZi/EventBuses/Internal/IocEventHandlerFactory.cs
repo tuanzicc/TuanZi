@@ -1,5 +1,5 @@
 ﻿using System;
-
+using TuanZi.Dependency;
 
 namespace TuanZi.EventBuses.Internal
 {
