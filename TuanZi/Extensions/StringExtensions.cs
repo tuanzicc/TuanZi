@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 
 using Newtonsoft.Json;
@@ -248,11 +249,14 @@ namespace TuanZi
             return chars.Last().ToUpper() == last;
         }
 
-        public static bool IsMobileNumber(this string value, bool isRestrict = false)
+        public static bool IsPhoneNumber(this string value)
         {
-            string pattern = isRestrict ? @"^[1][3-8]\d{9}$" : @"^[1]\d{10}$";
-            return value.IsMatch(pattern);
+            var number = value.ToDigitsOnly();
+            return number.Length > 9;
+            //string pattern = @"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$";
+            //return value.IsMatch(pattern);
         }
+
 
         public static bool IsBase64(this string value)
         {
@@ -479,6 +483,16 @@ namespace TuanZi
             }
             byte[] bytes = encoding.GetBytes(source);
             return bytes.ToHexString();
+        }
+
+        public static string ToDigitsOnly(this string input)
+        {
+            return new Regex(@"[^\d]").Replace(input, string.Empty);
+        }
+
+        public static string ToTitleCase(this string value)
+        {
+            return Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(value);
         }
 
         public static string FromHexString(this string hexString, Encoding encoding = null)
