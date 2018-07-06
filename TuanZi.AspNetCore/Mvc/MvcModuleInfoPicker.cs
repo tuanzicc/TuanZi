@@ -1,13 +1,4 @@
-﻿// -----------------------------------------------------------------------
-//  <copyright file="MvcModuleInfoPicker.cs" company="Tuan开源团队">
-//      Copyright (c) 2014-2018 TuanZi. All rights reserved.
-//  </copyright>
-//  <site>http://www.Tuan.org</site>
-//  <last-editor>郭明锋</last-editor>
-//  <last-date>2018-06-23 17:23</last-date>
-// -----------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,16 +13,8 @@ using TuanZi.Reflection;
 
 namespace TuanZi.AspNetCore.Mvc
 {
-    /// <summary>
-    /// MVC模块信息提取器
-    /// </summary>
     public class MvcModuleInfoPicker : ModuleInfoPickerBase<Function>
     {
-        /// <summary>
-        /// 重写以实现从类型中提取模块信息
-        /// </summary>
-        /// <param name="type">类型信息</param>
-        /// <returns>提取到的模块信息</returns>
         protected override ModuleInfo GetModule(Type type)
         {
             ModuleInfoAttribute infoAttr = type.GetAttribute<ModuleInfoAttribute>();
@@ -45,13 +28,6 @@ namespace TuanZi.AspNetCore.Mvc
             return info;
         }
 
-        /// <summary>
-        /// 重写以实现从方法信息中提取模块信息
-        /// </summary>
-        /// <param name="method">方法信息</param>
-        /// <param name="typeInfo">所在类型模块信息</param>
-        /// <param name="index">序号</param>
-        /// <returns>提取到的模块信息</returns>
         protected override ModuleInfo GetModule(MethodInfo method, ModuleInfo typeInfo, int index)
         {
             ModuleInfoAttribute infoAttr = method.GetAttribute<ModuleInfoAttribute>();
@@ -63,7 +39,6 @@ namespace TuanZi.AspNetCore.Mvc
             };
             string controller = method.DeclaringType?.Name.Replace("Controller", "");
             info.Position = $"{typeInfo.Position}.{controller}";
-            //依赖的功能
             string area = method.DeclaringType.GetAttribute<AreaAttribute>(true)?.RouteValue;
             List<IFunction> dependOnFunctions = new List<IFunction>()
             {
@@ -77,7 +52,7 @@ namespace TuanZi.AspNetCore.Mvc
                 IFunction function = FunctionHandler.GetFunction(darea, dcontroller, dependOnAttr.Action);
                 if (function == null)
                 {
-                    throw new TuanException($"功能“{area}/{controller}/{method.Name}”的依赖功能“{darea}/{dcontroller}/{dependOnAttr.Action}”无法找到");
+                    throw new TuanException($"The dependency function '{darea}/{dcontroller}/{dependOnAttr.Action}' of the function '{area}/{controller}/{method.Name}' could not be found");
                 }
                 dependOnFunctions.Add(function);
             }
@@ -105,7 +80,6 @@ namespace TuanZi.AspNetCore.Mvc
             string area = type.GetAttribute<AreaAttribute>(true)?.RouteValue;
             if (area == null)
             {
-                //无区域，使用Root.Site位置
                 return attrPosition == null
                     ? $"Root.Site"
                     : $"Root.Site.{attrPosition}";
