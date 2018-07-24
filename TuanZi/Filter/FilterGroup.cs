@@ -1,7 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using TuanZi.Properties;
 
 
@@ -44,6 +44,14 @@ namespace TuanZi.Filter
                     throw new InvalidOperationException(Resources.Filter_GroupOperateError);
                 }
                 _operate = value;
+            }
+        }
+
+        public void AddRule(FilterRule rule)
+        {
+            if (Rules.All(m => !m.Equals(rule)))
+            {
+                Rules.Add(rule);
             }
         }
     }

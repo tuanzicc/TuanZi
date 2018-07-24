@@ -2,7 +2,7 @@
 {
     public class AuditEntityProperty
     {
-        public string Name { get; set; }
+        public string DisplayName { get; set; }
 
         public string FieldName { get; set; }
 

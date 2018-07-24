@@ -31,11 +31,11 @@ namespace TuanZi.Mapping
             return _mapper.MapTo(source, target);
         }
 
-        public static IQueryable<TOutputDto> ToOutput<TOutputDto>(this IQueryable source,
+        public static IQueryable<TOutputDto> ToOutput<TEntity, TOutputDto>(this IQueryable<TEntity> source,
             params Expression<Func<TOutputDto, object>>[] membersToExpand)
         {
             CheckMapper();
-            return _mapper.ToOutput(source, membersToExpand);
+            return _mapper.ToOutput<TOutputDto>(source, membersToExpand);
         }
 
         private static void CheckMapper()

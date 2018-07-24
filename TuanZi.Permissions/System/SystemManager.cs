@@ -12,6 +12,7 @@ using TuanZi.Entity;
 
 namespace TuanZi.System
 {
+
     public class SystemManager : IKeyValueCoupleStore
     {
         private readonly IRepository<KeyValueCouple, Guid> _keyValueRepository;
@@ -30,13 +31,13 @@ namespace TuanZi.System
 
         public IQueryable<KeyValueCouple> KeyValueCouples
         {
-            get { return _keyValueRepository.Entities; }
+            get { return _keyValueRepository.Query(); }
         }
 
         public KeyValueCouple GetKeyValueCouple(string key)
         {
             const int seconds = 60 * 1000;
-            KeyValueCouple[] pairs = _cache.Get(AllKeyValueCouplesKey, () => _keyValueRepository.Entities.ToArray(), seconds);
+            KeyValueCouple[] pairs = _cache.Get(AllKeyValueCouplesKey, () => _keyValueRepository.Query().ToArray(), seconds);
             return pairs.FirstOrDefault(m => m.Key == key);
         }
 
@@ -56,7 +57,7 @@ namespace TuanZi.System
             Check.NotNull(dtos, nameof(dtos));
             foreach (KeyValueCouple dto in dtos)
             {
-                KeyValueCouple pair = _keyValueRepository.TrackEntities.FirstOrDefault(m => m.Key == dto.Key);
+                KeyValueCouple pair = _keyValueRepository.TrackQuery().FirstOrDefault(m => m.Key == dto.Key);
                 if (pair == null)
                 {
                     pair = dto;
@@ -84,7 +85,7 @@ namespace TuanZi.System
 
         public async Task<OperationResult> DeleteKeyValueCouples(string rootKey)
         {
-            Guid[] ids = _keyValueRepository.Entities.Where(m => m.Key.StartsWith(rootKey)).Select(m => m.Id).ToArray();
+            Guid[] ids = _keyValueRepository.Query(m => m.Key.StartsWith(rootKey)).Select(m => m.Id).ToArray();
             return await DeleteKeyValueCouples(ids);
         }
 

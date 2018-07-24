@@ -7,40 +7,46 @@ using TuanZi.Collections;
 using TuanZi.Core.EntityInfos;
 using TuanZi.Core.Functions;
 using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.EventBuses;
+using TuanZi.Exceptions;
 using TuanZi.Extensions;
+using TuanZi.Filter;
 using TuanZi.Identity;
 using TuanZi.Mapping;
 using TuanZi.Security.Events;
+using TuanZi.Secutiry;
 
 namespace TuanZi.Security
 {
 
-
     public abstract class SecurityManagerBase<TFunction, TFunctionInputDto, TEntityInfo, TEntityInfoInputDto, TModule, TModuleInputDto, TModuleKey,
-              TModuleFunction, TModuleRole, TModuleUser, TUserRole, TRole, TRoleKey, TUser, TUserKey>
-          : IFunctionStore<TFunction, TFunctionInputDto>,
-            IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
-            IModuleStore<TModule, TModuleInputDto, TModuleKey>,
-            IModuleFunctionStore<TModuleFunction, TModuleKey>,
-            IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
-            IModuleUserStore<TModuleUser, TUserKey, TModuleKey>
-          where TFunction : IFunction
-          where TFunctionInputDto : FunctionInputDtoBase
-          where TEntityInfo : IEntityInfo, IEntity<Guid>
-          where TEntityInfoInputDto : EntityInfoInputDtoBase
-          where TModule : ModuleBase<TModuleKey>
-          where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
-          where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
-          where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
-          where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
-          where TModuleKey : struct, IEquatable<TModuleKey>
-          where TUserRole : UserRoleBase<TUserKey, TRoleKey>
-          where TRole : RoleBase<TRoleKey>
-          where TUser : UserBase<TUserKey>
-          where TRoleKey : IEquatable<TRoleKey>
-          where TUserKey : IEquatable<TUserKey>
+            TModuleFunction, TModuleRole, TModuleUser, TEntityRole, TEntityRoleInputDto, TUserRole, TRole, TRoleKey, TUser, TUserKey>
+        : IFunctionStore<TFunction, TFunctionInputDto>,
+          IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
+          IModuleStore<TModule, TModuleInputDto, TModuleKey>,
+          IModuleFunctionStore<TModuleFunction, TModuleKey>,
+          IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
+          IModuleUserStore<TModuleUser, TUserKey, TModuleKey>,
+          IEntityRoleStore<TEntityRole, TEntityRoleInputDto, TRoleKey>
+        where TFunction : IFunction
+        where TFunctionInputDto : FunctionInputDtoBase
+        where TEntityInfo : IEntityInfo
+        where TEntityInfoInputDto : EntityInfoInputDtoBase
+        where TModule : ModuleBase<TModuleKey>
+        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
+        where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
+        where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
+        where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
+        where TModuleKey : struct, IEquatable<TModuleKey>
+        where TEntityRole : EntityRoleBase<TRoleKey>
+        where TEntityRoleInputDto : EntityRoleInputDtoBase<TRoleKey>
+        where TUserRole : UserRoleBase<TUserKey, TRoleKey>
+        where TRole : RoleBase<TRoleKey>
+        where TUser : UserBase<TUserKey>
+        where TRoleKey : IEquatable<TRoleKey>
+        where TUserKey : IEquatable<TUserKey>
     {
         private readonly IRepository<TEntityInfo, Guid> _entityInfoRepository;
         private readonly IEventBus _eventBus;
@@ -49,6 +55,7 @@ namespace TuanZi.Security
         private readonly IRepository<TModule, TModuleKey> _moduleRepository;
         private readonly IRepository<TModuleRole, Guid> _moduleRoleRepository;
         private readonly IRepository<TModuleUser, Guid> _moduleUserRepository;
+        private readonly IRepository<TEntityRole, Guid> _entityRoleRepository;
         private readonly IRepository<TRole, TRoleKey> _roleRepository;
         private readonly IRepository<TUser, TUserKey> _userRepository;
         private readonly IRepository<TUserRole, Guid> _userRoleRepository;
@@ -61,9 +68,10 @@ namespace TuanZi.Security
             IRepository<TModuleFunction, Guid> moduleFunctionRepository,
             IRepository<TModuleRole, Guid> moduleRoleRepository,
             IRepository<TModuleUser, Guid> moduleUserRepository,
+            IRepository<TEntityRole, Guid> entityRoleRepository,
+            IRepository<TUserRole, Guid> userRoleRepository,
             IRepository<TRole, TRoleKey> roleRepository,
-            IRepository<TUser, TUserKey> userRepository,
-            IRepository<TUserRole, Guid> userRoleRepository
+            IRepository<TUser, TUserKey> userRepository
         )
         {
             _eventBus = eventBus;
@@ -73,17 +81,15 @@ namespace TuanZi.Security
             _moduleFunctionRepository = moduleFunctionRepository;
             _moduleRoleRepository = moduleRoleRepository;
             _moduleUserRepository = moduleUserRepository;
+            _entityRoleRepository = entityRoleRepository;
+            _userRoleRepository = userRoleRepository;
             _roleRepository = roleRepository;
             _userRepository = userRepository;
-            _userRoleRepository = userRoleRepository;
         }
 
         #region Implementation of IFunctionStore<TFunction,in TFunctionInputDto>
 
-        public IQueryable<TFunction> Functions
-        {
-            get { return _functionRepository.Entities; }
-        }
+        public IQueryable<TFunction> Functions => _functionRepository.Query();
 
         public virtual Task<bool> CheckFunctionExists(Expression<Func<TFunction, bool>> predicate, Guid id = default(Guid))
         {
@@ -93,7 +99,7 @@ namespace TuanZi.Security
         public virtual async Task<OperationResult> UpdateFunctions(params TFunctionInputDto[] dtos)
         {
             Check.NotNull(dtos, nameof(dtos));
-            OperationResult result = await _functionRepository.UpdateBatchAsync(dtos,
+            OperationResult result = await _functionRepository.UpdateAsync(dtos,
                 async (dto, entity) =>
                 {
                     if (dto.IsLocked && entity.Area == "Admin" && entity.Controller == "Function"
@@ -117,25 +123,22 @@ namespace TuanZi.Security
             if (result.Successed)
             {
                 FunctionCacheRefreshEventData clearEventData = new FunctionCacheRefreshEventData();
-                _eventBus.PublishSync(clearEventData);
+                _eventBus.Publish(clearEventData);
 
                 FunctionAuthCacheRefreshEventData removeEventData = new FunctionAuthCacheRefreshEventData()
                 {
                     FunctionIds = dtos.Select(m => m.Id).ToArray()
                 };
-                _eventBus.PublishSync(removeEventData);
+                _eventBus.Publish(removeEventData);
             }
             return result;
         }
 
-        #endregion
+        #endregion Implementation of IFunctionStore<TFunction,in TFunctionInputDto>
 
         #region Implementation of IEntityInfoStore<TEntityInfo,in TEntityInfoInputDto>
 
-        public IQueryable<TEntityInfo> EntityInfos
-        {
-            get { return _entityInfoRepository.Entities; }
-        }
+        public IQueryable<TEntityInfo> EntityInfos => _entityInfoRepository.Query();
 
         public virtual Task<bool> CheckEntityInfoExists(Expression<Func<TEntityInfo, bool>> predicate, Guid id = default(Guid))
         {
@@ -145,17 +148,14 @@ namespace TuanZi.Security
         public virtual Task<OperationResult> UpdateEntityInfos(params TEntityInfoInputDto[] dtos)
         {
             Check.NotNull(dtos, nameof(dtos));
-            return _entityInfoRepository.UpdateBatchAsync(dtos);
+            return _entityInfoRepository.UpdateAsync(dtos);
         }
 
-        #endregion
+        #endregion Implementation of IEntityInfoStore<TEntityInfo,in TEntityInfoInputDto>
 
         #region Implementation of IModuleStore<TModule,in TModuleInputDto,in TModuleKey>
 
-        public IQueryable<TModule> Modules
-        {
-            get { return _moduleRepository.Entities; }
-        }
+        public IQueryable<TModule> Modules => _moduleRepository.Query();
 
         public virtual Task<bool> CheckModuleExists(Expression<Func<TModule, bool>> predicate, TModuleKey id = default(TModuleKey))
         {
@@ -177,11 +177,11 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.Error, $"A submodule named '{dto.Name}' already exists in module '{exist}'");
             }
             exist = Modules.Where(m => m.Code == dto.Code && m.ParentId != null && m.ParentId.Equals(dto.ParentId))
-             .SelectMany(m => Modules.Where(n => n.Id.Equals(m.ParentId)).Select(n => n.Name)).FirstOrDefault();
-           if (exist != null)
-           {
+                .SelectMany(m => Modules.Where(n => n.Id.Equals(m.ParentId)).Select(n => n.Name)).FirstOrDefault();
+            if (exist != null)
+            {
                 return new OperationResult(OperationResultType.Error, $"A submodule with code '{dto.Code}' already exists in module '{exist}'");
-           }
+            }
 
             TModule entity = dto.MapTo<TModule>();
             var peerModules = Modules.Where(m => m.ParentId.Equals(dto.ParentId)).Select(m => new { m.OrderCode }).ToArray();
@@ -265,10 +265,8 @@ namespace TuanZi.Security
                 entity.TreePathString = treePathItemFormat.FormatWith(entity.Id);
             }
             return await _moduleRepository.UpdateAsync(entity) > 0
-               ? new OperationResult(OperationResultType.Success, $"Module '{dto.Name}' updated")
-               : OperationResult.NoChanges;
-
-
+                 ? new OperationResult(OperationResultType.Success, $"Module '{dto.Name}' updated")
+                : OperationResult.NoChanges;
         }
 
         public virtual async Task<OperationResult> DeleteModule(TModuleKey id)
@@ -291,16 +289,17 @@ namespace TuanZi.Security
                 : OperationResult.NoChanges;
             if (result.Successed)
             {
-                Guid[] functionIds = _moduleFunctionRepository.Entities.Where(m => m.Id.Equals(id)).Select(m => m.FunctionId).ToArray();
+                Guid[] functionIds = _moduleFunctionRepository.Query(m => m.Id.Equals(id)).Select(m => m.FunctionId).ToArray();
                 FunctionAuthCacheRefreshEventData removeEventData = new FunctionAuthCacheRefreshEventData() { FunctionIds = functionIds };
-                _eventBus.PublishSync(removeEventData);
+                _eventBus.Publish(removeEventData);
             }
             return result;
         }
 
         public virtual TModuleKey[] GetModuleTreeIds(params TModuleKey[] rootIds)
         {
-            return rootIds.SelectMany(m => _moduleRepository.Entities.Where(n => n.TreePathString.Contains($"${m}$")).Select(n => n.Id)).Distinct().ToArray();
+            return rootIds.SelectMany(m => _moduleRepository.Query(n => n.TreePathString.Contains($"${m}$")).Select(n => n.Id)).Distinct()
+                .ToArray();
         }
 
         private static string GetModuleTreePath(TModuleKey currentId, string parentTreePath, string treePathItemFormat)
@@ -308,14 +307,11 @@ namespace TuanZi.Security
             return $"{parentTreePath},{treePathItemFormat.FormatWith(currentId)}";
         }
 
-        #endregion
+        #endregion Implementation of IModuleStore<TModule,in TModuleInputDto,in TModuleKey>
 
         #region Implementation of IModuleFunctionStore<TModuleFunction>
 
-        public IQueryable<TModuleFunction> ModuleFunctions
-        {
-            get { return _moduleFunctionRepository.Entities; }
-        }
+        public IQueryable<TModuleFunction> ModuleFunctions => _moduleFunctionRepository.Query();
 
         public virtual Task<bool> CheckModuleFunctionExists(Expression<Func<TModuleFunction, bool>> predicate, Guid id = default(Guid))
         {
@@ -330,7 +326,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
             }
 
-            Guid[] existFunctionIds = _moduleFunctionRepository.Entities.Where(m => m.ModuleId.Equals(moduleId)).Select(m => m.FunctionId).ToArray();
+            Guid[] existFunctionIds = _moduleFunctionRepository.Query(m => m.ModuleId.Equals(moduleId)).Select(m => m.FunctionId).ToArray();
             Guid[] addFunctionIds = functionIds.Except(existFunctionIds).ToArray();
             Guid[] removeFunctionIds = existFunctionIds.Except(functionIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -354,7 +350,7 @@ namespace TuanZi.Security
                 {
                     continue;
                 }
-                TModuleFunction moduleFunction = _moduleFunctionRepository.Entities
+                TModuleFunction moduleFunction = _moduleFunctionRepository.Query()
                     .FirstOrDefault(m => m.ModuleId.Equals(moduleId) && m.FunctionId == functionId);
                 if (moduleFunction == null)
                 {
@@ -370,22 +366,19 @@ namespace TuanZi.Security
                 {
                     FunctionIds = addFunctionIds.Union(removeFunctionIds).Distinct().ToArray()
                 };
-                _eventBus.PublishSync(removeEventData);
+                _eventBus.Publish(removeEventData);
 
                 return new OperationResult(OperationResultType.Success,
-                    $"Module '{module.Name}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
+                      $"Module '{module.Name}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
             return OperationResult.NoChanges;
         }
 
-        #endregion
+        #endregion Implementation of IModuleFunctionStore<TModuleFunction>
 
         #region Implementation of IModuleRoleStore<TModuleRole>
 
-        public IQueryable<TModuleRole> ModuleRoles
-        {
-            get { return _moduleRoleRepository.Entities; }
-        }
+        public IQueryable<TModuleRole> ModuleRoles => _moduleRoleRepository.Query();
 
         public virtual Task<bool> CheckModuleRoleExists(Expression<Func<TModuleRole, bool>> predicate, Guid id = default(Guid))
         {
@@ -400,7 +393,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"Role with ID '{roleId}' does not exist.");
             }
 
-            TModuleKey[] existModuleIds = _moduleRoleRepository.Entities.Where(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).ToArray();
+            TModuleKey[] existModuleIds = _moduleRoleRepository.Query(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).ToArray();
             TModuleKey[] addModuleIds = moduleIds.Except(existModuleIds).ToArray();
             TModuleKey[] removeModuleIds = existModuleIds.Except(moduleIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -424,7 +417,7 @@ namespace TuanZi.Security
                 {
                     return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
                 }
-                TModuleRole moduleRole = _moduleRoleRepository.Entities.FirstOrDefault(m => m.RoleId.Equals(roleId) && m.ModuleId.Equals(moduleId));
+                TModuleRole moduleRole = _moduleRoleRepository.Query().FirstOrDefault(m => m.RoleId.Equals(roleId) && m.ModuleId.Equals(moduleId));
                 if (moduleRole == null)
                 {
                     continue;
@@ -436,11 +429,19 @@ namespace TuanZi.Security
             if (count > 0)
             {
                 moduleIds = addModuleIds.Union(removeModuleIds).Distinct().ToArray();
-                Guid[] functionIds = _moduleFunctionRepository.Entities.Where(m => moduleIds.Contains(m.ModuleId))
+                Guid[] functionIds = _moduleFunctionRepository.Query(m => moduleIds.Contains(m.ModuleId))
                     .Select(m => m.FunctionId).Distinct().ToArray();
                 FunctionAuthCacheRefreshEventData removeEventData = new FunctionAuthCacheRefreshEventData() { FunctionIds = functionIds };
-                _eventBus.PublishSync(removeEventData);
+                _eventBus.Publish(removeEventData);
 
+                if (addNames.Count > 0 && removeNames.Count == 0)
+                {
+                    return new OperationResult(OperationResultType.Success, $"Role '{role.Name}' added '{addNames.ExpandAndToString()}'");
+                }
+                if (addNames.Count == 0 && removeNames.Count > 0)
+                {
+                    return new OperationResult(OperationResultType.Success, $"Role '{role.Name}' deleted '{removeNames.ExpandAndToString()}'");
+                }
                 return new OperationResult(OperationResultType.Success,
                     $"Role '{role.Name}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
@@ -449,18 +450,15 @@ namespace TuanZi.Security
 
         public virtual TModuleKey[] GetRoleModuleIds(TRoleKey roleId)
         {
-            TModuleKey[] moduleIds = _moduleRoleRepository.Entities.Where(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).Distinct().ToArray();
+            TModuleKey[] moduleIds = _moduleRoleRepository.Query(m => m.RoleId.Equals(roleId)).Select(m => m.ModuleId).Distinct().ToArray();
             return GetModuleTreeIds(moduleIds);
         }
 
-        #endregion
+        #endregion Implementation of IModuleRoleStore<TModuleRole>
 
         #region Implementation of IModuleUserStore<TModuleUser>
 
-        public IQueryable<TModuleUser> ModuleUsers
-        {
-            get { return _moduleUserRepository.Entities; }
-        }
+        public IQueryable<TModuleUser> ModuleUsers => _moduleUserRepository.Query();
 
         public virtual Task<bool> CheckModuleUserExists(Expression<Func<TModuleUser, bool>> predicate, Guid id = default(Guid))
         {
@@ -475,7 +473,7 @@ namespace TuanZi.Security
                 return new OperationResult(OperationResultType.QueryNull, $"User with ID '{userId}' does not exists.");
             }
 
-            TModuleKey[] existModuleIds = _moduleUserRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).ToArray();
+            TModuleKey[] existModuleIds = _moduleUserRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).ToArray();
             TModuleKey[] addModuleIds = moduleIds.Except(existModuleIds).ToArray();
             TModuleKey[] removeModuleIds = existModuleIds.Except(moduleIds).ToArray();
             List<string> addNames = new List<string>(), removeNames = new List<string>();
@@ -499,7 +497,7 @@ namespace TuanZi.Security
                 {
                     return new OperationResult(OperationResultType.QueryNull, $"Module with ID '{moduleId}' does not exist.");
                 }
-                TModuleUser moduleUser = _moduleUserRepository.Entities.FirstOrDefault(m => m.ModuleId.Equals(moduleId) && m.UserId.Equals(userId));
+                TModuleUser moduleUser = _moduleUserRepository.Query().FirstOrDefault(m => m.ModuleId.Equals(moduleId) && m.UserId.Equals(userId));
                 if (moduleUser == null)
                 {
                     continue;
@@ -510,8 +508,16 @@ namespace TuanZi.Security
             if (count > 0)
             {
                 FunctionAuthCacheRefreshEventData removeEventData = new FunctionAuthCacheRefreshEventData() { UserNames = new[] { user.UserName } };
-                _eventBus.PublishSync(removeEventData);
+                _eventBus.Publish(removeEventData);
 
+                if (addNames.Count > 0 && removeNames.Count == 0)
+                {
+                    return new OperationResult(OperationResultType.Success, $"User '{user.UserName}' added '{addNames.ExpandAndToString()}'");
+                }
+                if (addNames.Count == 0 && removeNames.Count > 0)
+                {
+                    return new OperationResult(OperationResultType.Success, $"User '{user.UserName}' deleted '{removeNames.ExpandAndToString()}'");
+                }
                 return new OperationResult(OperationResultType.Success,
                     $"User '{user.UserName}' added '{addNames.ExpandAndToString()}'，deleted '{removeNames.ExpandAndToString()}' done");
             }
@@ -520,7 +526,7 @@ namespace TuanZi.Security
 
         public virtual TModuleKey[] GetUserSelfModuleIds(TUserKey userId)
         {
-            TModuleKey[] moduleIds = _moduleUserRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).Distinct().ToArray();
+            TModuleKey[] moduleIds = _moduleUserRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.ModuleId).Distinct().ToArray();
             return GetModuleTreeIds(moduleIds);
         }
 
@@ -528,13 +534,184 @@ namespace TuanZi.Security
         {
             TModuleKey[] selfModuleIds = GetUserSelfModuleIds(userId);
 
-            TRoleKey[] roleIds = _userRoleRepository.Entities.Where(m => m.UserId.Equals(userId)).Select(m => m.RoleId).ToArray();
+            TRoleKey[] roleIds = _userRoleRepository.Query(m => m.UserId.Equals(userId)).Select(m => m.RoleId).ToArray();
             TModuleKey[] roleModuleIds = roleIds
-                .SelectMany(m => _moduleRoleRepository.Entities.Where(n => n.RoleId.Equals(m)).Select(n => n.ModuleId))
+                .SelectMany(m => _moduleRoleRepository.Query(n => n.RoleId.Equals(m)).Select(n => n.ModuleId))
                 .Distinct().ToArray();
             roleModuleIds = GetModuleTreeIds(roleModuleIds);
 
             return roleModuleIds.Union(selfModuleIds).Distinct().ToArray();
+        }
+
+        #endregion Implementation of IModuleUserStore<TModuleUser>
+
+        #region Implementation of IEntityRoleStore<TEntityRole,in TEntityRoleInputDto,in TRoleKey>
+
+        public virtual IQueryable<TEntityRole> EntityRoles => _entityRoleRepository.Query();
+
+        public virtual Task<bool> CheckEntityRoleExists(Expression<Func<TEntityRole, bool>> predicate, Guid id = default(Guid))
+        {
+            return _entityRoleRepository.CheckExistsAsync(predicate, id);
+        }
+
+        public virtual FilterGroup[] GetEntityRoleFilterGroups(TRoleKey roleId, Guid entityId, DataAuthOperation operation)
+        {
+            return _entityRoleRepository.Query(m => m.RoleId.Equals(roleId) && m.EntityId == entityId && m.Operation == operation)
+                .Select(m => m.FilterGroupJson).ToArray().Select(m => m.FromJsonString<FilterGroup>()).ToArray();
+        }
+
+        public virtual async Task<OperationResult> CreateEntityRoles(params TEntityRoleInputDto[] dtos)
+        {
+            List<DataAuthCacheItem> cacheItems = new List<DataAuthCacheItem>();
+            OperationResult result = await _entityRoleRepository.InsertAsync(dtos,
+                async dto =>
+                {
+                    TRole role = await _roleRepository.GetAsync(dto.RoleId);
+                    if (role == null)
+                    {
+                        throw new TuanException($"Role ID with '{dto.RoleId}' does not exist.");
+                    }
+                    TEntityInfo entityInfo = await _entityInfoRepository.GetAsync(dto.EntityId);
+                    if (entityInfo == null)
+                    {
+                        throw new TuanException($"Entity '{dto.EntityId}'  does not exist.");
+                    }
+                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId))
+                    {
+                        throw new TuanException($"The data permission rule for the role '{role.Name}' and the entity '{entityInfo.Name}' already exists.");
+                    }
+                    OperationResult checkResult = CheckFilterGroup(dto.FilterGroup, entityInfo);
+                    if (!checkResult.Successed)
+                    {
+                        throw new TuanException($"Data rule validation failed:{checkResult.Message}");
+                    }
+                    cacheItems.Add(new DataAuthCacheItem()
+                    {
+                        RoleName = role.Name,
+                        EntityTypeFullName = entityInfo.TypeName,
+                        Operation = dto.Operation,
+                        FilterGroup = dto.FilterGroup
+                    });
+                });
+            if (result.Successed && cacheItems.Count > 0)
+            {
+                DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData() { CacheItems = cacheItems };
+                _eventBus.Publish(eventData);
+            }
+            return result;
+        }
+
+        public virtual async Task<OperationResult> UpdateEntityRoles(params TEntityRoleInputDto[] dtos)
+        {
+            List<DataAuthCacheItem> cacheItems = new List<DataAuthCacheItem>();
+            OperationResult result = await _entityRoleRepository.UpdateAsync(dtos,
+                async (dto, entity) =>
+                {
+                    TRole role = await _roleRepository.GetAsync(dto.RoleId);
+                    if (role == null)
+                    {
+                        throw new TuanException($"Role with ID '{dto.RoleId}' does not exist.");
+                    }
+                    TEntityInfo entityInfo = await _entityInfoRepository.GetAsync(dto.EntityId);
+                    if (entityInfo == null)
+                    {
+                        throw new TuanException($"Entity'{dto.EntityId}' does not exist.");
+                    }
+                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId, dto.Id))
+                    {
+                        throw new TuanException($"The data permission rule for the role '{role.Name}' and the entity '{entityInfo.Name}' already exists.");
+                    }
+                    OperationResult checkResult = CheckFilterGroup(dto.FilterGroup, entityInfo);
+                    if (!checkResult.Successed)
+                    {
+                        throw new TuanException($"Data rule validation failed:{checkResult.Message}");
+                    }
+                    cacheItems.Add(new DataAuthCacheItem()
+                    {
+                        RoleName = role.Name,
+                        EntityTypeFullName = entityInfo.TypeName,
+                        FilterGroup = dto.FilterGroup
+                    });
+                });
+
+            if (result.Successed && cacheItems.Count > 0)
+            {
+                DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData() { CacheItems = cacheItems };
+                _eventBus.Publish(eventData);
+            }
+            return result;
+        }
+
+        public virtual async Task<OperationResult> DeleteEntityRoles(params Guid[] ids)
+        {
+            List<(string, string)> list = new List<(string, string)>();
+            OperationResult result = await _entityRoleRepository.DeleteAsync(ids,
+                async entity =>
+                {
+                    TRole role = await _roleRepository.GetAsync(entity.RoleId);
+                    TEntityInfo entityInfo = await _entityInfoRepository.GetAsync(entity.EntityId);
+                    if (role != null && entityInfo != null)
+                    {
+                        list.Add((role.Name, entityInfo.TypeName));
+                    }
+                });
+            if (result.Successed && list.Count > 0)
+            {
+                IDataAuthCache cache = ServiceLocator.Instance.GetService<IDataAuthCache>();
+                foreach ((string roleName, string typeName) in list)
+                {
+                    cache.RemoveCache(roleName, typeName, DataAuthOperation.Delete);
+                }
+            }
+            return result;
+        }
+
+        private static OperationResult CheckFilterGroup(FilterGroup group, TEntityInfo entityInfo)
+        {
+            EntityProperty[] properties = entityInfo.Properties;
+
+            foreach (FilterRule rule in group.Rules)
+            {
+                EntityProperty property = properties.FirstOrDefault(m => m.Name == rule.Field);
+                if (property == null)
+                {
+                    return new OperationResult(OperationResultType.Error, $"The property name '{rule.Field}' does not exist in the entity '{entityInfo.Name}'");
+                }
+                if (rule.Value == null || rule.Value.ToString().IsNullOrWhiteSpace())
+                {
+                    return new OperationResult(OperationResultType.Error, $"属性名“{property.Display}”操作“{rule.Operate.ToDescription()}”的值不能为空");
+                }
+            }
+            if (group.Operate == FilterOperate.And)
+            {
+                List<IGrouping<string, FilterRule>> duplicate = group.Rules.GroupBy(m => m.Field + m.Operate).Where(m => m.Count() > 1).ToList();
+                if (duplicate.Count > 0)
+                {
+                    FilterRule[] rules = duplicate.SelectMany(m => m.Select(n => n)).DistinctBy(m => m.Field + m.Operate).ToArray();
+                    return new OperationResult(OperationResultType.Error,
+                        $"The group operation is 'and' under the condition that the field and operation '{rules.ExpandAndToString(m => $"{properties.First(n => n.Name == m.Field).Display}-{m.Operate.ToDescription()}", ", ")}' There are duplicate rules, please remove duplicates");
+                }
+            }
+            OperationResult result;
+            if (group.Groups.Count > 0)
+            {
+                foreach (FilterGroup g in group.Groups)
+                {
+                    result = CheckFilterGroup(g, entityInfo);
+                    if (!result.Successed)
+                    {
+                        return result;
+                    }
+                }
+            }
+            Type entityType = Type.GetType(entityInfo.TypeName);
+            result = FilterHelper.CheckFilterGroup(group, entityType);
+            if (!result.Successed)
+            {
+                return result;
+            }
+
+            return OperationResult.Success;
         }
 
         #endregion

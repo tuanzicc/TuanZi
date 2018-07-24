@@ -16,7 +16,7 @@ namespace TuanZi.Security
 {
     [IgnoreDependency]
     public interface IEntityInfoStore<TEntityInfo, in TEntityInfoInputDto>
-        where TEntityInfo : IEntityInfo, IEntity<Guid>
+        where TEntityInfo : IEntityInfo
         where TEntityInfoInputDto : EntityInfoInputDtoBase
     {
         IQueryable<TEntityInfo> EntityInfos { get; }

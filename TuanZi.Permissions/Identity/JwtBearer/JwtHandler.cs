@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -12,7 +11,7 @@ using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
 
-namespace TuanZi.Security.JwtBearer
+namespace TuanZi.Identity.JwtBearer
 {
     public class JwtHelper
     {

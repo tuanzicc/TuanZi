@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 using TuanZi.Audits;
+using TuanZi.Collections;
 using TuanZi.Core;
 using TuanZi.Core.EntityInfos;
 using TuanZi.Dependency;
@@ -29,9 +31,12 @@ namespace TuanZi.Entity
 
         public static void CheckAndMigration(this DbContext dbContext)
         {
-            if (dbContext.Database.GetPendingMigrations().Any())
+            string[] migrations = dbContext.Database.GetPendingMigrations().ToArray();
+            if (migrations.Length > 0)
             {
                 dbContext.Database.Migrate();
+                ILogger logger = ServiceLocator.Instance.GetLogger("TuanZi.Entity.DbContextExtensions");
+                logger.LogInformation($"A pending migration record for {migrations.Length} has been submitted:{migrations.ExpandAndToString()}");
             }
         }
 
@@ -82,6 +87,7 @@ namespace TuanZi.Entity
         private static AuditEntity GetAuditEntity(EntityEntry entry, IEntityInfo entityInfo)
         {
             AuditEntity audit = new AuditEntity() { Name = entityInfo.Name, TypeName = entityInfo.TypeName, OperateType = OperateType.Insert };
+            EntityProperty[] entityProperties = entityInfo.Properties;
             foreach (IProperty property in entry.CurrentValues.Properties)
             {
                 if (property.IsConcurrencyToken)
@@ -97,8 +103,8 @@ namespace TuanZi.Entity
                 }
                 AuditEntityProperty auditProperty = new AuditEntityProperty()
                 {
-                    Name = name,
-                    FieldName = entityInfo.PropertyNames[name],
+                    FieldName = name,
+                    DisplayName = entityProperties.First(m => m.Name == name).Display,
                     DataType = property.ClrType.ToString()
                 };
                 if (entry.State == EntityState.Added)

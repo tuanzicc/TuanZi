@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Core;
 using TuanZi.Core.Packs;
 
 
@@ -14,9 +14,7 @@ namespace TuanZi.AspNetCore
         {
             IServiceProvider serviceProvider = app.ApplicationServices;
 
-            TuanPackManager moduleManager = serviceProvider.GetService<TuanPackManager>();
-            moduleManager.UseModules(serviceProvider);
-
+            serviceProvider.UseTuan();
             return app;
         }
 

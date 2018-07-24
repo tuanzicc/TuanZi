@@ -8,7 +8,6 @@ using TuanZi.Dependency;
 
 namespace TuanZi.Security
 {
-    [IgnoreDependency]
     public interface IModuleRoleStore<TModuleRole, in TRoleKey, TModuleKey>
     {
         IQueryable<TModuleRole> ModuleRoles { get; }

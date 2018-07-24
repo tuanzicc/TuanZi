@@ -1,4 +1,6 @@
-﻿namespace TuanZi.Filter
+﻿using System;
+
+namespace TuanZi.Filter
 {
     public class PageResult<T>
     {
@@ -19,6 +21,11 @@
         public PageData<T> ToPageData()
         {
             return new PageData<T>(Data, Total);
+        }
+
+        public PageResult<TResult> ToPageResult<TResult>(Func<T[], TResult[]> func)
+        {
+            return new PageResult<TResult>(func(Data), Total);
         }
     }
 }

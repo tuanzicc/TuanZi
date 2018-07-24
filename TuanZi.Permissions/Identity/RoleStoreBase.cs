@@ -14,11 +14,11 @@ using TuanZi.Entity;
 namespace TuanZi.Identity
 {
     public abstract class RoleStoreBase<TRole, TRoleKey, TRoleClaim>
-        : IQueryableRoleStore<TRole>,
-          IRoleClaimStore<TRole>
-        where TRole : RoleBase<TRoleKey>
-        where TRoleClaim : RoleClaimBase<TRoleKey>, new()
-        where TRoleKey : IEquatable<TRoleKey>
+       : IQueryableRoleStore<TRole>,
+         IRoleClaimStore<TRole>
+       where TRole : RoleBase<TRoleKey>
+       where TRoleClaim : RoleClaimBase<TRoleKey>, new()
+       where TRoleKey : IEquatable<TRoleKey>
     {
         private readonly IRepository<TRole, TRoleKey> _roleRepository;
         private readonly IRepository<TRoleClaim, int> _roleClaimRepository;
@@ -43,7 +43,7 @@ namespace TuanZi.Identity
 
         #region Implementation of IQueryableRoleStore<TRole>
 
-        public IQueryable<TRole> Roles => _roleRepository.Entities;
+        public IQueryable<TRole> Roles => _roleRepository.Query();
 
         #endregion
 
@@ -57,7 +57,7 @@ namespace TuanZi.Identity
 
             if (role.IsDefault)
             {
-                string defaultRole = _roleRepository.Entities.Where(m => m.IsDefault).Select(m => m.Name).FirstOrDefault();
+                string defaultRole = _roleRepository.Query(m => m.IsDefault, false).Select(m => m.Name).FirstOrDefault();
                 if (defaultRole != null)
                 {
                     return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
@@ -79,7 +79,7 @@ namespace TuanZi.Identity
             }
             if (role.IsDefault)
             {
-                var defaultRole = _roleRepository.Entities.Where(m => m.IsDefault).Select(m => new { m.Id, m.Name }).FirstOrDefault();
+                var defaultRole = _roleRepository.Query(m => m.IsDefault, false).Select(m => new { m.Id, m.Name }).FirstOrDefault();
                 if (defaultRole != null && !defaultRole.Id.Equals(role.Id))
                 {
                     return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
@@ -176,7 +176,7 @@ namespace TuanZi.Identity
             ThrowIfDisposed();
             Check.NotNull(role, nameof(role));
 
-            IList<Claim> list = _roleClaimRepository.Entities.Where(m => m.RoleId.Equals(role.Id)).Select(n => new Claim(n.ClaimType, n.ClaimValue)).ToList();
+            IList<Claim> list = _roleClaimRepository.Query(m => m.RoleId.Equals(role.Id)).Select(n => new Claim(n.ClaimType, n.ClaimValue)).ToList();
             return Task.FromResult(list);
         }
 

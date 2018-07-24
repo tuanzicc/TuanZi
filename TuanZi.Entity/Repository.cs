@@ -5,40 +5,59 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.Logging;
 using TuanZi.Collections;
 using TuanZi.Data;
+using TuanZi.Dependency;
+using TuanZi.Exceptions;
 using TuanZi.Extensions;
+using TuanZi.Filter;
 using TuanZi.Mapping;
-
+using TuanZi.Secutiry;
 using Z.EntityFramework.Plus;
 
 
 namespace TuanZi.Entity
 {
-    public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
-        where TEntity : class, IEntity<TKey>
-        where TKey : IEquatable<TKey>
+    public partial class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+       where TEntity : class, IEntity<TKey>
+       where TKey : IEquatable<TKey>
     {
         private readonly DbContext _dbContext;
         private readonly DbSet<TEntity> _dbSet;
+        private readonly ILogger _logger;
 
         public Repository(IUnitOfWork unitOfWork)
         {
             UnitOfWork = unitOfWork;
             _dbContext = (DbContext)unitOfWork.GetDbContext<TEntity, TKey>();
             _dbSet = _dbContext.Set<TEntity>();
+            _logger = ServiceLocator.Instance.GetLogger<Repository<TEntity, TKey>>();
         }
 
         public IUnitOfWork UnitOfWork { get; }
 
-        public IQueryable<TEntity> Entities => _dbSet.AsQueryable().AsNoTracking();
+        public virtual IQueryable<TEntity> Entities
+        {
+            get
+            {
+                Expression<Func<TEntity, bool>> dataFilterExp = GetDataFilter(DataAuthOperation.Read);
+                return _dbSet.AsQueryable().AsNoTracking().Where(dataFilterExp);
+            }
+        }
 
-        public IQueryable<TEntity> TrackEntities => _dbSet.AsQueryable();
+        public virtual IQueryable<TEntity> TrackEntities
+        {
+            get
+            {
+                Expression<Func<TEntity, bool>> dataFilterExp = GetDataFilter(DataAuthOperation.Read);
+                return _dbSet.AsQueryable().Where(dataFilterExp);
+            }
+        }
 
         #region Synchronize
 
-        public int Insert(params TEntity[] entities)
+        public virtual int Insert(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
             for (int i = 0; i < entities.Length; i++)
@@ -50,16 +69,7 @@ namespace TuanZi.Entity
             return _dbContext.SaveChanges();
         }
 
-        public int Insert<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
-        {
-            Check.NotNull(dto, nameof(dto));
-            TEntity entity = dto.MapTo<TEntity>();
-            entity = entity.CheckICreatedTime<TEntity, TKey>();
-            _dbSet.Add(entity);
-            return _dbContext.SaveChanges();
-        }
-
-        public OperationResult InsertBatch<TInputDto>(ICollection<TInputDto> dtos,
+        public virtual OperationResult Insert<TInputDto>(ICollection<TInputDto> dtos,
             Action<TInputDto> checkAction = null,
             Func<TInputDto, TEntity, TEntity> updateFunc = null) where TInputDto : IInputDto<TKey>
         {
@@ -81,78 +91,33 @@ namespace TuanZi.Entity
                     entity = entity.CheckICreatedTime<TEntity, TKey>();
                     _dbSet.Add(entity);
                 }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
+                }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(dto));
             }
             int count = _dbContext.SaveChanges();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' added".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) added".FormatWith(dtos.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) added".FormatWith(dtos.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public int Recycle(params TEntity[] entities)
-        {
-            Check.NotNull(entities, nameof(entities));
-            foreach (var entity in entities)
-            {
-                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.LogicDelete);
-            }
-            return Update(entities);
-        }
-
-        public int Recycle(TKey key)
-        {
-            CheckEntityKey(key, nameof(key));
-            TEntity entity = _dbSet.Find(key);
-            return entity == null ? 0 : Recycle(entity);
-        }
-
-        public int Recycle(Expression<Func<TEntity, bool>> predicate)
-        {
-            Check.NotNull(predicate, nameof(predicate));
-            TEntity[] entities = _dbSet.Where(predicate).ToArray();
-            return Recycle(entities);
-        }
-
-        public int Restore(params TEntity[] entities)
-        {
-            Check.NotNull(entities, nameof(entities));
-            foreach (var entity in entities)
-            {
-                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.Restore);
-            }
-            return Update(entities);
-        }
-
-        public int Restore(TKey key)
-        {
-            CheckEntityKey(key, nameof(key));
-            TEntity entity = _dbSet.Find(key);
-            return entity == null ? 0 : Restore(entity);
-        }
-
-        public int Restore(Expression<Func<TEntity, bool>> predicate)
-        {
-            Check.NotNull(predicate, nameof(predicate));
-            TEntity[] entities = _dbSet.Where(predicate).ToArray();
-            return Restore(entities);
-        }
-
-        public int Delete(params TEntity[] entities)
+        public virtual int Delete(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
 
+            CheckDataAuth(DataAuthOperation.Delete, entities);
             _dbSet.RemoveRange(entities);
             return _dbContext.SaveChanges();
         }
 
-        public int Delete(TKey key)
+        public virtual int Delete(TKey key)
         {
             CheckEntityKey(key, nameof(key));
 
@@ -160,7 +125,7 @@ namespace TuanZi.Entity
             return Delete(entity);
         }
 
-        public OperationResult Delete(ICollection<TKey> ids, Action<TEntity> checkAction = null, Func<TEntity, TEntity> deleteFunc = null)
+        public virtual OperationResult Delete(ICollection<TKey> ids, Action<TEntity> checkAction = null, Func<TEntity, TEntity> deleteFunc = null)
         {
             Check.NotNull(ids, nameof(ids));
             List<string> names = new List<string>();
@@ -181,50 +146,43 @@ namespace TuanZi.Entity
                     {
                         entity = deleteFunc(entity);
                     }
+                    CheckDataAuth(DataAuthOperation.Delete, entity);
                     _dbSet.Remove(entity);
+                }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(entity));
             }
             int count = _dbContext.SaveChanges();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' deleted".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) deleted".FormatWith(ids.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) deleted".FormatWith(ids.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public int DeleteBatch(Expression<Func<TEntity, bool>> predicate)
+        public virtual int DeleteBatch(Expression<Func<TEntity, bool>> predicate)
         {
             Check.NotNull(predicate, nameof(predicate));
 
             return _dbSet.Where(predicate).Delete();
         }
 
-        public int Update(params TEntity[] entities)
+        public virtual int Update(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
-           
+
+            CheckDataAuth(DataAuthOperation.Update, entities);
             _dbSet.UpdateRange(entities);
             return _dbContext.SaveChanges();
         }
 
-        public int Update<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
-        {
-            Check.NotNull(dto, nameof(dto));
-            TEntity entity = _dbSet.Find(dto.Id);
-            if (entity == null)
-                return 0;
-            entity = dto.MapTo(entity);
-            _dbSet.Update(entity);
-            return _dbContext.SaveChanges();
-        }
-
-        public OperationResult UpdateBatch<TEditDto>(ICollection<TEditDto> dtos,
+        public virtual OperationResult Update<TEditDto>(ICollection<TEditDto> dtos,
             Action<TEditDto, TEntity> checkAction = null,
             Func<TEditDto, TEntity, TEntity> updateFunc = null) where TEditDto : IInputDto<TKey>
         {
@@ -248,24 +206,27 @@ namespace TuanZi.Entity
                     {
                         entity = updateFunc(dto, entity);
                     }
+                    CheckDataAuth(DataAuthOperation.Update, entity);
                     _dbSet.Update(entity);
+                }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(dto));
             }
             int count = _dbContext.SaveChanges();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' updated".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) updated".FormatWith(dtos.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) updated".FormatWith(dtos.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public int UpdateBatch(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
+        public virtual int UpdateBatch(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
         {
             Check.NotNull(predicate, nameof(predicate));
             Check.NotNull(updateExpression, nameof(updateExpression));
@@ -273,38 +234,51 @@ namespace TuanZi.Entity
             return _dbSet.Where(predicate).Update(updateExpression);
         }
 
-        public bool CheckExists(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey))
+        public virtual bool CheckExists(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey))
         {
             Check.NotNull(predicate, nameof(predicate));
 
             TKey defaultId = default(TKey);
             var entity = _dbSet.Where(predicate).Select(m => new { m.Id }).FirstOrDefault();
-            bool exists = (!typeof(TKey).IsValueType && ReferenceEquals(id, null)) || id.Equals(defaultId)
+            bool exists = !typeof(TKey).IsValueType && ReferenceEquals(id, null) || id.Equals(defaultId)
                 ? entity != null
                 : entity != null && !entity.Id.Equals(id);
             return exists;
         }
 
-        public TEntity Get(TKey key)
+        public virtual TEntity Get(TKey key)
         {
             CheckEntityKey(key, nameof(key));
 
             return _dbSet.Find(key);
         }
-        public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] includePropertySelectors)
+
+        public virtual IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true)
         {
-            IQueryable<TEntity> query = _dbSet.AsQueryable().AsNoTracking();
-            if (includePropertySelectors != null && includePropertySelectors.Length > 0)
-            {
-                foreach (Expression<Func<TEntity, object>> selector in includePropertySelectors)
-                {
-                    query = query.Include(selector);
-                }
-            }
-            return query.AsNoTracking();
+            return TrackQuery(predicate, filterByDataAuth).AsNoTracking();
         }
 
-        public IQueryable<TEntity> TrackInclude(params Expression<Func<TEntity, object>>[] includePropertySelectors)
+        public virtual IQueryable<TEntity> Query(params Expression<Func<TEntity, object>>[] includePropertySelectors)
+        {
+            return TrackQuery(includePropertySelectors).AsNoTracking();
+        }
+
+        public IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true)
+        {
+            IQueryable<TEntity> query = _dbSet.AsQueryable();
+            if (filterByDataAuth)
+            {
+                Expression<Func<TEntity, bool>> dataAuthExp = GetDataFilter(DataAuthOperation.Read);
+                query = query.Where(dataAuthExp);
+            }
+            if (predicate == null)
+            {
+                return query;
+            }
+            return query.Where(predicate);
+        }
+
+        public virtual IQueryable<TEntity> TrackQuery(params Expression<Func<TEntity, object>>[] includePropertySelectors)
         {
             IQueryable<TEntity> query = _dbSet.AsQueryable();
             if (includePropertySelectors != null && includePropertySelectors.Length > 0)
@@ -317,33 +291,25 @@ namespace TuanZi.Entity
             return query;
         }
 
-
         #endregion
 
         #region Asynchronous
 
-        public async Task<int> InsertAsync(params TEntity[] entities)
+        public virtual async Task<int> InsertAsync(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
+
             for (int i = 0; i < entities.Length; i++)
             {
                 TEntity entity = entities[i];
                 entities[i] = entity.CheckICreatedTime<TEntity, TKey>();
             }
+
             await _dbSet.AddRangeAsync(entities);
             return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<int> InsertAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
-        {
-            Check.NotNull(dto, nameof(dto));
-            TEntity entity = dto.MapTo<TEntity>();
-            entity = entity.CheckICreatedTime<TEntity, TKey>();
-            _dbSet.Add(entity);
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<OperationResult> InsertBatchAsync<TInputDto>(ICollection<TInputDto> dtos,
+        public virtual async Task<OperationResult> InsertAsync<TInputDto>(ICollection<TInputDto> dtos,
             Func<TInputDto, Task> checkAction = null,
             Func<TInputDto, TEntity, Task<TEntity>> updateFunc = null) where TInputDto : IInputDto<TKey>
         {
@@ -365,80 +331,33 @@ namespace TuanZi.Entity
                     entity = entity.CheckICreatedTime<TEntity, TKey>();
                     await _dbSet.AddAsync(entity);
                 }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
+                }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(dto));
             }
             int count = await _dbContext.SaveChangesAsync();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' added".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) added".FormatWith(dtos.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) added".FormatWith(dtos.Count))
                 : OperationResult.NoChanges;
         }
 
-        public async Task<int> RecycleAsync(params TEntity[] entities)
-        {
-            Check.NotNull(entities, nameof(entities));
-            foreach (var entity in entities)
-            {
-                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.LogicDelete);
-            }
-            _dbSet.UpdateRange(entities);
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<int> RecycleAsync(TKey key)
-        {
-            CheckEntityKey(key, nameof(key));
-            TEntity entity = _dbSet.Find(key);
-            return entity == null ? 0 : await RecycleAsync(entity);
-        }
-
-        public async Task<int> RecycleAsync(Expression<Func<TEntity, bool>> predicate)
-        {
-            Check.NotNull(predicate, nameof(predicate));
-            TEntity[] entities = _dbSet.Where(predicate).ToArray();
-            return await RecycleAsync(entities);
-        }
-
-        public async Task<int> RestoreAsync(params TEntity[] entities)
-        {
-            Check.NotNull(entities, nameof(entities));
-            foreach (var entity in entities)
-            {
-                entity.CheckIRecycle<TEntity, TKey>(RecycleOperation.Restore);
-            }
-            _dbSet.UpdateRange(entities);
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<int> RestoreAsync(TKey key)
-        {
-            CheckEntityKey(key, nameof(key));
-            TEntity entity = _dbSet.Find(key);
-            return entity == null ? 0 : await RestoreAsync(entity);
-        }
-
-        public async Task<int> RestoreAsync(Expression<Func<TEntity, bool>> predicate)
-        {
-            Check.NotNull(predicate, nameof(predicate));
-            TEntity[] entities = _dbSet.Where(predicate).ToArray();
-            return await RestoreAsync(entities);
-        }
-
-        public async Task<int> DeleteAsync(params TEntity[] entities)
+        public virtual async Task<int> DeleteAsync(params TEntity[] entities)
         {
             Check.NotNull(entities, nameof(entities));
 
+            CheckDataAuth(DataAuthOperation.Delete, entities);
             _dbSet.RemoveRange(entities);
             return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<int> DeleteAsync(TKey key)
+        public virtual async Task<int> DeleteAsync(TKey key)
         {
             CheckEntityKey(key, nameof(key));
 
@@ -446,7 +365,7 @@ namespace TuanZi.Entity
             return await DeleteAsync(entity);
         }
 
-        public async Task<OperationResult> DeleteAsync(ICollection<TKey> ids,
+        public virtual async Task<OperationResult> DeleteAsync(ICollection<TKey> ids,
             Func<TEntity, Task> checkAction = null,
             Func<TEntity, Task<TEntity>> deleteFunc = null)
         {
@@ -469,49 +388,43 @@ namespace TuanZi.Entity
                     {
                         entity = await deleteFunc(entity);
                     }
+                    CheckDataAuth(DataAuthOperation.Delete, entity);
                     _dbSet.Remove(entity);
+                }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(entity));
             }
             int count = await _dbContext.SaveChangesAsync();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' deleted".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) deleted".FormatWith(ids.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) deleted".FormatWith(ids.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public async Task<int> DeleteBatchAsync(Expression<Func<TEntity, bool>> predicate)
+        public virtual async Task<int> DeleteBatchAsync(Expression<Func<TEntity, bool>> predicate)
         {
             Check.NotNull(predicate, nameof(predicate));
 
             return await _dbSet.Where(predicate).DeleteAsync();
         }
 
-        public async Task<int> UpdateAsync(TEntity entity)
+        public virtual async Task<int> UpdateAsync(TEntity entity)
         {
             Check.NotNull(entity, nameof(entity));
+
+            CheckDataAuth(DataAuthOperation.Update, entity);
             _dbSet.Update(entity);
             return await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<int> UpdateAsync<TEditDto>(TEditDto dto) where TEditDto : IInputDto<TKey>
-        {
-            Check.NotNull(dto, nameof(dto));
-            TEntity entity = await _dbSet.FirstOrDefaultAsync(m => m.Id.ToString() == dto.Id.ToString());
-            if (entity == null)
-                return 0;
-            entity = dto.MapTo(entity);
-            _dbSet.Update(entity);
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<OperationResult> UpdateBatchAsync<TEditDto>(ICollection<TEditDto> dtos,
+        public virtual async Task<OperationResult> UpdateAsync<TEditDto>(ICollection<TEditDto> dtos,
             Func<TEditDto, TEntity, Task> checkAction = null,
             Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null) where TEditDto : IInputDto<TKey>
         {
@@ -534,24 +447,28 @@ namespace TuanZi.Entity
                     {
                         entity = await updateFunc(dto, entity);
                     }
+
+                    CheckDataAuth(DataAuthOperation.Update, entity);
                     _dbSet.Update(entity);
+                }
+                catch (TuanException e)
+                {
+                    return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 catch (Exception e)
                 {
+                    _logger.LogError(e, e.Message);
                     return new OperationResult(OperationResultType.Error, e.Message);
                 }
                 names.AddIfNotNull(GetNameValue(dto));
             }
             int count = await _dbContext.SaveChangesAsync();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                        ? "'{0}' updated".FormatWith(names.ExpandAndToString())
-                        : "{0} record(s) updated".FormatWith(dtos.Count))
+                ? new OperationResult(OperationResultType.Success, "{0} record(s) updated".FormatWith(dtos.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public async Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
+        public virtual async Task<int> UpdateAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
         {
             Check.NotNull(predicate, nameof(predicate));
             Check.NotNull(updateExpression, nameof(updateExpression));
@@ -559,7 +476,7 @@ namespace TuanZi.Entity
             return await _dbSet.Where(predicate).UpdateAsync(updateExpression);
         }
 
-        public async Task<bool> CheckExistsAsync(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey))
+        public virtual async Task<bool> CheckExistsAsync(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey))
         {
             predicate.CheckNotNull(nameof(predicate));
 
@@ -571,7 +488,7 @@ namespace TuanZi.Entity
             return exists;
         }
 
-        public async Task<TEntity> GetAsync(TKey key)
+        public virtual async Task<TEntity> GetAsync(TKey key)
         {
             CheckEntityKey(key, nameof(key));
 
@@ -580,7 +497,7 @@ namespace TuanZi.Entity
 
         #endregion
 
-        #region Private Methods
+        #region privates
 
         private static void CheckEntityKey(object key, string keyName)
         {
@@ -613,6 +530,26 @@ namespace TuanZi.Entity
             {
                 return null;
             }
+        }
+
+        private static void CheckDataAuth(DataAuthOperation operation, params TEntity[] entities)
+        {
+            if (entities.Length == 0)
+            {
+                return;
+            }
+            Expression<Func<TEntity, bool>> exp = GetDataFilter(operation);
+            Func<TEntity, bool> func = exp.Compile();
+            bool flag = entities.All(func);
+            if (!flag)
+            {
+                throw new TuanException($"Entity '{typeof(TEntity)}' data '{entities.ExpandAndToString(m => m.Id.ToString())}' has insufficient permissions for '{operation.ToDescription()}' operation");
+            }
+        }
+
+        private static Expression<Func<TEntity, bool>> GetDataFilter(DataAuthOperation operation)
+        {
+            return FilterHelper.GetDataFilterExpression<TEntity>(operation: operation);
         }
 
         #endregion

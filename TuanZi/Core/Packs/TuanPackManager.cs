@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Logging;
 using TuanZi.Core.Builders;
 using TuanZi.Reflection;
 
@@ -57,12 +57,18 @@ namespace TuanZi.Core.Packs
             return services;
         }
 
-        public void UseModules(IServiceProvider provider)
+        public void UsePacks(IServiceProvider provider)
         {
-            foreach (TuanPack module in LoadedPacks)
+            ILogger<TuanPackManager> logger = provider.GetService<ILogger<TuanPackManager>>();
+            logger.LogInformation("Tuan framework initialization begins");
+
+            foreach (TuanPack pack in LoadedPacks)
             {
-                module.UsePack(provider);
+                pack.UsePack(provider);
+                logger.LogInformation($"Module {pack.GetType()} loaded successfully");
             }
+
+            logger.LogInformation("Tuan framework initialization completed");
         }
     }
 }

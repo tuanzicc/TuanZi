@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-
+using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 
 using TuanZi.Collections;
@@ -37,16 +37,42 @@ namespace TuanZi.Caching
             }
         }
 
+        public static async Task SetAsync(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options = null)
+        {
+            Check.NotNullOrEmpty(key, nameof(key));
+            Check.NotNull(value, nameof(value));
+
+            string json = value.ToJsonString();
+            if (options == null)
+            {
+                await cache.SetStringAsync(key, json);
+            }
+            else
+            {
+                await cache.SetStringAsync(key, json, options);
+            }
+        }
+
         public static void Set(this IDistributedCache cache, string key, object value, int cacheSeconds)
         {
             Check.NotNullOrEmpty(key, nameof(key));
             Check.NotNull(value, nameof(value));
             Check.GreaterThan(cacheSeconds, nameof(cacheSeconds), 0, true);
 
-
             DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
             options.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheSeconds));
             cache.Set(key, value, options);
+        }
+
+        public static Task SetAsync(this IDistributedCache cache, string key, object value, int cacheSeconds)
+        {
+            Check.NotNullOrEmpty(key, nameof(key));
+            Check.NotNull(value, nameof(value));
+            Check.GreaterThan(cacheSeconds, nameof(cacheSeconds), 0, true);
+
+            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
+            options.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheSeconds));
+            return cache.SetAsync(key, value, options);
         }
 
         public static void Set(this IDistributedCache cache, string key, object value, IFunction function)
@@ -63,6 +89,20 @@ namespace TuanZi.Caching
             cache.Set(key, value, options);
         }
 
+        public static Task SetAsync(this IDistributedCache cache, string key, object value, IFunction function)
+        {
+            Check.NotNullOrEmpty(key, nameof(key));
+            Check.NotNull(value, nameof(value));
+            Check.NotNull(function, nameof(function));
+
+            if (function.CacheExpirationSeconds == 0)
+            {
+                return Task.FromResult(0);
+            }
+            DistributedCacheEntryOptions options = function.ToCacheOptions();
+            return cache.SetAsync(key, value, options);
+        }
+
         public static TResult Get<TResult>(this IDistributedCache cache, string key)
         {
             string json = cache.GetString(key);
@@ -73,28 +113,88 @@ namespace TuanZi.Caching
             return json.FromJsonString<TResult>();
         }
 
-        public static TResult Get<TResult>(this IDistributedCache cache, string key, Func<TResult> getFunc, int cacheSeconds)
+        public static async Task<TResult> GetAsync<TResult>(this IDistributedCache cache, string key)
+        {
+            string json = await cache.GetStringAsync(key);
+            if (json == null)
+            {
+                return default(TResult);
+            }
+            return json.FromJsonString<TResult>();
+        }
+
+        public static TResult Get<TResult>(this IDistributedCache cache, string key, Func<TResult> getFunc, DistributedCacheEntryOptions options = null)
         {
             TResult result = cache.Get<TResult>(key);
-            if (result != null)
+            if (!Equals(result, default(TResult)))
             {
                 return result;
             }
             result = getFunc();
-            cache.Set(key, result, cacheSeconds);
+            if (Equals(result, default(TResult)))
+            {
+                return default(TResult);
+            }
+            cache.Set(key, result, options);
             return result;
+        }
+
+        public static async Task<TResult> GetAsync<TResult>(this IDistributedCache cache, string key, Func<Task<TResult>> getAsyncFunc, DistributedCacheEntryOptions options = null)
+        {
+            TResult result = await cache.GetAsync<TResult>(key);
+            if (!Equals(result, default(TResult)))
+            {
+                return result;
+            }
+            result = await getAsyncFunc();
+            if (Equals(result, default(TResult)))
+            {
+                return default(TResult);
+            }
+            await cache.SetAsync(key, result, options);
+            return result;
+        }
+
+        public static TResult Get<TResult>(this IDistributedCache cache, string key, Func<TResult> getFunc, int cacheSeconds)
+        {
+            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
+            options.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheSeconds));
+            return cache.Get<TResult>(key, getFunc, options);
+        }
+
+        public static Task<TResult> GetAsync<TResult>(this IDistributedCache cache, string key, Func<Task<TResult>> getAsyncFunc, int cacheSeconds)
+        {
+            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
+            options.SetAbsoluteExpiration(TimeSpan.FromSeconds(cacheSeconds));
+            return cache.GetAsync<TResult>(key, getAsyncFunc, options);
         }
 
         public static TResult Get<TResult>(this IDistributedCache cache, string key, Func<TResult> getFunc, IFunction function)
         {
-            TResult result = cache.Get<TResult>(key);
-            if (result != null)
+            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
+            if (function.IsCacheSliding)
             {
-                return result;
+                options.SetSlidingExpiration(TimeSpan.FromSeconds(function.CacheExpirationSeconds));
             }
-            result = getFunc();
-            cache.Set(key, result, function);
-            return result;
+            else
+            {
+                options.SetAbsoluteExpiration(TimeSpan.FromSeconds(function.CacheExpirationSeconds));
+            }
+            return cache.Get<TResult>(key, getFunc, options);
+        }
+
+        public static Task<TResult> GetAsync<TResult>(this IDistributedCache cache, string key, Func<Task<TResult>> getAsyncFunc, IFunction function)
+        {
+            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions();
+            if (function.IsCacheSliding)
+            {
+                options.SetSlidingExpiration(TimeSpan.FromSeconds(function.CacheExpirationSeconds));
+            }
+            else
+            {
+                options.SetAbsoluteExpiration(TimeSpan.FromSeconds(function.CacheExpirationSeconds));
+            }
+            return cache.GetAsync<TResult>(key, getAsyncFunc, options);
         }
 
         public static PageResult<TResult> ToPageCache<TEntity, TResult>(this IQueryable<TEntity> source,
@@ -295,7 +395,7 @@ namespace TuanZi.Caching
         {
             IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
             string key = GetKey<TSource, TOutputDto>(source, keyParams);
-            return cache.Get(key, () => source.ToOutput<TOutputDto>().ToList(), cacheSeconds);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToList(), cacheSeconds);
         }
 
         public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
@@ -304,7 +404,7 @@ namespace TuanZi.Caching
         {
             IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
             string key = GetKey<TSource, TOutputDto>(source, keyParams);
-            return cache.Get(key, () => source.ToOutput<TOutputDto>().ToArray(), cacheSeconds);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToArray(), cacheSeconds);
         }
 
         public static List<TOutputDto> ToCacheList<TSource, TOutputDto>(this IQueryable<TSource> source,
@@ -313,7 +413,7 @@ namespace TuanZi.Caching
         {
             IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
             string key = GetKey<TSource, TOutputDto>(source, keyParams);
-            return cache.Get(key, () => source.ToOutput<TOutputDto>().ToList(), function);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToList(), function);
         }
 
         public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
@@ -322,7 +422,7 @@ namespace TuanZi.Caching
         {
             IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
             string key = GetKey<TSource, TOutputDto>(source, keyParams);
-            return cache.Get(key, () => source.ToOutput<TOutputDto>().ToArray(), function);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToArray(), function);
         }
 
         #endregion
@@ -417,14 +517,14 @@ namespace TuanZi.Caching
             source = source != null
                 ? source.Skip((pageIndex - 1) * pageSize).Take(pageSize)
                 : Enumerable.Empty<TEntity>().AsQueryable();
-            IQueryable<TOutputDto> query = source.ToOutput<TOutputDto>();
+            IQueryable<TOutputDto> query = source.ToOutput<TEntity, TOutputDto>();
             return GetKey(query.Expression, keyParams);
         }
 
         private static string GetKey<TSource, TOutputDto>(IQueryable<TSource> source,
             params object[] keyParams)
         {
-            IQueryable<TOutputDto> query = source.ToOutput<TOutputDto>();
+            IQueryable<TOutputDto> query = source.ToOutput<TSource, TOutputDto>();
             return GetKey(query.Expression, keyParams);
         }
 

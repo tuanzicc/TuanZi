@@ -19,6 +19,10 @@ namespace TuanZi.Security.Events
 
         public override void Handle(FunctionCacheRefreshEventData eventData)
         {
+            if (!ServiceLocator.InScoped())
+            {
+                return;
+            }
             IFunctionHandler functionHandler = _provider.GetService<IFunctionHandler>();
             functionHandler.RefreshCache();
         }

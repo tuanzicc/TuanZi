@@ -23,22 +23,24 @@ namespace TuanZi.Core.Options
         {
             SetDbContextOptionses(options);
 
-            //MailSender
             IConfigurationSection section = _configuration.GetSection("Tuan:MailSender");
             MailSenderOptions sender = section.Get<MailSenderOptions>();
             if (sender != null)
             {
+                if (sender.Password == null)
+                {
+                    sender.Password = _configuration["Tuan:MailSender:Password"];
+                }
                 options.MailSender = sender;
             }
 
-            //JwtOptions
             section = _configuration.GetSection("Tuan:Jwt");
             JwtOptions jwt = section.Get<JwtOptions>();
             if (jwt != null)
             {
                 if (jwt.Secret == null)
                 {
-                    jwt.Secret = _configuration["JwtSecret"];
+                    jwt.Secret = _configuration["Tuan:Jwt:Secret"];
                 }
                 options.Jwt = jwt;
             }
@@ -57,7 +59,7 @@ namespace TuanZi.Core.Options
                 }
                 TuanDbContextOptions dbContextOptions = new TuanDbContextOptions()
                 {
-                    DbContextTypeName = "TuanZi.Entity.DefaultDbContext,TuanZi.Entity",
+                    DbContextTypeName = "Tuan.Entity.DefaultDbContext,Tuan.EntityFrameworkCore",
                     ConnectionString = connectionString,
                     DatabaseType = DatabaseType.SqlServer
                 };
@@ -67,7 +69,7 @@ namespace TuanZi.Core.Options
             var repeated = dict.Values.GroupBy(m => m.DbContextType).FirstOrDefault(m => m.Count() > 1);
             if (repeated != null)
             {
-                throw new TuanException($"There are multiple configuration nodes in the data context configuration that point to the same context type: {repeated.First().DbContextTypeName}");
+                throw new TuanException($"Multiple configuration nodes in the data context configuration point to the same context type: {repeated.First().DbContextTypeName}");
             }
 
             foreach (KeyValuePair<string, TuanDbContextOptions> pair in dict)

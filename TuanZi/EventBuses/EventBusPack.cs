@@ -12,7 +12,7 @@ namespace TuanZi.EventBuses
     {
         public override PackLevel Level => PackLevel.Core;
 
-        public override int Order => 1;
+        public override int Order => 2;
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {

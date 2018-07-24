@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Collections;
 using TuanZi.Core.Modules;
 using TuanZi.Data;
 using TuanZi.Dependency;
@@ -14,10 +14,10 @@ using TuanZi.Exceptions;
 namespace TuanZi.Security
 {
     public abstract class ModuleHandlerBase<TModule, TModuleInputDto, TModuleKey, TModuleFunction> : IModuleHandler
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>
+       where TModule : ModuleBase<TModuleKey>
+       where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
+       where TModuleKey : struct, IEquatable<TModuleKey>
+       where TModuleFunction : ModuleFunctionBase<TModuleKey>
     {
         private readonly ServiceLocator _locator;
         private readonly IModuleInfoPicker _moduleInfoPicker;
@@ -53,6 +53,24 @@ namespace TuanZi.Security
             IModuleFunctionStore<TModuleFunction, TModuleKey> moduleFunctionStore =
                 provider.GetService<IModuleFunctionStore<TModuleFunction, TModuleKey>>();
 
+            TModule[] modules = moduleStore.Modules.ToArray();
+            var positionModules = modules.Select(m => new { m.Id, Position = GetModulePosition(modules, m) })
+                .OrderByDescending(m => m.Position.Length).ToArray();
+            string[] deletePositions = positionModules.Select(m => m.Position)
+                .Except(moduleInfos.Select(n => $"{n.Position}.{n.Code}"))
+                .Except("Root,Root.Site,Root.Admin,Root.Admin.Identity,Root.Admin.Security,Root.Admin.System".Split(','))
+                .ToArray();
+            TModuleKey[] deleteModuleIds = positionModules.Where(m => deletePositions.Contains(m.Position)).Select(m => m.Id).ToArray();
+            OperationResult result;
+            foreach (TModuleKey id in deleteModuleIds)
+            {
+                result = moduleStore.DeleteModule(id).Result;
+                if (result.Errored)
+                {
+                    throw new TuanException(result.Message);
+                }
+            }
+
             foreach (ModuleInfo info in moduleInfos)
             {
                 TModule parent = GetModule(moduleStore, info.Position);
@@ -60,11 +78,10 @@ namespace TuanZi.Security
                 {
                     throw new TuanException($"Module information with path '{info.Position}' could not be found");
                 }
-                OperationResult result;
                 TModule module = moduleStore.Modules.FirstOrDefault(m => m.ParentId.Equals(parent.Id) && m.Code == info.Code);
                 if (module == null)
                 {
-                    TModuleInputDto dto = GetDto(info, parent.Id, null);
+                    TModuleInputDto dto = GetDto(info, parent, null);
                     result = moduleStore.CreateModule(dto).Result;
                     if (result.Errored)
                     {
@@ -74,7 +91,7 @@ namespace TuanZi.Security
                 }
                 else
                 {
-                    TModuleInputDto dto = GetDto(info, parent.Id, module);
+                    TModuleInputDto dto = GetDto(info, parent, module);
                     result = moduleStore.UpdateModule(dto).Result;
                     if (result.Errored)
                     {
@@ -126,7 +143,7 @@ namespace TuanZi.Security
             return module;
         }
 
-        private static TModuleInputDto GetDto(ModuleInfo info, TModuleKey parentId, TModule existsModule)
+        private static TModuleInputDto GetDto(ModuleInfo info, TModule parent, TModule existsModule)
         {
             return new TModuleInputDto()
             {
@@ -134,9 +151,16 @@ namespace TuanZi.Security
                 Name = info.Name,
                 Code = info.Code,
                 OrderCode = info.Order,
-                Remark = existsModule?.Remark,
-                ParentId = parentId
+                Remark = existsModule?.Remark ?? $"{parent.Name}-{info.Name}",
+                ParentId = parent.Id
             };
         }
+
+        private static string GetModulePosition(TModule[] source, TModule module)
+        {
+            string[] codes = module.TreePathIds.Select(id => source.First(n => n.Id.Equals(id)).Code).ToArray();
+            return codes.ExpandAndToString(".");
+        }
     }
+
 }

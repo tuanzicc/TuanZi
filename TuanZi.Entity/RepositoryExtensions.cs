@@ -18,7 +18,7 @@ namespace TuanZi.Entity
              where TEntity : class, IEntity<TKey>
              where TKey : IEquatable<TKey>
         {
-            return repository.TrackEntities.Where(predicate).Delete(interceptAction);
+            return repository.TrackQuery().Where(predicate).Delete(interceptAction);
         }
 
         public static async Task<int> UpdateBatchAndInterceptAsync<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
@@ -27,7 +27,7 @@ namespace TuanZi.Entity
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return await repository.TrackEntities.Where(predicate).DeleteAsync(interceptAction);
+            return await repository.TrackQuery().Where(predicate).DeleteAsync(interceptAction);
         }
 
         public static int UpdateBatchAndIntercept<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
@@ -37,7 +37,7 @@ namespace TuanZi.Entity
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return repository.TrackEntities.Where(predicate).Update(updateExpression, interceptAction);
+            return repository.TrackQuery().Where(predicate).Update(updateExpression, interceptAction);
         }
 
         public static async Task<int> UpdateBatchAndInterceptAsync<TEntity, TKey>(this IRepository<TEntity, TKey> repository,
@@ -47,7 +47,7 @@ namespace TuanZi.Entity
             where TEntity : class, IEntity<TKey>
             where TKey : IEquatable<TKey>
         {
-            return await repository.TrackEntities.Where(predicate).UpdateAsync(updateExpression, interceptAction);
+            return await repository.TrackQuery().Where(predicate).UpdateAsync(updateExpression, interceptAction);
         }
 
         public static IQueryable<TEntity> FromSql<TEntity, TKey>(this IRepository<TEntity, TKey> repository, string sql, params object[] parameters)

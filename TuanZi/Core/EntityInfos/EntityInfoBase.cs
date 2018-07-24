@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Reflection;
 using TuanZi.Data;
 using TuanZi.Entity;
@@ -22,17 +24,18 @@ namespace TuanZi.Core.EntityInfos
         public bool AuditEnabled { get; set; } = true;
 
         [Required]
-        public string PropertyNamesJson { get; set; }
+        public string PropertyJson { get; set; }
 
-        public IDictionary<string, string> PropertyNames
+        [NotMapped]
+        public EntityProperty[] Properties
         {
             get
             {
-                if (PropertyNamesJson.IsNullOrEmpty())
+                if (string.IsNullOrEmpty(PropertyJson) || !PropertyJson.StartsWith("["))
                 {
-                    return new Dictionary<string, string>();
+                    return new EntityProperty[0];
                 }
-                return PropertyNamesJson.FromJsonString<Dictionary<string, string>>();
+                return PropertyJson.FromJsonString<EntityProperty[]>();
             }
         }
 
@@ -40,17 +43,38 @@ namespace TuanZi.Core.EntityInfos
         {
             Check.NotNull(entityType, nameof(entityType));
 
-            TypeName = entityType.FullName;
+            TypeName = $"{entityType.FullName},{entityType.Module.Name.Replace(".dll", "")}";
             Name = entityType.GetDescription();
             AuditEnabled = true;
 
-            IDictionary<string, string> propertyDict = new Dictionary<string, string>();
             PropertyInfo[] propertyInfos = entityType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            foreach (PropertyInfo propertyInfo in propertyInfos)
+            PropertyJson = propertyInfos.Select(property =>
             {
-                propertyDict.Add(propertyInfo.Name, propertyInfo.GetDescription());
-            }
-            PropertyNamesJson = propertyDict.ToJsonString();
+                EntityProperty ep = new EntityProperty()
+                {
+                    Name = property.Name,
+                    Display = property.GetDescription(),
+                    TypeName = property.PropertyType.FullName
+                };
+                if (property.PropertyType.IsEnum)
+                {
+                    ep.TypeName = typeof(int).FullName;
+                    Type enumType = property.PropertyType;
+                    Array values = enumType.GetEnumValues();
+                    int[] intValues = values.Cast<int>().ToArray();
+                    string[] names = values.Cast<Enum>().Select(m => m.ToDescription()).ToArray();
+                    for (int i = 0; i < intValues.Length; i++)
+                    {
+                        string value = intValues[i].ToString();
+                        ep.ValueRange.Add(new { id = value, text = names[i] });
+                    }
+                }
+                if (property.HasAttribute<UserFlagAttribute>())
+                {
+                    ep.IsUserFlag = true;
+                }
+                return ep;
+            }).ToArray().ToJsonString();
         }
     }
 }

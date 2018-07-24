@@ -75,14 +75,18 @@ namespace TuanZi.Secutiry.Claims
             return claimsIdentity.FindFirst(ClaimTypes.Email)?.Value;
         }
 
-        public static IEnumerable<string> GetRoles(this IIdentity identity)
+        public static string[] GetRoles(this IIdentity identity)
         {
             Check.NotNull(identity, nameof(identity));
             if (!(identity is ClaimsIdentity claimsIdentity))
             {
                 return null;
             }
-            return claimsIdentity.FindAll(ClaimTypes.Role).Select(m => m.Value);
+            return claimsIdentity.FindAll(ClaimTypes.Role).SelectMany(m =>
+            {
+                string[] roles = m.Value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                return roles;
+            }).ToArray();
         }
     }
 }

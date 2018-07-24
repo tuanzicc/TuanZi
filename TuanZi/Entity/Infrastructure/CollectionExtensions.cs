@@ -8,7 +8,8 @@ using TuanZi.Extensions;
 using TuanZi.Filter;
 using TuanZi.Mapping;
 using TuanZi.Properties;
-
+using TuanZi.Reflection;
+using TuanZi.Secutiry;
 
 namespace TuanZi.Entity
 {
@@ -73,9 +74,30 @@ namespace TuanZi.Entity
             pageIndex.CheckGreaterThan("pageIndex", 0);
             pageSize.CheckGreaterThan("pageSize", 0);
 
-            int total;
-            TOutputDto[] data = source.Where(predicate, pageIndex, pageSize, out total, sortConditions).ToOutput<TOutputDto>().ToArray();
+            TOutputDto[] data = source.Where(predicate, pageIndex, pageSize, out int total, sortConditions).ToOutput<TEntity, TOutputDto>().ToArray();
             return new PageResult<TOutputDto>() { Total = total, Data = data };
+        }
+
+        public static IQueryable<TOutputDto> ToOutput<TEntity, TOutputDto>(this IQueryable<TEntity> source)
+        {
+            if (!typeof(TOutputDto).IsBaseOn<IDataAuthEnabled>())
+            {
+                return MapperExtensions.ToOutput<TEntity, TOutputDto>(source);
+            }
+
+            List<TEntity> entities = source.ToList();
+            List<TOutputDto> dtos = new List<TOutputDto>();
+            Func<TEntity, bool> updateFunc = FilterHelper.GetDataFilterExpression<TEntity>(null, DataAuthOperation.Update).Compile();
+            Func<TEntity, bool> deleteFunc = FilterHelper.GetDataFilterExpression<TEntity>(null, DataAuthOperation.Delete).Compile();
+            foreach (TEntity entity in entities)
+            {
+                TOutputDto dto = entity.MapTo<TOutputDto>();
+                IDataAuthEnabled dto2 = (IDataAuthEnabled)dto;
+                dto2.Updatable = updateFunc(entity);
+                dto2.Deletable = deleteFunc(entity);
+                dtos.Add(dto);
+            }
+            return dtos.AsQueryable();
         }
 
         public static IQueryable<TEntity> Where<TEntity>(this IQueryable<TEntity> source,

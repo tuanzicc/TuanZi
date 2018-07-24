@@ -8,17 +8,18 @@ using Microsoft.Extensions.Logging;
 using TuanZi.AspNetCore.Mvc.Filters;
 using TuanZi.Core;
 using TuanZi.Core.Functions;
+using TuanZi.Dependency;
 using TuanZi.Exceptions;
 using TuanZi.Reflection;
 
 
 namespace TuanZi.AspNetCore.Mvc
 {
-    public class MvcFunctionHandler: FunctionHandlerBase<Function, MvcFunctionHandler>
+    public class MvcFunctionHandler : FunctionHandlerBase<Function>
     {
-        public MvcFunctionHandler(ILoggerFactory loggerFactory, IAllAssemblyFinder allAssemblyFinder)
-            : base(loggerFactory, allAssemblyFinder)
+        public MvcFunctionHandler()
         {
+            IAllAssemblyFinder allAssemblyFinder = ServiceLocator.Instance.GetService<IAllAssemblyFinder>();
             FunctionTypeFinder = new MvcControllerTypeFinder(allAssemblyFinder);
             MethodInfoFinder = new PublicInstanceMethodInfoFinder();
         }
@@ -34,10 +35,10 @@ namespace TuanZi.AspNetCore.Mvc
                 throw new TuanException($"Type '{controllerType.FullName}' is not an MVC controller type");
             }
             FunctionAccessType accessType = controllerType.HasAttribute<LoginedAttribute>() || controllerType.HasAttribute<AuthorizeAttribute>()
-               ? FunctionAccessType.Logined
-               : controllerType.HasAttribute<RoleLimitAttribute>()
-                   ? FunctionAccessType.RoleLimit
-                   : FunctionAccessType.Anonymouse;
+                ? FunctionAccessType.Logined
+                : controllerType.HasAttribute<RoleLimitAttribute>()
+                    ? FunctionAccessType.RoleLimit
+                    : FunctionAccessType.Anonymouse;
             Function function = new Function()
             {
                 Name = controllerType.GetDescription(),
@@ -71,16 +72,16 @@ namespace TuanZi.AspNetCore.Mvc
             return function;
         }
 
-        private static string GetArea(Type type)
-        {
-            AreaAttribute attribute = type.GetAttribute<AreaAttribute>(true);
-            return attribute?.RouteValue;
-        }
-
         protected override bool IsIgnoreMethod(Function action, MethodInfo method, IEnumerable<Function> functions)
         {
             bool flag = base.IsIgnoreMethod(action, method, functions);
             return flag && method.HasAttribute<HttpPostAttribute>() || method.HasAttribute<NonActionAttribute>();
+        }
+
+        private static string GetArea(Type type)
+        {
+            AreaAttribute attribute = type.GetAttribute<AreaAttribute>(true);
+            return attribute?.RouteValue;
         }
     }
 }

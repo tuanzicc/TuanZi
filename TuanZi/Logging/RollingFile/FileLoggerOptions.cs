@@ -15,7 +15,7 @@ namespace TuanZi.Logging.RollingFile
     {
         private int? _fileSizeLimit = 10 * 1024 * 1024;
         private int? _retainedFileCountLimit = 2;
-        private string _fileName = "logs-";
+        private string _fileName = "log-";
 
 
         /// <summary>
@@ -75,6 +75,6 @@ namespace TuanZi.Logging.RollingFile
         /// Default to <c>Logs</c>
         /// </summary>
         /// <returns></returns>
-        public string LogDirectory { get; set; } = "Logs";
+        public string LogDirectory { get; set; } = "Log";
     }
 }

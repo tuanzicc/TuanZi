@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using TuanZi.Entity;
 
 namespace TuanZi.Core.EntityInfos
 {
-    public interface IEntityInfo
+    public interface IEntityInfo : IEntity<Guid>
     {
-        Guid Id { get; set; }
-
         string Name { get; set; }
 
         string TypeName { get; set; }
 
         bool AuditEnabled { get; set; }
 
-        string PropertyNamesJson { get; set; }
+        string PropertyJson { get; set; }
 
-        IDictionary<string, string> PropertyNames { get; }
+        EntityProperty[] Properties { get; }
 
         void FromType(Type entityType);
     }

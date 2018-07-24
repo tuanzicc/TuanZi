@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +27,14 @@ namespace TuanZi.Identity
             services.AddScoped<IUserStore<TUser>, TUserStore>();
             services.AddScoped<IRoleStore<TRole>, TRoleStore>();
 
+            services.AddTransient<IPrincipal>(provider =>
+            {
+                IHttpContextAccessor accessor = provider.GetService<IHttpContextAccessor>();
+                return accessor?.HttpContext.User;
+            });
+
+            services.AddSingleton<IOnlineUserCache, OnlineUserCache<TUser, TUserKey, TRole, TRoleKey>>();
+
             Action<IdentityOptions> identityOptionsAction = IdentityOptionsAction();
             IdentityBuilder builder = services.AddIdentity<TUser, TRole>(identityOptionsAction);
             OnIdentityBuild(builder);
@@ -36,11 +46,6 @@ namespace TuanZi.Identity
             }
 
             return services;
-        }
-
-        protected virtual Action<IdentityOptions> SetupAction()
-        {
-            return null;
         }
 
         protected virtual Action<IdentityOptions> IdentityOptionsAction()

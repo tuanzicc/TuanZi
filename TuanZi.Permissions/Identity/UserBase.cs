@@ -40,6 +40,8 @@ namespace TuanZi.Identity
         [DisplayName("Password Hash")]
         public string PasswordHash { get; set; }
 
+        public string HeadImg { get; set; }
+
         [DisplayName("Security Stamp")]
         public string SecurityStamp { get; set; }
 

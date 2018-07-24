@@ -16,19 +16,18 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Core.Functions
 {
-    public abstract class FunctionHandlerBase<TFunction, TFunctionHandler> : IFunctionHandler
-        where TFunction : class, IEntity<Guid>, IFunction, new()
+
+    public abstract class FunctionHandlerBase<TFunction> : IFunctionHandler
+      where TFunction : class, IEntity<Guid>, IFunction, new()
     {
         private readonly List<TFunction> _functions = new List<TFunction>();
-        private readonly ILogger<TFunctionHandler> _logger;
 
-        protected FunctionHandlerBase(ILoggerFactory loggerFactory, IAllAssemblyFinder allAssemblyFinder)
+        protected FunctionHandlerBase()
         {
-            _logger = loggerFactory.CreateLogger<TFunctionHandler>();
-            AllAssemblyFinder = allAssemblyFinder;
+            Logger = ServiceLocator.Instance.GetService<ILoggerFactory>().CreateLogger(GetType());
         }
 
-        protected IAllAssemblyFinder AllAssemblyFinder { get; }
+        protected ILogger Logger { get; }
 
         public abstract IFunctionTypeFinder FunctionTypeFinder { get; }
 
@@ -40,6 +39,7 @@ namespace TuanZi.Core.Functions
 
             Type[] functionTypes = FunctionTypeFinder.FindAll(true);
             TFunction[] functions = GetFunctions(functionTypes);
+            Logger.LogInformation($"Function information is initialized, and a total of {functions.Length} function information is found.");
 
             ServiceLocator.Instance.ExcuteScopedWork(provider =>
             {
@@ -134,7 +134,6 @@ namespace TuanZi.Core.Functions
             TFunction exist = GetFunction(functions, action.Area, action.Controller, action.Action, action.Name);
             return exist != null;
         }
-        
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, TFunction[] functions)
         {
@@ -149,7 +148,7 @@ namespace TuanZi.Core.Functions
             {
                 throw new TuanException("The service of IRepository<,> is not found, please initialize the EntityPack module");
             }
-            TFunction[] dbItems = repository.TrackEntities.ToArray();
+            TFunction[] dbItems = repository.TrackQuery().ToArray();
 
             TFunction[] removeItems = dbItems.Except(functions,
                 EqualityHelper<TFunction>.CreateComparer(m => m.Area + m.Controller + m.Action)).ToArray();
@@ -161,8 +160,7 @@ namespace TuanZi.Core.Functions
             int addCount = addItems.Length;
             repository.Insert(addItems);
 
-            int updateCount = 0;
-            return;
+            int updateCount = 0; return;
             foreach (TFunction item in dbItems.Except(removeItems))
             {
                 bool isUpdate = false;
@@ -173,7 +171,6 @@ namespace TuanZi.Core.Functions
                         string.Equals(m.Area, item.Area, StringComparison.OrdinalIgnoreCase)
                         && string.Equals(m.Controller, item.Controller, StringComparison.OrdinalIgnoreCase)
                         && string.Equals(m.Action, item.Action, StringComparison.OrdinalIgnoreCase));
-
                 }
                 catch (InvalidOperationException)
                 {
@@ -202,6 +199,7 @@ namespace TuanZi.Core.Functions
                 {
                     repository.Update(item);
                     updateCount++;
+                    Logger.LogDebug($"Updated Function '{function.Name}({function.Area}/{function.Controller}/{function.Action})'");
                 }
             }
             repository.UnitOfWork.Commit();
@@ -210,6 +208,10 @@ namespace TuanZi.Core.Functions
                 string msg = "Function Changes";
                 if (addCount > 0)
                 {
+                    foreach (TFunction function in addItems)
+                    {
+                        Logger.LogDebug($"Added Function '{function.Name}({function.Area}/{function.Controller}/{function.Action})'");
+                    }
                     msg += "，Added " + addCount;
                 }
                 if (updateCount > 0)
@@ -218,17 +220,24 @@ namespace TuanZi.Core.Functions
                 }
                 if (removeCount > 0)
                 {
+                    foreach (TFunction function in removeItems)
+                    {
+                        Logger.LogDebug($"Deleted Function '{function.Name}({function.Area}/{function.Controller}/{function.Action})'");
+                    }
                     msg += "，Deleted " + removeCount;
                 }
-                _logger.LogInformation(msg);
+                Logger.LogInformation(msg);
             }
         }
 
         protected virtual TFunction[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
-            return repository.Entities.ToArray();
+            return repository.Query().ToArray();
         }
 
     }
+
+
+
 }

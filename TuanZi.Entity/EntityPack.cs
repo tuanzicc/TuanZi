@@ -12,7 +12,6 @@ namespace TuanZi.Entity
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             services.AddSingleton<IEntityConfigurationTypeFinder, EntityConfigurationTypeFinder>();
-            services.AddSingleton<IEntityConfigurationAssemblyFinder, EntityConfigurationAssemblyFinder>();
             services.AddSingleton<IDbContextResolver, DbContextResolver>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();

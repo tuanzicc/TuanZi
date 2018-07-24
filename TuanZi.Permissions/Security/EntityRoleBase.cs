@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using TuanZi.Entity;
 using TuanZi.Extensions;
 using TuanZi.Filter;
-
+using TuanZi.Secutiry;
 
 namespace TuanZi.Security
 {
@@ -15,6 +15,8 @@ namespace TuanZi.Security
         public TRoleKey RoleId { get; set; }
 
         public Guid EntityId { get; set; }
+
+        public DataAuthOperation Operation { get; set; }
 
         public string FilterGroupJson { get; set; }
 

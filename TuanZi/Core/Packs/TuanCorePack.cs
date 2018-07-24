@@ -16,15 +16,14 @@ namespace TuanZi.Core.Packs
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             services.AddSingleton<IConfigureOptions<TuanOptions>, TuanOptionsSetup>();
-            ServiceLocator.Instance.TrySetServiceCollection(services);
+            ServiceLocator.Instance.SetServiceCollection(services);
 
             return services;
         }
 
         public override void UsePack(IServiceProvider provider)
         {
-            ServiceLocator.Instance.TrySetApplicationServiceProvider(provider);
-
+            ServiceLocator.Instance.SetApplicationServiceProvider(provider);
             IsEnabled = true;
         }
     }

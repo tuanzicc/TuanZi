@@ -15,15 +15,14 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Entity
 {
-    public class EntityConfigurationTypeFinder : FinderBase<Type>, IEntityConfigurationTypeFinder
+    
+    public class EntityConfigurationTypeFinder : BaseTypeFinderBase<IEntityRegister>, IEntityConfigurationTypeFinder
     {
-        private readonly IEntityConfigurationAssemblyFinder _assemblyFinder;
         private Dictionary<Type, IEntityRegister[]> _entityRegistersDict;
 
-        public EntityConfigurationTypeFinder(IEntityConfigurationAssemblyFinder assemblyFinder)
-        {
-            _assemblyFinder = assemblyFinder;
-        }
+        public EntityConfigurationTypeFinder(IAllAssemblyFinder allAssemblyFinder)
+            : base(allAssemblyFinder)
+        { }
 
         protected Dictionary<Type, IEntityRegister[]> EntityRegistersDict
         {
@@ -59,15 +58,6 @@ namespace TuanZi.Entity
                 }
             }
             throw new TuanException($"Failed to get the context type of the entity class '{entityType}', please load it into the context by inheriting the base class 'EntityTypeConfigurationBase<TEntity, TKey>'");
-        }
-
-        protected override Type[] FindAllItems()
-        {
-            Type baseType = typeof(IEntityRegister);
-            Type[] types = _assemblyFinder.FindAll()
-                .SelectMany(assembly => assembly.GetTypes().Where(type => baseType.IsAssignableFrom(type) && !type.IsAbstract && type.IsPublic))
-                .ToArray();
-            return types;
         }
 
         private void EntityRegistersInit(Type[] types)

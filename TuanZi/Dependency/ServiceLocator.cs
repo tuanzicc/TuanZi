@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
+using System.Security.Principal;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
 namespace TuanZi.Dependency
 {
-    public sealed class ServiceLocator
+
+    public sealed class ServiceLocator : IDisposable
     {
         private static readonly Lazy<ServiceLocator> InstanceLazy = new Lazy<ServiceLocator>(() => new ServiceLocator());
         private IServiceProvider _provider;
@@ -33,22 +37,21 @@ namespace TuanZi.Dependency
             }
         }
 
-        internal void TrySetServiceCollection(IServiceCollection services)
+        public static bool InScoped()
         {
-            Check.NotNull(services, nameof(services));
-            if (_services == null)
-            {
-                _services = services;
-            }
+            return Instance.ScopedProvider != null;
         }
 
-        public void TrySetApplicationServiceProvider(IServiceProvider provider)
+        internal void SetServiceCollection(IServiceCollection services)
+        {
+            Check.NotNull(services, nameof(services));
+            _services = services;
+        }
+
+        internal void SetApplicationServiceProvider(IServiceProvider provider)
         {
             Check.NotNull(provider, nameof(provider));
-            if (_provider == null)
-            {
-                _provider = provider;
-            }
+            _provider = provider;
         }
 
         public void ExcuteScopedWork(Action<IServiceProvider> action)
@@ -199,6 +202,43 @@ namespace TuanZi.Dependency
                 return scopedResolver.GetServices(serviceType);
             }
             return _provider.GetServices(serviceType);
+        }
+
+        public ILogger<T> GetLogger<T>()
+        {
+            ILoggerFactory factory = GetService<ILoggerFactory>();
+            return factory.CreateLogger<T>();
+        }
+
+        public ILogger GetLogger(Type type)
+        {
+            ILoggerFactory factory = GetService<ILoggerFactory>();
+            return factory.CreateLogger(type);
+        }
+
+        public ILogger GetLogger(string name)
+        {
+            ILoggerFactory factory = GetService<ILoggerFactory>();
+            return factory.CreateLogger(name);
+        }
+
+        public ClaimsPrincipal GetCurrentUser()
+        {
+            try
+            {
+                IPrincipal user = GetService<IPrincipal>();
+                return user as ClaimsPrincipal;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public void Dispose()
+        {
+            _services = null;
+            _provider = null;
         }
     }
 }

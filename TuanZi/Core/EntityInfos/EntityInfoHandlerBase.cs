@@ -14,12 +14,9 @@ using TuanZi.Exceptions;
 
 namespace TuanZi.Core.EntityInfos
 {
- 
-
-
 
     public abstract class EntityInfoHandlerBase<TEntityInfo, TEntityInfoHandler> : IEntityInfoHandler
-     where TEntityInfo : class, IEntityInfo, IEntity<Guid>, new()
+    where TEntityInfo : class, IEntityInfo, new()
     {
         private readonly List<TEntityInfo> _entityInfos = new List<TEntityInfo>();
         private readonly ILogger _logger;
@@ -33,7 +30,7 @@ namespace TuanZi.Core.EntityInfos
         {
             IEntityTypeFinder entityTypeFinder = ServiceLocator.Instance.GetService<IEntityTypeFinder>();
             Type[] entityTypes = entityTypeFinder.FindAll(true);
-
+            _logger.LogInformation($"The data entity processor starts to initialize and finds {entityTypes.Length} entity classes.");
             foreach (Type entityType in entityTypes)
             {
                 if (_entityInfos.Exists(m => m.TypeName == entityType.FullName))
@@ -86,7 +83,7 @@ namespace TuanZi.Core.EntityInfos
             {
                 throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Pack module");
             }
-            TEntityInfo[] dbItems = repository.TrackEntities.ToArray();
+            TEntityInfo[] dbItems = repository.TrackQuery().ToArray();
 
             TEntityInfo[] removeItems = dbItems.Except(entityInfos, EqualityHelper<TEntityInfo>.CreateComparer(m => m.TypeName)).ToArray();
             int removeCount = removeItems.Length;
@@ -110,9 +107,9 @@ namespace TuanZi.Core.EntityInfos
                     item.Name = entityInfo.Name;
                     isUpdate = true;
                 }
-                if (item.PropertyNamesJson != entityInfo.PropertyNamesJson)
+                if (item.PropertyJson != entityInfo.PropertyJson)
                 {
-                    item.PropertyNamesJson = entityInfo.PropertyNamesJson;
+                    item.PropertyJson = entityInfo.PropertyJson;
                     isUpdate = true;
                 }
                 if (isUpdate)
@@ -128,14 +125,18 @@ namespace TuanZi.Core.EntityInfos
                 if (addCount > 0)
                 {
                     msg += $"，Added {addCount}";
+                    _logger.LogInformation($"Added {addItems.Length} Entities: {addItems.Select(m => m.TypeName).ExpandAndToString()}");
                 }
                 if (updateCount > 0)
                 {
                     msg += $"，Updated {updateCount}";
+
+                    _logger.LogInformation($"Updated {updateCount} Entities");
                 }
                 if (removeCount > 0)
                 {
                     msg += $"，Deleted {removeCount}";
+                    _logger.LogInformation($"Deleted {removeItems.Length} Entities: {removeItems.Select(m => m.TypeName).ExpandAndToString()}");
                 }
                 _logger.LogInformation(msg);
             }
@@ -144,8 +145,11 @@ namespace TuanZi.Core.EntityInfos
         protected virtual TEntityInfo[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
-            return repository.Entities.ToArray();
+            return repository.Query().ToArray();
         }
 
     }
+
+
+   
 }
