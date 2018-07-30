@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -21,8 +21,9 @@ namespace TuanZi.Core.Packs
             return services;
         }
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             ServiceLocator.Instance.SetApplicationServiceProvider(provider);
             IsEnabled = true;
         }

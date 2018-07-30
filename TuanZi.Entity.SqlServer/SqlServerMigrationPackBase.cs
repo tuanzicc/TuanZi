@@ -8,6 +8,7 @@ using TuanZi.Core.Packs;
 using TuanZi.Core.Options;
 using TuanZi.Exceptions;
 using TuanZi.Core;
+using Microsoft.AspNetCore.Builder;
 
 namespace TuanZi.Entity.SqlServer
 {
@@ -16,8 +17,9 @@ namespace TuanZi.Entity.SqlServer
     {
         public override PackLevel Level => PackLevel.Framework;
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             using (IServiceScope scope = provider.CreateScope())
             {
                 ILogger logger = provider.GetService<ILoggerFactory>().CreateLogger(GetType());

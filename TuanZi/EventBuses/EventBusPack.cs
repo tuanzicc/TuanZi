@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Core.Packs;
@@ -26,8 +26,9 @@ namespace TuanZi.EventBuses
             return services;
         }
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             IEventBusBuilder builder = provider.GetService<IEventBusBuilder>();
             builder.Build();
             IsEnabled = true;

@@ -7,6 +7,7 @@ using TuanZi.Core.Packs;
 using TuanZi.Core.Options;
 using TuanZi.Exceptions;
 using TuanZi.Core;
+using Microsoft.AspNetCore.Builder;
 
 namespace TuanZi.Entity.MySql
 {
@@ -15,8 +16,9 @@ namespace TuanZi.Entity.MySql
     {
         public override PackLevel Level => PackLevel.Framework;
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             using (IServiceScope scope = provider.CreateScope())
             {
                 TDbContext context = CreateDbContext(scope.ServiceProvider);

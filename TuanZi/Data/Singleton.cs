@@ -30,6 +30,6 @@ namespace TuanZi.Data
             }
         }
 
-        public static IDictionary<Type, object> AllSingletons { get; private set; }
+        public static IDictionary<Type, object> AllSingletons { get;  }
     }
 }

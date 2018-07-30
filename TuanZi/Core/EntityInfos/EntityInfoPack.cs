@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Core.Packs;
@@ -20,8 +20,9 @@ namespace TuanZi.Core.EntityInfos
             return services;
         }
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             IEntityInfoHandler handler = provider.GetService<IEntityInfoHandler>();
             handler.Initialize();
             IsEnabled = true;

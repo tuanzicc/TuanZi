@@ -38,6 +38,13 @@ namespace TuanZi.Mapping
             return _mapper.ToOutput<TOutputDto>(source, membersToExpand);
         }
 
+        public static IQueryable<TOutputDto> ToOutput<TOutputDto>(this IQueryable source,
+            params Expression<Func<TOutputDto, object>>[] membersToExpand)
+        {
+            CheckMapper();
+            return _mapper.ToOutput(source, membersToExpand);
+        }
+
         private static void CheckMapper()
         {
             if (_mapper == null)

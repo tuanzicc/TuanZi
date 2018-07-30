@@ -38,16 +38,9 @@ namespace TuanZi.Core
             return services;
         }
 
-        public static IServiceProvider UseTuan(this IServiceProvider provider)
-        {
-            TuanPackManager packManager = provider.GetService<TuanPackManager>();
-            packManager.UsePacks(provider);
-            return provider;
-        }
-
         public static TuanOptions GetTuanOptions(this IServiceProvider provider)
         {
-            return provider.GetService<IOptionsMonitor<TuanOptions>>()?.CurrentValue;
+            return provider.GetService<IOptions<TuanOptions>>()?.Value;
         }
     }
 }

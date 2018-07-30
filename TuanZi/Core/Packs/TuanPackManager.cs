@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TuanZi.Core.Builders;
@@ -57,14 +57,14 @@ namespace TuanZi.Core.Packs
             return services;
         }
 
-        public void UsePacks(IServiceProvider provider)
+        public void UsePacks(IApplicationBuilder app)
         {
-            ILogger<TuanPackManager> logger = provider.GetService<ILogger<TuanPackManager>>();
+            ILogger<TuanPackManager> logger = app.ApplicationServices.GetService<ILogger<TuanPackManager>>();
             logger.LogInformation("Tuan framework initialization begins");
 
             foreach (TuanPack pack in LoadedPacks)
             {
-                pack.UsePack(provider);
+                pack.UsePack(app);
                 logger.LogInformation($"Module {pack.GetType()} loaded successfully");
             }
 

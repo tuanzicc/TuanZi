@@ -1,7 +1,7 @@
 ﻿
 
 using System;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Core.EntityInfos;
@@ -63,8 +63,9 @@ namespace TuanZi.Security
             return services;
         }
 
-        public override void UsePack(IServiceProvider provider)
+        public override void UsePack(IApplicationBuilder app)
         {
+            IServiceProvider provider = app.ApplicationServices;
             IModuleHandler moduleHandler = provider.GetService<IModuleHandler>();
             moduleHandler.Initialize();
 

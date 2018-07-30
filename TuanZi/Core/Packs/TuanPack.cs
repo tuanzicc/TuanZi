@@ -1,5 +1,5 @@
 ﻿using System;
-
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Reflection;
@@ -20,7 +20,7 @@ namespace TuanZi.Core.Packs
             return services;
         }
 
-        public virtual void UsePack(IServiceProvider provider)
+        public virtual void UsePack(IApplicationBuilder app)
         {
             IsEnabled = true;
         }
@@ -28,11 +28,7 @@ namespace TuanZi.Core.Packs
         internal Type[] GetDependModuleTypes()
         {
             DependsOnPacksAttribute depends = this.GetType().GetAttribute<DependsOnPacksAttribute>();
-            if (depends == null)
-            {
-                return new Type[0];
-            }
-            return depends.DependedModuleTypes;
+            return depends == null ? new Type[0] : depends.DependedModuleTypes;
         }
     }
 }

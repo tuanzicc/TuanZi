@@ -12,9 +12,9 @@ namespace TuanZi.AspNetCore
     {
         public static IApplicationBuilder UseTuan(this IApplicationBuilder app)
         {
-            IServiceProvider serviceProvider = app.ApplicationServices;
-
-            serviceProvider.UseTuan();
+            IServiceProvider provider = app.ApplicationServices;
+            TuanPackManager packManager = provider.GetService<TuanPackManager>();
+            packManager.UsePacks(app);
             return app;
         }
 
