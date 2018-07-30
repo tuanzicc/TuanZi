@@ -27,7 +27,7 @@ namespace TuanZi.Threading.Asyncs
                 catch (Exception e)
                 {
                     synch.InnerException = e;
-                    throw;
+                    throw e;
                 }
                 finally
                 {
