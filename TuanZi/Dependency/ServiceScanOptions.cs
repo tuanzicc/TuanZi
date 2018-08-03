@@ -3,9 +3,9 @@
 
 namespace TuanZi.Dependency
 {
-    public class AppServiceAdderOptions
+    public class ServiceScanOptions
     {
-        public AppServiceAdderOptions()
+        public ServiceScanOptions()
         {
             TransientTypeFinder = new TransientDependencyTypeFinder();
             ScopedTypeFinder = new ScopedDependencyTypeFinder();

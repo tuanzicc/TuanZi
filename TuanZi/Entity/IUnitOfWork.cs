@@ -8,8 +8,11 @@ namespace TuanZi.Entity
     public interface IUnitOfWork : IDisposable
     {
         bool HasCommited { get; }
+
         IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>;
 
         void Commit();
+
+        void Rollback();
     }
 }

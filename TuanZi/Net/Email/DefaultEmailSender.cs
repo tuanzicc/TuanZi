@@ -13,11 +13,11 @@ using TuanZi.Dependency;
 using TuanZi.Core.Options;
 using TuanZi.Exceptions;
 using TuanZi.Extensions;
-using TuanZi.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TuanZi.Net.Email
 {
-    public class DefaultEmailSender : IEmailSender, ISingletonDependency
+    public class DefaultEmailSender : IEmailSender
     {
         private readonly IServiceProvider _provider;
         public DefaultEmailSender(IServiceProvider provider)

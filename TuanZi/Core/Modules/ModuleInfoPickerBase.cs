@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.Extensions.Logging;
-
+using TuanZi.Collections;
 using TuanZi.Core.Functions;
 using TuanZi.Data;
 using TuanZi.Dependency;
@@ -40,19 +41,27 @@ namespace TuanZi.Core.Modules
             List<ModuleInfo> infos = new List<ModuleInfo>();
             foreach (Type moduleType in moduleTypes)
             {
-                ModuleInfo typeInfo = GetModule(moduleType);
-                infos.Add(typeInfo);
+                string[] existPaths = infos.Select(m => $"{m.Position}.{m.Code}").ToArray();
+                ModuleInfo[] typeInfos = GetModules(moduleType, existPaths);
+                foreach (ModuleInfo info in typeInfos)
+                {
+                    if (info.Order == 0)
+                    {
+                        info.Order = infos.Count(m => m.Position == info.Position) + 1;
+                    }
+                    infos.AddIfNotExist(info);
+                }
                 MethodInfo[] methods = FunctionHandler.MethodInfoFinder.Find(moduleType, type => type.HasAttribute<ModuleInfoAttribute>());
                 for (int index = 0; index < methods.Length; index++)
                 {
-                    ModuleInfo methodInfo = GetModule(methods[index], typeInfo, index);
+                    ModuleInfo methodInfo = GetModule(methods[index], typeInfos.Last(), index);
                     infos.Add(methodInfo);
                 }
             }
             return infos.ToArray();
         }
 
-        protected abstract ModuleInfo GetModule(Type type);
+        protected abstract ModuleInfo[] GetModules(Type type, string[] existPaths);
 
         protected abstract ModuleInfo GetModule(MethodInfo method, ModuleInfo typeInfo, int index);
     }

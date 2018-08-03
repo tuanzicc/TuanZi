@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 
-namespace OSharp.Identity.OAuth2.QQ
+namespace Tuan.Identity.OAuth2.QQ
 {
     internal class QQHandler : OAuthHandler<QQOptions>
     {

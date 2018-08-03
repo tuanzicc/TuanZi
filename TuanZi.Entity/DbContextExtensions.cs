@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,8 @@ using TuanZi.Audits;
 using TuanZi.Collections;
 using TuanZi.Core;
 using TuanZi.Core.EntityInfos;
+using TuanZi.Core.Functions;
+using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Exceptions;
 
@@ -58,9 +61,40 @@ namespace TuanZi.Entity
             return context.Database.ExecuteSqlCommandAsync(new RawSqlString(sql), parameters);
         }
 
-        public static IList<AuditEntity> GetAuditEntities(this DbContext context)
+        public static void Update<TEntity, TKey>(this DbContext context, params TEntity[] entities)
+            where TEntity : class, IEntity<TKey>
         {
-            List<AuditEntity> result = new List<AuditEntity>();
+            Check.NotNull(entities, nameof(entities));
+
+            DbSet<TEntity> set = context.Set<TEntity>();
+            foreach (TEntity entity in entities)
+            {
+                try
+                {
+                    EntityEntry<TEntity> entry = context.Entry(entity);
+                    if (entry.State == EntityState.Detached)
+                    {
+                        set.Attach(entity);
+                        entry.State = EntityState.Modified;
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    TEntity oldEntity = set.Find(entity.Id);
+                    context.Entry(oldEntity).CurrentValues.SetValues(entity);
+                }
+            }
+        }
+
+        public static IList<AuditEntityEntry> GetAuditEntities(this DbContext context)
+        {
+            List<AuditEntityEntry> result = new List<AuditEntityEntry>();
+            ScopedDictionary scopedDict = ServiceLocator.Instance.GetService<ScopedDictionary>();
+            IFunction function = scopedDict?.Function;
+            if (function == null || !function.AuditEntityEnabled)
+            {
+                return result;
+            }
             IEntityInfoHandler entityInfoHandler = ServiceLocator.Instance.GetService<IEntityInfoHandler>();
             if (entityInfoHandler == null)
             {
@@ -79,14 +113,26 @@ namespace TuanZi.Entity
                 {
                     continue;
                 }
-                result.Add(GetAuditEntity(entry, entityInfo));
+                result.AddIfNotNull(GetAuditEntity(entry, entityInfo));
             }
             return result;
         }
 
-        private static AuditEntity GetAuditEntity(EntityEntry entry, IEntityInfo entityInfo)
+        private static AuditEntityEntry GetAuditEntity(EntityEntry entry, IEntityInfo entityInfo)
         {
-            AuditEntity audit = new AuditEntity() { Name = entityInfo.Name, TypeName = entityInfo.TypeName, OperateType = OperateType.Insert };
+            AuditEntityEntry audit = new AuditEntityEntry
+            {
+                Name = entityInfo.Name,
+                TypeName = entityInfo.TypeName,
+                OperateType = entry.State == EntityState.Added
+                    ? OperateType.Insert
+                    : entry.State == EntityState.Modified
+                        ? OperateType.Update
+                        : entry.State == EntityState.Deleted
+                            ? OperateType.Delete
+                            : OperateType.Query,
+                Entity = entry.Entity
+            };
             EntityProperty[] entityProperties = entityInfo.Properties;
             foreach (IProperty property in entry.CurrentValues.Properties)
             {
@@ -101,7 +147,7 @@ namespace TuanZi.Entity
                         ? entry.Property(property.Name).OriginalValue?.ToString()
                         : entry.Property(property.Name).CurrentValue?.ToString();
                 }
-                AuditEntityProperty auditProperty = new AuditEntityProperty()
+                AuditPropertyEntry auditProperty = new AuditPropertyEntry()
                 {
                     FieldName = name,
                     DisplayName = entityProperties.First(m => m.Name == name).Display,
@@ -110,24 +156,27 @@ namespace TuanZi.Entity
                 if (entry.State == EntityState.Added)
                 {
                     auditProperty.NewValue = entry.Property(property.Name).CurrentValue?.ToString();
+                    audit.PropertyEntries.Add(auditProperty);
                 }
                 else if (entry.State == EntityState.Deleted)
                 {
                     auditProperty.OriginalValue = entry.Property(property.Name).OriginalValue?.ToString();
+                    audit.PropertyEntries.Add(auditProperty);
                 }
                 else if (entry.State == EntityState.Modified)
                 {
                     string currentValue = entry.Property(property.Name).CurrentValue?.ToString();
                     string originalValue = entry.Property(property.Name).OriginalValue?.ToString();
-                    if (currentValue != originalValue)
+                    if (currentValue == originalValue)
                     {
-                        auditProperty.NewValue = currentValue;
-                        auditProperty.OriginalValue = originalValue;
+                        continue;
                     }
+                    auditProperty.NewValue = currentValue;
+                    auditProperty.OriginalValue = originalValue;
+                    audit.PropertyEntries.Add(auditProperty);
                 }
-                audit.Properties.Add(auditProperty);
             }
-            return audit;
+            return audit.PropertyEntries.Count == 0 ? null : audit;
         }
     }
 }

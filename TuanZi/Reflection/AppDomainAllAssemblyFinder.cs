@@ -12,7 +12,7 @@ using TuanZi.Finders;
 
 namespace TuanZi.Reflection
 {
-    public class AppDomainAllAssemblyFinder : FinderBase<Assembly>, IAllAssemblyFinder, ISingletonDependency
+    public class AppDomainAllAssemblyFinder : FinderBase<Assembly>, IAllAssemblyFinder
     {
         private readonly bool _filterNetAssembly;
 
@@ -54,17 +54,17 @@ namespace TuanZi.Reflection
                         {
                             continue;
                         }
-                        if (name == "TuanZiNS")
+                        if (name == "TuanZi")
                         {
                             continue;
                         }
-                        if (name == "TuanZiNS.Core")
+                        if (name == "TuanZi.Core")
                         {
                             name = "TuanZi";
                         }
-                        else if (name.StartsWith("TuanZiNS."))
+                        else if (name.StartsWith("TuanZi."))
                         {
-                            name = name.Replace("TuanZiNS.", "TuanZi.");
+                            name = name.Replace("TuanZi.", "TuanZi.");
                         }
                         if (!names.Contains(name))
                         {
@@ -103,4 +103,5 @@ namespace TuanZi.Reflection
             return assemblies.ToArray();
         }
     }
+
 }

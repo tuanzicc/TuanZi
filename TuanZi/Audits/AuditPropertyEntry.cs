@@ -1,6 +1,6 @@
 ﻿namespace TuanZi.Audits
 {
-    public class AuditEntityProperty
+    public class AuditPropertyEntry
     {
         public string DisplayName { get; set; }
 

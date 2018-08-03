@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 using TuanZi.Core.Options;
 using TuanZi.Dependency;
-
+using TuanZi.Reflection;
 
 namespace TuanZi.Core.Packs
 {
@@ -15,17 +15,10 @@ namespace TuanZi.Core.Packs
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
+            services.AddSingleton<IAllAssemblyFinder, AppDomainAllAssemblyFinder>();
             services.AddSingleton<IConfigureOptions<TuanOptions>, TuanOptionsSetup>();
-            ServiceLocator.Instance.SetServiceCollection(services);
 
             return services;
-        }
-
-        public override void UsePack(IApplicationBuilder app)
-        {
-            IServiceProvider provider = app.ApplicationServices;
-            ServiceLocator.Instance.SetApplicationServiceProvider(provider);
-            IsEnabled = true;
         }
     }
 }

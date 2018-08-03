@@ -170,6 +170,7 @@ namespace TuanZi.Entity
         {
             Check.NotNull(predicate, nameof(predicate));
 
+            ((DbContextBase)_dbContext).BeginOrUseTransaction();
             return _dbSet.Where(predicate).Delete();
         }
 
@@ -178,7 +179,7 @@ namespace TuanZi.Entity
             Check.NotNull(entities, nameof(entities));
 
             CheckDataAuth(DataAuthOperation.Update, entities);
-            _dbSet.UpdateRange(entities);
+            _dbContext.Update<TEntity, TKey>(entities);
             return _dbContext.SaveChanges();
         }
 
@@ -207,7 +208,7 @@ namespace TuanZi.Entity
                         entity = updateFunc(dto, entity);
                     }
                     CheckDataAuth(DataAuthOperation.Update, entity);
-                    _dbSet.Update(entity);
+                    _dbContext.Update<TEntity, TKey>(entity);
                 }
                 catch (TuanException e)
                 {
@@ -231,6 +232,7 @@ namespace TuanZi.Entity
             Check.NotNull(predicate, nameof(predicate));
             Check.NotNull(updateExpression, nameof(updateExpression));
 
+            ((DbContextBase)_dbContext).BeginOrUseTransaction();
             return _dbSet.Where(predicate).Update(updateExpression);
         }
 
@@ -242,7 +244,7 @@ namespace TuanZi.Entity
             var entity = _dbSet.Where(predicate).Select(m => new { m.Id }).FirstOrDefault();
             bool exists = !typeof(TKey).IsValueType && ReferenceEquals(id, null) || id.Equals(defaultId)
                 ? entity != null
-                : entity != null && !entity.Id.Equals(id);
+                : entity != null && !EntityBase<TKey>.IsKeyEqual(entity.Id, id);
             return exists;
         }
 
@@ -412,15 +414,16 @@ namespace TuanZi.Entity
         {
             Check.NotNull(predicate, nameof(predicate));
 
+            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync();
             return await _dbSet.Where(predicate).DeleteAsync();
         }
 
-        public virtual async Task<int> UpdateAsync(TEntity entity)
+        public virtual async Task<int> UpdateAsync(params TEntity[] entities)
         {
-            Check.NotNull(entity, nameof(entity));
+            Check.NotNull(entities, nameof(entities));
 
-            CheckDataAuth(DataAuthOperation.Update, entity);
-            _dbSet.Update(entity);
+            CheckDataAuth(DataAuthOperation.Update, entities);
+            _dbContext.Update<TEntity, TKey>(entities);
             return await _dbContext.SaveChangesAsync();
         }
 
@@ -449,7 +452,7 @@ namespace TuanZi.Entity
                     }
 
                     CheckDataAuth(DataAuthOperation.Update, entity);
-                    _dbSet.Update(entity);
+                    _dbContext.Update<TEntity, TKey>(entity);
                 }
                 catch (TuanException e)
                 {
@@ -468,11 +471,12 @@ namespace TuanZi.Entity
                 : new OperationResult(OperationResultType.NoChanges);
         }
 
-        public virtual async Task<int> UpdateAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
+        public virtual async Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)
         {
             Check.NotNull(predicate, nameof(predicate));
             Check.NotNull(updateExpression, nameof(updateExpression));
 
+            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync();
             return await _dbSet.Where(predicate).UpdateAsync(updateExpression);
         }
 
@@ -484,7 +488,7 @@ namespace TuanZi.Entity
             var entity = await _dbSet.Where(predicate).Select(m => new { m.Id }).FirstOrDefaultAsync();
             bool exists = !typeof(TKey).IsValueType && ReferenceEquals(id, null) || id.Equals(defaultId)
                 ? entity != null
-                : entity != null && !entity.Id.Equals(id);
+                : entity != null && !EntityBase<TKey>.IsKeyEqual(entity.Id, id);
             return exists;
         }
 

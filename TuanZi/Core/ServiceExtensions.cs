@@ -10,11 +10,12 @@ using TuanZi.Dependency;
 using TuanZi.Reflection;
 using TuanZi.Data;
 
-namespace TuanZi.Core
+
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceExtensions
     {
-        public static IServiceCollection AddTuan(this IServiceCollection services, Action<ITuanBuilder> builderAction = null, AppServiceScanOptions scanOptions = null)
+        public static IServiceCollection AddTuan(this IServiceCollection services, Action<ITuanBuilder> builderAction = null)
         {
             Check.NotNull(services, nameof(services));
 
@@ -26,15 +27,6 @@ namespace TuanZi.Core
             TuanPackManager manager = new TuanPackManager(builder, new AppDomainAllAssemblyFinder());
             manager.LoadPacks(services);
             services.AddSingleton(provider => manager);
-            if (scanOptions == null)
-            {
-                scanOptions = new AppServiceScanOptions();
-            }
-            services = new AppServiceAdder(scanOptions).AddServices(services);
-            if (builder.OptionsAction != null)
-            {
-                services.Configure(builder.OptionsAction);
-            }
             return services;
         }
 

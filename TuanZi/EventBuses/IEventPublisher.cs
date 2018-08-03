@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace TuanZi.EventBuses
 {
+
     public interface IEventPublisher
     {
         void Publish<TEventData>(TEventData eventData, bool wait = true) where TEventData : IEventData;

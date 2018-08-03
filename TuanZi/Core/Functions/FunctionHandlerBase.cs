@@ -24,7 +24,7 @@ namespace TuanZi.Core.Functions
 
         protected FunctionHandlerBase()
         {
-            Logger = ServiceLocator.Instance.GetService<ILoggerFactory>().CreateLogger(GetType());
+            Logger = ServiceLocator.Instance.GetLogger(GetType());
         }
 
         protected ILogger Logger { get; }

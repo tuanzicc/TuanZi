@@ -10,13 +10,12 @@ using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Exceptions;
-
+using TuanZi.Reflection;
 
 namespace TuanZi.Core.EntityInfos
 {
-
     public abstract class EntityInfoHandlerBase<TEntityInfo, TEntityInfoHandler> : IEntityInfoHandler
-    where TEntityInfo : class, IEntityInfo, new()
+       where TEntityInfo : class, IEntityInfo, new()
     {
         private readonly List<TEntityInfo> _entityInfos = new List<TEntityInfo>();
         private readonly ILogger _logger;
@@ -57,8 +56,18 @@ namespace TuanZi.Core.EntityInfos
             {
                 RefreshCache();
             }
-            return _entityInfos.FirstOrDefault(m => m.TypeName == type.FullName)
-                ?? _entityInfos.FirstOrDefault(m => type.BaseType != null && m.TypeName == type.BaseType.FullName);
+            string typeName = type.GetFullNameWithModule();
+            IEntityInfo entityInfo = _entityInfos.FirstOrDefault(m => m.TypeName == typeName);
+            if (entityInfo != null)
+            {
+                return entityInfo;
+            }
+            if (type.BaseType == null)
+            {
+                return null;
+            }
+            typeName = type.BaseType.GetFullNameWithModule();
+            return _entityInfos.FirstOrDefault(m => m.TypeName == typeName);
         }
 
         public IEntityInfo GetEntityInfo<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>
@@ -83,7 +92,7 @@ namespace TuanZi.Core.EntityInfos
             {
                 throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Pack module");
             }
-            TEntityInfo[] dbItems = repository.TrackQuery().ToArray();
+            TEntityInfo[] dbItems = repository.TrackQuery(null, false).ToArray();
 
             TEntityInfo[] removeItems = dbItems.Except(entityInfos, EqualityHelper<TEntityInfo>.CreateComparer(m => m.TypeName)).ToArray();
             int removeCount = removeItems.Length;
@@ -145,11 +154,9 @@ namespace TuanZi.Core.EntityInfos
         protected virtual TEntityInfo[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
-            return repository.Query().ToArray();
+            return repository.Query(null, false).ToArray();
         }
 
     }
 
-
-   
 }

@@ -16,6 +16,7 @@ namespace TuanZi.EventBuses
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
+            services.AddSingleton<IEventHandlerTypeFinder, EventHandlerTypeFinder>();
             services.AddSingleton<IEventBus, PassThroughEventBus>();
             services.AddSingleton<IEventSubscriber>(provider => provider.GetService<IEventBus>());
             services.AddSingleton<IEventPublisher>(provider => provider.GetService<IEventBus>());
@@ -28,8 +29,7 @@ namespace TuanZi.EventBuses
 
         public override void UsePack(IApplicationBuilder app)
         {
-            IServiceProvider provider = app.ApplicationServices;
-            IEventBusBuilder builder = provider.GetService<IEventBusBuilder>();
+            IEventBusBuilder builder = app.ApplicationServices.GetService<IEventBusBuilder>();
             builder.Build();
             IsEnabled = true;
         }

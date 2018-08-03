@@ -14,11 +14,11 @@ using TuanZi.Entity;
 namespace TuanZi.Identity
 {
     public abstract class RoleStoreBase<TRole, TRoleKey, TRoleClaim>
-       : IQueryableRoleStore<TRole>,
-         IRoleClaimStore<TRole>
-       where TRole : RoleBase<TRoleKey>
-       where TRoleClaim : RoleClaimBase<TRoleKey>, new()
-       where TRoleKey : IEquatable<TRoleKey>
+        : IQueryableRoleStore<TRole>,
+          IRoleClaimStore<TRole>
+        where TRole : RoleBase<TRoleKey>
+        where TRoleClaim : RoleClaimBase<TRoleKey>, new()
+        where TRoleKey : IEquatable<TRoleKey>
     {
         private readonly IRepository<TRole, TRoleKey> _roleRepository;
         private readonly IRepository<TRoleClaim, int> _roleClaimRepository;
@@ -57,7 +57,7 @@ namespace TuanZi.Identity
 
             if (role.IsDefault)
             {
-                string defaultRole = _roleRepository.Query(m => m.IsDefault, false).Select(m => m.Name).FirstOrDefault();
+                string defaultRole = _roleRepository.TrackQuery(m => m.IsDefault, false).Select(m => m.Name).FirstOrDefault();
                 if (defaultRole != null)
                 {
                     return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
@@ -79,7 +79,7 @@ namespace TuanZi.Identity
             }
             if (role.IsDefault)
             {
-                var defaultRole = _roleRepository.Query(m => m.IsDefault, false).Select(m => new { m.Id, m.Name }).FirstOrDefault();
+                var defaultRole = _roleRepository.TrackQuery(m => m.IsDefault, false).Select(m => new { m.Id, m.Name }).FirstOrDefault();
                 if (defaultRole != null && !defaultRole.Id.Equals(role.Id))
                 {
                     return new IdentityResult().Failed($"The default role '{defaultRole}' already exists in the system.");
@@ -156,14 +156,14 @@ namespace TuanZi.Identity
             ThrowIfDisposed();
 
             TRoleKey id = ConvertIdFromString(roleId);
-            return Task.FromResult(Roles.FirstOrDefault(m => m.Id.Equals(id)));
+            return Task.FromResult(_roleRepository.TrackQuery().FirstOrDefault(m => m.Id.Equals(id)));
         }
 
         public Task<TRole> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ThrowIfDisposed();
-            return Task.FromResult(Roles.FirstOrDefault(m => m.NormalizedName == normalizedRoleName));
+            return Task.FromResult(_roleRepository.TrackQuery().FirstOrDefault(m => m.NormalizedName == normalizedRoleName));
         }
 
         #endregion

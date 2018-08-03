@@ -2,8 +2,10 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.AspNetCore.UI;
+using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Entity;
 
@@ -22,29 +24,66 @@ namespace TuanZi.AspNetCore.Mvc.Filters
 
         public override void OnResultExecuted(ResultExecutedContext context)
         {
+            ScopedDictionary dict = context.HttpContext.RequestServices.GetService<ScopedDictionary>();
+            AjaxResultType type = AjaxResultType.Success;
+            string message = null;
             if (context.Result is JsonResult result1)
             {
-                if (result1.Value is AjaxResult ajax && !ajax.Successed())
+                if (result1.Value is AjaxResult ajax)
                 {
-                    return;
+                    type = ajax.Type;
+                    message = ajax.Content;
+                    if (ajax.Successed())
+                    {
+                        _unitOfWork?.Commit();
+                    }
+                }
+
+            }
+            else if (context.Result is ObjectResult result2)
+            {
+                if (result2.Value is AjaxResult ajax)
+                {
+                    type = ajax.Type;
+                    message = ajax.Content;
+                    if (ajax.Successed())
+                    {
+                        _unitOfWork?.Commit();
+                    }
                 }
                 _unitOfWork?.Commit();
-                return;
             }
-            if (context.Result is ObjectResult result2)
+            else if (context.HttpContext.Response.StatusCode >= 400)
             {
-                if (result2.Value is AjaxResult ajax && !ajax.Successed())
+                switch (context.HttpContext.Response.StatusCode)
                 {
-                    return;
+                    case 401:
+                        type = AjaxResultType.UnAuth;
+                        break;
+                    case 403:
+                        type = AjaxResultType.UnAuth;
+                        break;
+                    case 404:
+                        type = AjaxResultType.UnAuth;
+                        break;
+                    case 423:
+                        type = AjaxResultType.UnAuth;
+                        break;
+                    default:
+                        type = AjaxResultType.Error;
+                        break;
                 }
-                _unitOfWork?.Commit();
-                return;
             }
-            if (context.HttpContext.Response.StatusCode >= 400)
+            else
             {
-                return;
+                type = AjaxResultType.Success;
+                _unitOfWork?.Commit();
             }
-            _unitOfWork?.Commit();
+            if (dict.AuditOperation != null)
+            {
+                dict.AuditOperation.ResultType = type;
+                dict.AuditOperation.Message = message;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using TuanZi.Data;
 using TuanZi.EventBuses;
 
@@ -7,13 +8,13 @@ namespace TuanZi.Audits
 {
     public class AuditEntityEventData : EventDataBase
     {
-        public AuditEntityEventData(IList<AuditEntity> auditEntities)
+        public AuditEntityEventData(IList<AuditEntityEntry> auditEntities)
         {
             Check.NotNull(auditEntities, nameof(auditEntities));
 
             AuditEntities = auditEntities;
         }
 
-        public IEnumerable<AuditEntity> AuditEntities { get; }
+        public IEnumerable<AuditEntityEntry> AuditEntities { get; }
     }
 }

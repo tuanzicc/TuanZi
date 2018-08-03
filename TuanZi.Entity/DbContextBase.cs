@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using TuanZi.Audits;
 using TuanZi.Core.Options;
 using TuanZi.Dependency;
+using TuanZi.Entity.Transactions;
 using TuanZi.EventBuses;
 
 
@@ -20,7 +21,7 @@ namespace TuanZi.Entity
     public abstract class DbContextBase : DbContext, IDbContext
     {
         private readonly ILogger _logger;
-        private readonly TuanDbContextOptions _osharpDbOptions;
+        private readonly TuanDbContextOptions _TuanDbOptions;
         private readonly IEntityConfigurationTypeFinder _typeFinder;
 
         protected DbContextBase(DbContextOptions options, IEntityConfigurationTypeFinder typeFinder)
@@ -29,11 +30,31 @@ namespace TuanZi.Entity
             _typeFinder = typeFinder;
             if (ServiceLocator.Instance.IsProviderEnabled)
             {
-                IOptions<TuanOptions> osharpOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
-                _osharpDbOptions = osharpOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
+                IOptions<TuanOptions> TuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
+                _TuanDbOptions = TuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
 
                 _logger = ServiceLocator.Instance.GetLogger(GetType());
             }
+        }
+
+        public DbContextGroup ContextGroup { get; set; }
+
+        public void BeginOrUseTransaction()
+        {
+            if (ContextGroup == null)
+            {
+                return;
+            }
+            ContextGroup.BeginOrUseTransaction(this);
+        }
+
+        public async Task BeginOrUseTransactionAsync()
+        {
+            if (ContextGroup == null)
+            {
+                return;
+            }
+            await ContextGroup.BeginOrUseTransactionAsync(this, CancellationToken.None);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,11 +71,14 @@ namespace TuanZi.Entity
 
         public override int SaveChanges()
         {
-            IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }
+            var d = this.Database;
+            BeginOrUseTransaction();
+
             int count = base.SaveChanges();
             if (count > 0 && auditEntities.Count > 0 && ServiceLocator.InScoped())
             {
@@ -67,11 +91,14 @@ namespace TuanZi.Entity
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
-            IList<AuditEntity> auditEntities = new List<AuditEntity>();
-            if (_osharpDbOptions != null && _osharpDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }
+
+            await BeginOrUseTransactionAsync();
+
             int count = await base.SaveChangesAsync(cancellationToken);
             if (count > 0 && auditEntities.Count > 0 && ServiceLocator.InScoped())
             {
@@ -82,5 +109,14 @@ namespace TuanZi.Entity
             return count;
         }
 
+        #region Overrides of DbContext
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            ContextGroup = null;
+        }
+
+        #endregion
     }
 }

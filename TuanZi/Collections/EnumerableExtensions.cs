@@ -21,7 +21,7 @@ namespace TuanZi.Collections
 
         public static string ExpandAndToString<T>(this IEnumerable<T> collection, string separator = ",")
         {
-            return collection.ExpandAndToString(t => t.ToString(), separator);
+            return collection.ExpandAndToString(t => t?.ToString(), separator);
         }
 
         public static string ExpandAndToString<T>(this IEnumerable<T> collection, Func<T, string> itemFormatFunc, string separetor = ",")

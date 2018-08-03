@@ -13,7 +13,6 @@ namespace TuanZi.Entity
 {
     public partial interface IRepository<TEntity, TKey>
         where TEntity : IEntity<TKey>
-        where TKey : IEquatable<TKey>
     {
         #region Synchronize
 

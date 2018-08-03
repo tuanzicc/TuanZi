@@ -6,7 +6,8 @@ using TuanZi.Core;
 using TuanZi.Core.Packs;
 
 
-namespace TuanZi.AspNetCore
+
+namespace Microsoft.AspNetCore.Builder
 {
     public static class ApplicationBuilderExtensions
     {
@@ -15,6 +16,7 @@ namespace TuanZi.AspNetCore
             IServiceProvider provider = app.ApplicationServices;
             TuanPackManager packManager = provider.GetService<TuanPackManager>();
             packManager.UsePacks(app);
+
             return app;
         }
 

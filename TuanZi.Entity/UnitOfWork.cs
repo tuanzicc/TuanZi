@@ -13,19 +13,19 @@ using TuanZi.Extensions;
 
 namespace TuanZi.Entity
 {
+
     public class UnitOfWork : IUnitOfWork
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IDbContextManager _dbContextMamager;
 
         public UnitOfWork(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            HasCommited = false;
-            ActiveTransactionInfos = new Dictionary<string, ActiveTransactionInfo>();
+            _dbContextMamager = serviceProvider.GetService<IDbContextManager>();
         }
 
-        protected IDictionary<string, ActiveTransactionInfo> ActiveTransactionInfos { get; }
-        public bool HasCommited { get; private set; }
+        public bool HasCommited => _dbContextMamager.HasCommited;
 
         public IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>
         {
@@ -33,65 +33,37 @@ namespace TuanZi.Entity
             Type entityType = typeof(TEntity);
             Type dbContextType = typeFinder.GetDbContextTypeForEntity(entityType);
 
-            DbContext dbContext;
             TuanDbContextOptions dbContextOptions = GetDbContextResolveOptions(dbContextType);
             DbContextResolveOptions resolveOptions = new DbContextResolveOptions(dbContextOptions);
             IDbContextResolver contextResolver = _serviceProvider.GetService<IDbContextResolver>();
-            ActiveTransactionInfo transInfo = ActiveTransactionInfos.GetOrDefault(resolveOptions.ConnectionString);
-            if (transInfo == null)
-            {
-                resolveOptions.ExistingConnection = null;
-                dbContext = contextResolver.Resolve(resolveOptions);
-                if (!dbContext.ExistsRelationalDatabase())
-                {
-                    throw new TuanException($"The database of the data context '{ dbContext.GetType().FullName }' does not exist. Please use the Migration function to create a database for data migration.");
-                }
 
-                IDbContextTransaction transaction = dbContext.Database.BeginTransaction();
-                transInfo = new ActiveTransactionInfo(transaction, dbContext);
-                ActiveTransactionInfos[resolveOptions.ConnectionString] = transInfo;
-            }
-            else
+            DbContextBase dbContext = _dbContextMamager.Get(dbContextType, resolveOptions.ConnectionString);
+            if (dbContext != null)
             {
-                resolveOptions.ExistingConnection = transInfo.DbContextTransaction.GetDbTransaction().Connection;
-                if (transInfo.StarterDbContext.GetType() == resolveOptions.DbContextType)
-                {
-                    return transInfo.StarterDbContext as IDbContext;
-                }
-                dbContext = contextResolver.Resolve(resolveOptions);
-                if (dbContext.IsRelationalTransaction())
-                {
-                    dbContext.Database.UseTransaction(transInfo.DbContextTransaction.GetDbTransaction());
-                }
-                else
-                {
-                    dbContext.Database.BeginTransaction();
-                }
-                transInfo.AttendedDbContexts.Add(dbContext);
+                return dbContext;
             }
-            return dbContext as IDbContext;
+            dbContext = (DbContextBase)contextResolver.Resolve(resolveOptions);
+            if (!dbContext.ExistsRelationalDatabase())
+            {
+                throw new TuanException($"The database of the data context '{ dbContext.GetType().FullName }' does not exist. Please use the Migration function to create a database for data migration.");
+            }
+            if (resolveOptions.ExistingConnection == null)
+            {
+                resolveOptions.ExistingConnection = dbContext.Database.GetDbConnection();
+            }
+            _dbContextMamager.Add(dbContextOptions.ConnectionString, dbContext);
+
+            return dbContext;
         }
 
         public void Commit()
         {
-            if (HasCommited)
-            {
-                return;
-            }
-            foreach (ActiveTransactionInfo transInfo in ActiveTransactionInfos.Values)
-            {
-                transInfo.DbContextTransaction.Commit();
+            _dbContextMamager.Commit();
+        }
 
-                foreach (DbContext attendedDbContext in transInfo.AttendedDbContexts)
-                {
-                    if (attendedDbContext.IsRelationalTransaction())
-                    {
-                        continue;
-                    }
-                    attendedDbContext.Database.CommitTransaction();
-                }
-            }
-            HasCommited = true;
+        public void Rollback()
+        {
+            _dbContextMamager.Rollback();
         }
 
         private TuanDbContextOptions GetDbContextResolveOptions(Type dbContextType)
@@ -106,16 +78,7 @@ namespace TuanZi.Entity
 
         public void Dispose()
         {
-            foreach (ActiveTransactionInfo transInfo in ActiveTransactionInfos.Values)
-            {
-                transInfo.DbContextTransaction.Dispose();
-                foreach (DbContext attendedDbContext in transInfo.AttendedDbContexts)
-                {
-                    attendedDbContext.Dispose();
-                }
-                transInfo.StarterDbContext.Dispose();
-            }
-            ActiveTransactionInfos.Clear();
+            _dbContextMamager.Dispose();
         }
     }
 }

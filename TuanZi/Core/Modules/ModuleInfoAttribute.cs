@@ -13,5 +13,7 @@ namespace TuanZi.Core.Modules
         public double Order { get; set; }
 
         public string Position { get; set; }
+
+        public string PositionName { get; set; }
     }
 }

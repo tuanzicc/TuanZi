@@ -15,63 +15,26 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Entity
 {
-    
+
     public class EntityConfigurationTypeFinder : BaseTypeFinderBase<IEntityRegister>, IEntityConfigurationTypeFinder
     {
-        private Dictionary<Type, IEntityRegister[]> _entityRegistersDict;
+        private readonly IDictionary<Type, IEntityRegister[]> _entityRegistersDict
+            = new Dictionary<Type, IEntityRegister[]>();
 
         public EntityConfigurationTypeFinder(IAllAssemblyFinder allAssemblyFinder)
             : base(allAssemblyFinder)
         { }
 
-        protected Dictionary<Type, IEntityRegister[]> EntityRegistersDict
+        public void Initialize()
         {
-            get
-            {
-                if (_entityRegistersDict == null)
-                {
-                    Type[] types = FindAll(true);
-                    EntityRegistersInit(types);
-                }
-
-                return _entityRegistersDict;
-            }
-        }
-
-        public IEntityRegister[] GetEntityRegisters(Type dbContextType)
-        {
-            return EntityRegistersDict.ContainsKey(dbContextType) ? EntityRegistersDict[dbContextType] : new IEntityRegister[0];
-        }
-
-        public Type GetDbContextTypeForEntity(Type entityType)
-        {
-            var dict = EntityRegistersDict;
-            if (dict.Count == 0)
-            {
-                throw new TuanException($"No dbcontext entity mapping configuration was found. Please inherit the base class 'EntityTypeConfigurationBase<TEntity, TKey>' for each entity to load the entity into the context.");
-            }
-            foreach (var item in EntityRegistersDict)
-            {
-                if (item.Value.Any(m => m.EntityType == entityType))
-                {
-                    return item.Key;
-                }
-            }
-            throw new TuanException($"Failed to get the context type of the entity class '{entityType}', please load it into the context by inheriting the base class 'EntityTypeConfigurationBase<TEntity, TKey>'");
-        }
-
-        private void EntityRegistersInit(Type[] types)
-        {
+            IDictionary<Type, IEntityRegister[]> dict = _entityRegistersDict;
+            dict.Clear();
+            Type[] types = FindAll(true);
             if (types.Length == 0)
             {
-                if (_entityRegistersDict == null)
-                {
-                    _entityRegistersDict = new Dictionary<Type, IEntityRegister[]>();
-                }
                 return;
             }
             List<IEntityRegister> registers = types.Select(type => Activator.CreateInstance(type) as IEntityRegister).ToList();
-            Dictionary<Type, IEntityRegister[]> dict = new Dictionary<Type, IEntityRegister[]>();
             List<IGrouping<Type, IEntityRegister>> groups = registers.GroupBy(m => m.DbContextType).ToList();
             Type key;
             foreach (IGrouping<Type, IEntityRegister> group in groups)
@@ -106,8 +69,28 @@ namespace TuanZi.Entity
 
                 dict[key] = list.ToArray();
             }
+        }
 
-            _entityRegistersDict = dict;
+        public IEntityRegister[] GetEntityRegisters(Type dbContextType)
+        {
+            return _entityRegistersDict.ContainsKey(dbContextType) ? _entityRegistersDict[dbContextType] : new IEntityRegister[0];
+        }
+
+        public Type GetDbContextTypeForEntity(Type entityType)
+        {
+            var dict = _entityRegistersDict;
+            if (dict.Count == 0)
+            {
+                throw new TuanException($"No dbcontext entity mapping configuration was found. Please inherit the base class 'EntityTypeConfigurationBase<TEntity, TKey>' for each entity to load the entity into the context.");
+            }
+            foreach (var item in _entityRegistersDict)
+            {
+                if (item.Value.Any(m => m.EntityType == entityType))
+                {
+                    return item.Key;
+                }
+            }
+            throw new TuanException($"Failed to get the context type of the entity class '{entityType}', please load it into the context by inheriting the base class 'EntityTypeConfigurationBase<TEntity, TKey>'");
         }
 
 

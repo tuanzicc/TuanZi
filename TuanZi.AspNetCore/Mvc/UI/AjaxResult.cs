@@ -1,4 +1,6 @@
-﻿namespace TuanZi.AspNetCore.UI
+﻿using TuanZi.Data;
+
+namespace TuanZi.AspNetCore.UI
 {
     public class AjaxResult
     {

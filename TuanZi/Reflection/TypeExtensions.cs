@@ -156,6 +156,11 @@ namespace TuanZi.Reflection
             return type.IsBaseOn(baseType);
         }
 
+        public static string GetFullNameWithModule(this Type type)
+        {
+            return $"{type.FullName},{type.Module.Name.Replace(".dll", "").Replace(".exe", "")}";
+        }
+
         public static IEnumerable<PropertyInfo> FindProperties(this Type type, string name, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public)
         {
             PropertyInfo property = null;

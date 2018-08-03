@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+
+using TuanZi.Data;
 
 
 namespace TuanZi.Audits
 {
-    public class AuditOperation
+    public class AuditOperationEntry
     {
-        public AuditOperation()
+        public AuditOperationEntry()
         {
-            AuditEntities = new List<AuditEntity>();
+            EntityEntries = new List<AuditEntityEntry>();
         }
 
         public string FunctionName { get; set; }
@@ -24,8 +25,15 @@ namespace TuanZi.Audits
 
         public string UserAgent { get; set; }
 
+        public AjaxResultType ResultType { get; set; } = AjaxResultType.Success;
+
+        public string Message { get; set; }
+
         public DateTime CreatedTime { get; set; }
 
-        public ICollection<AuditEntity> AuditEntities { get; set; }
+        public DateTime EndedTime { get; set; }
+
+        public ICollection<AuditEntityEntry> EntityEntries { get; set; }
+
     }
 }

@@ -11,15 +11,14 @@ using Microsoft.AspNetCore.Builder;
 
 namespace TuanZi.Entity.MySql
 {
-    public abstract class MySqlMigrationPackBase<TDbContext> : TuanPack
-        where TDbContext : DbContext
+    public abstract class MySqlMigrationModuleBase<TDbContext> : TuanPack
+       where TDbContext : DbContext
     {
         public override PackLevel Level => PackLevel.Framework;
 
         public override void UsePack(IApplicationBuilder app)
         {
-            IServiceProvider provider = app.ApplicationServices;
-            using (IServiceScope scope = provider.CreateScope())
+            using (IServiceScope scope = app.ApplicationServices.CreateScope())
             {
                 TDbContext context = CreateDbContext(scope.ServiceProvider);
                 if (context != null)

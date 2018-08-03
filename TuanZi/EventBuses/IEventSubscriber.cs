@@ -17,7 +17,7 @@ namespace TuanZi.EventBuses
 
         void Subscribe(Type eventType, IEventHandler eventHandler);
 
-        void SubscribeAll(Assembly assembly);
+        void SubscribeAll(Type[] eventHandlerTypes);
 
         void Unsubscribe<TEventData>(Action<TEventData> action) where TEventData : IEventData;
 

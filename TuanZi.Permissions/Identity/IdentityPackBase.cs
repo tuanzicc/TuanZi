@@ -30,7 +30,7 @@ namespace TuanZi.Identity
             services.AddTransient<IPrincipal>(provider =>
             {
                 IHttpContextAccessor accessor = provider.GetService<IHttpContextAccessor>();
-                return accessor?.HttpContext.User;
+                return accessor?.HttpContext?.User;
             });
 
             services.AddSingleton<IOnlineUserCache, OnlineUserCache<TUser, TUserKey, TRole, TRoleKey>>();
@@ -45,6 +45,8 @@ namespace TuanZi.Identity
                 services.ConfigureApplicationCookie(cookieOptionsAction);
             }
 
+            AddAuthentication(services);
+
             return services;
         }
 
@@ -57,6 +59,9 @@ namespace TuanZi.Identity
         {
             return null;
         }
+
+        protected virtual void AddAuthentication(IServiceCollection services)
+        { }
 
         protected virtual IdentityBuilder OnIdentityBuild(IdentityBuilder builder)
         {

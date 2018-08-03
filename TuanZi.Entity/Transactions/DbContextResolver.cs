@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using TuanZi.Dependency;
 using TuanZi.Entity.Transactions;
 using TuanZi.Exceptions;
 
@@ -20,22 +19,22 @@ namespace TuanZi.Entity
             _serviceProvider = serviceProvider;
         }
         
-        public DbContext Resolve(DbContextResolveOptions resolveOptions)
+        public IDbContext Resolve(DbContextResolveOptions resolveOptions)
         {
             Type dbContextType = resolveOptions.DbContextType;
             IDbContextOptionsBuilderCreator builderCreator = _serviceProvider.GetServices<IDbContextOptionsBuilderCreator>()
                 .FirstOrDefault(m => m.Type == resolveOptions.DatabaseType);
             if (builderCreator == null)
             {
-                throw new TuanException($"Cannot resolve {typeof(IDbContextOptionsBuilderCreator).FullName} instance of type '{resolveOptions.DatabaseType}'");
+                throw new TuanException($"无法解析类型为“{resolveOptions.DatabaseType}”的 {typeof(IDbContextOptionsBuilderCreator).FullName} 实例");
             }
             DbContextOptions options = builderCreator.Create(resolveOptions.ConnectionString, resolveOptions.ExistingConnection).Options;
 
             if (!(ActivatorUtilities.CreateInstance(_serviceProvider, dbContextType, options) is DbContext context))
             {
-                throw new TuanException($"Instantiated data context '{dbContextType.AssemblyQualifiedName}' failed");
+                throw new TuanException($"实例化数据上下文“{dbContextType.AssemblyQualifiedName}”失败");
             }
-            return context;
+            return context as IDbContext;
         }
     }
 }

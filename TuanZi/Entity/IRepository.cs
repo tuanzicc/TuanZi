@@ -13,11 +13,11 @@ namespace TuanZi.Entity
 {
     public partial interface IRepository<TEntity, TKey>
         where TEntity : IEntity<TKey>
-        where TKey : IEquatable<TKey>
     {
         IUnitOfWork UnitOfWork { get; }
 
         #region Synchronize
+
         int Insert(params TEntity[] entities);
 
         OperationResult Insert<TInputDto>(ICollection<TInputDto> dtos,
@@ -73,18 +73,19 @@ namespace TuanZi.Entity
 
         Task<int> DeleteBatchAsync(Expression<Func<TEntity, bool>> predicate);
 
-        Task<int> UpdateAsync(TEntity entity);
+        Task<int> UpdateAsync(params TEntity[] entities);
 
         Task<OperationResult> UpdateAsync<TEditDto>(ICollection<TEditDto> dtos,
             Func<TEditDto, TEntity, Task> checkAction = null,
             Func<TEditDto, TEntity, Task<TEntity>> updateFunc = null)
             where TEditDto : IInputDto<TKey>;
 
-        Task<int> UpdateAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression);
+        Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression);
 
         Task<bool> CheckExistsAsync(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey));
 
         Task<TEntity> GetAsync(TKey key);
+
         #endregion
     }
 }

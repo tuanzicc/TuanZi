@@ -14,22 +14,24 @@ using TuanZi.Extensions;
 
 namespace TuanZi.EventBuses
 {
+
     public abstract class EventBusBase : IEventBus
     {
-        protected readonly IEventStore _EventStore;
-        protected readonly ILogger _Logger;
-
         protected EventBusBase(IEventStore eventStore, ILogger logger)
         {
-            _EventStore = eventStore;
-            _Logger = logger;
+            EventStore = eventStore;
+            Logger = logger;
         }
+
+        protected IEventStore EventStore { get; }
+
+        protected ILogger Logger { get; }
 
         #region Implementation of IEventSubscriber
 
         public virtual void Subscribe<TEventData, TEventHandler>() where TEventData : IEventData where TEventHandler : IEventHandler, new()
         {
-            _EventStore.Add<TEventData, TEventHandler>();
+            EventStore.Add<TEventData, TEventHandler>();
         }
 
         public virtual void Subscribe<TEventData>(Action<TEventData> action) where TEventData : IEventData
@@ -52,38 +54,33 @@ namespace TuanZi.EventBuses
             Check.NotNull(eventType, nameof(eventType));
             Check.NotNull(eventHandler, nameof(eventHandler));
 
-            _EventStore.Add(eventType, eventHandler);
+            EventStore.Add(eventType, eventHandler);
         }
 
-        public virtual void SubscribeAll(Assembly assembly)
+        public virtual void SubscribeAll(Type[] eventHandlerTypes)
         {
-            assembly.CheckNotNull("assembly");
+            Check.NotNull(eventHandlerTypes, nameof(eventHandlerTypes));
 
-            Type[] handlerTypes = assembly.GetTypes().Where(type => type.IsDeriveClassFrom(typeof(IEventHandler<>))).ToArray();
-            if (handlerTypes.Length == 0)
+            foreach (Type handlerType in eventHandlerTypes)
             {
-                return;
-            }
-            foreach (Type handlerType in handlerTypes)
-            {
-                Type handlerInterface = handlerType.GetInterface("IEventHandler`1"); 
+                Type handlerInterface = handlerType.GetInterface("IEventHandler`1");
                 if (handlerInterface == null)
                 {
                     continue;
                 }
-                Type eventType = handlerInterface.GetGenericArguments()[0]; 
+                Type eventType = handlerInterface.GetGenericArguments()[0];
                 IEventHandlerFactory factory = new IocEventHandlerFactory(handlerType);
-                _EventStore.Add(eventType, factory);
-                _Logger.LogDebug($"Create a subscription pairing of event '{eventType}' to processor '{handlerType}'");
+                EventStore.Add(eventType, factory);
+                Logger.LogDebug($"Create a subscription pairing of event '{eventType}' to processor '{handlerType}'");
             }
-            _Logger.LogInformation($"The assembly '{assembly.GetName().Name}' created an event subscription for {handlerTypes.Length} processors");
+            Logger.LogInformation($"creates event subscriptions for {eventHandlerTypes.Length} event handlers from the assembly");
         }
 
         public virtual void Unsubscribe<TEventData>(Action<TEventData> action) where TEventData : IEventData
         {
             Check.NotNull(action, nameof(action));
 
-            _EventStore.Remove(action);
+            EventStore.Remove(action);
         }
 
         public virtual void Unsubscribe<TEventData>(IEventHandler<TEventData> eventHandler) where TEventData : IEventData
@@ -95,7 +92,7 @@ namespace TuanZi.EventBuses
 
         public virtual void Unsubscribe(Type eventType, IEventHandler eventHandler)
         {
-            _EventStore.Remove(eventType, eventHandler);
+            EventStore.Remove(eventType, eventHandler);
         }
 
         public virtual void UnsubscribeAll<TEventData>() where TEventData : IEventData
@@ -105,7 +102,7 @@ namespace TuanZi.EventBuses
 
         public virtual void UnsubscribeAll(Type eventType)
         {
-            _EventStore.RemoveAll(eventType);
+            EventStore.RemoveAll(eventType);
         }
 
         #endregion
@@ -131,7 +128,7 @@ namespace TuanZi.EventBuses
         {
             eventData.EventSource = eventSource;
 
-            IDictionary<Type, IEventHandlerFactory[]> dict = _EventStore.GetHandlers(eventType);
+            IDictionary<Type, IEventHandlerFactory[]> dict = EventStore.GetHandlers(eventType);
             foreach (var typeItem in dict)
             {
                 foreach (IEventHandlerFactory factory in typeItem.Value)
@@ -160,7 +157,7 @@ namespace TuanZi.EventBuses
         {
             eventData.EventSource = eventSource;
 
-            IDictionary<Type, IEventHandlerFactory[]> dict = _EventStore.GetHandlers(eventType);
+            IDictionary<Type, IEventHandlerFactory[]> dict = EventStore.GetHandlers(eventType);
             foreach (var typeItem in dict)
             {
                 foreach (IEventHandlerFactory factory in typeItem.Value)
@@ -175,7 +172,7 @@ namespace TuanZi.EventBuses
             IEventHandler handler = factory.GetHandler();
             if (handler == null)
             {
-                _Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
+                Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
                 return;
             }
             if (!handler.CanHandle(eventData))
@@ -200,7 +197,7 @@ namespace TuanZi.EventBuses
             IEventHandler handler = factory.GetHandler();
             if (handler == null)
             {
-                _Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
+                Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
                 return Task.FromResult(0);
             }
             if (!handler.CanHandle(eventData))
@@ -227,7 +224,7 @@ namespace TuanZi.EventBuses
             catch (Exception ex)
             {
                 string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
-                _Logger.LogError(ex, msg);
+                Logger.LogError(ex, msg);
             }
             finally
             {
@@ -244,7 +241,7 @@ namespace TuanZi.EventBuses
             catch (Exception ex)
             {
                 string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
-                _Logger.LogError(ex, msg);
+                Logger.LogError(ex, msg);
             }
             finally
             {

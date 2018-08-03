@@ -1,4 +1,4 @@
-﻿namespace TuanZi.AspNetCore.UI
+﻿namespace TuanZi.Data
 {
     public enum AjaxResultType
     {

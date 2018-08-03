@@ -2,7 +2,7 @@
 
 using Microsoft.AspNetCore.Authentication;
 
-using OSharp.Identity.OAuth2.QQ;
+using Tuan.Identity.OAuth2.QQ;
 
 
 namespace Microsoft.Extensions.DependencyInjection

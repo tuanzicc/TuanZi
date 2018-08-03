@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Http;
 
 
-namespace OSharp.Identity.OAuth2.QQ
+namespace Tuan.Identity.OAuth2.QQ
 {
     public class QQOptions : OAuthOptions
     {

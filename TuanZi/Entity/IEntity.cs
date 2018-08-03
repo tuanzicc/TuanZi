@@ -3,7 +3,7 @@
 
 namespace TuanZi.Entity
 {
-    public interface IEntity<out TKey> where TKey : IEquatable<TKey>
+    public interface IEntity<out TKey>
     {
         TKey Id { get; }
     }

@@ -16,11 +16,26 @@ namespace TuanZi.Core.Modules
 
         public string Position { get; set; }
 
+        public string PositionName { get; set; }
+
         public IFunction[] DependOnFunctions { get; set; } = new IFunction[0];
 
         private string ToDebugDisplay()
         {
             return $"{Name}[{Code}]({Position}),FunctionCount:{DependOnFunctions.Length}";
         }
+
+        #region Overrides of Object
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ModuleInfo info))
+            {
+                return false;
+            }
+            return $"{info.Position}.{info.Code}" == $"{Position}.{Code}";
+        }
+
+        #endregion
     }
 }

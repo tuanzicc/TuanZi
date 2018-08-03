@@ -55,16 +55,16 @@ namespace TuanZi.AspNetCore.Mvc
 
         public static IFunction GetExecuteFunction(this ActionContext context)
         {
-            const string key = TuanConstants.CurrentMvcFunctionKey;
-            IDictionary<object, object> items = context.HttpContext.Items;
-            if (items.ContainsKey(key))
+            IServiceProvider provider = context.HttpContext.RequestServices;
+            ScopedDictionary dict = provider.GetService<ScopedDictionary>();
+            if (dict.Function != null)
             {
-                return items[key] as IFunction;
+                return dict.Function;
             }
             string area = context.GetAreaName();
             string controller = context.GetControllerName();
             string action = context.GetActionName();
-            IFunctionHandler functionHandler = ServiceLocator.Instance.GetService<IFunctionHandler>();
+            IFunctionHandler functionHandler = provider.GetService<IFunctionHandler>();
             if (functionHandler == null)
             {
                 throw new TuanException("IFunctionHandler fails to parse when getting the function being executed");
@@ -72,7 +72,7 @@ namespace TuanZi.AspNetCore.Mvc
             IFunction function = functionHandler.GetFunction(area, controller, action);
             if (function != null)
             {
-                items.Add(key, function);
+                dict.Function = function;
             }
             return function;
         }
@@ -81,7 +81,6 @@ namespace TuanZi.AspNetCore.Mvc
         {
             return controller.ControllerContext.GetExecuteFunction();
         }
-
 
         public static IFunction GetFunction(this ControllerBase controller, string url)
         {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Common;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +9,6 @@ namespace TuanZi.Entity
 {
     public interface IDbContextResolver
     {
-        DbContext Resolve(DbContextResolveOptions resolveOptions);
+        IDbContext Resolve(DbContextResolveOptions resolveOptions);
     }
 }

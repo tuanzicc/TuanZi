@@ -13,13 +13,6 @@ namespace TuanZi.Identity.JwtBearer
 {
     public class OnlineUserJwtSecurityTokenHandler : JwtSecurityTokenHandler
     {
-        /// <summary>
-        /// Creates a <see cref="T:System.Security.Claims.ClaimsIdentity" /> from a <see cref="T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken" />.
-        /// </summary>
-        /// <param name="jwtToken">The <see cref="T:System.IdentityModel.Tokens.Jwt.JwtSecurityToken" /> to use as a <see cref="T:System.Security.Claims.Claim" /> source.</param>
-        /// <param name="issuer">The value to set <see cref="P:System.Security.Claims.Claim.Issuer" /></param>
-        /// <param name="validationParameters"> Contains parameters for validating the token.</param>
-        /// <returns>A <see cref="T:System.Security.Claims.ClaimsIdentity" /> containing the <see cref="P:System.IdentityModel.Tokens.Jwt.JwtSecurityToken.Claims" />.</returns>
         protected override ClaimsIdentity CreateClaimsIdentity(JwtSecurityToken jwtToken,
             string issuer,
             TokenValidationParameters validationParameters)
@@ -30,6 +23,10 @@ namespace TuanZi.Identity.JwtBearer
             {
                 IOnlineUserCache onlineUserCache = ServiceLocator.Instance.GetService<IOnlineUserCache>();
                 OnlineUser user = onlineUserCache.GetOrRefresh(identity.Name);
+                if (user == null)
+                {
+                    return null;
+                }
                 identity.AddClaims(new[]
                 {
                     new Claim(ClaimTypes.GivenName, user.NickName),
@@ -41,6 +38,8 @@ namespace TuanZi.Identity.JwtBearer
                 }
             }
 
+            ScopedDictionary dict = ServiceLocator.Instance.GetService<ScopedDictionary>();
+            dict.Identity = identity;
             return identity;
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace OSharp.Identity.OAuth2.QQ
+﻿namespace Tuan.Identity.OAuth2.QQ
 {
     public static class QQDefaults
     {
