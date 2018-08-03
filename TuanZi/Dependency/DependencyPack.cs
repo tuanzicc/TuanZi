@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -93,10 +93,14 @@ namespace TuanZi.Dependency
             return services;
         }
 
+        //Tuan
         private static Type[] GetImplementedInterfaces(Type type)
         {
             Type[] exceptInterfaces = { typeof(IDisposable) };
-            Type[] interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
+            TypeFilter theFilter = new TypeFilter(InterfaceFilter);
+            Type[] interfaceTypes = type.FindInterfaces(theFilter, type.BaseType).Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
+            if (interfaceTypes.Length == 0)
+                interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
             for (int index = 0; index < interfaceTypes.Length; index++)
             {
                 Type interfaceType = interfaceTypes[index];
@@ -107,6 +111,18 @@ namespace TuanZi.Dependency
             }
             return interfaceTypes;
         }
+        public static bool InterfaceFilter(Type typeObj, Object criteriaObj)
+        {
+            Type baseClassType = (Type)criteriaObj;
+            Type[] interfaces_array = baseClassType.GetInterfaces();
+            for (int i = 0; i < interfaces_array.Length; i++)
+            {
+                if (typeObj.ToString() == interfaces_array[i].ToString())
+                    return false;
+            }
+            return true;
+        }
+
 
         public override void UsePack(IApplicationBuilder app)
         {

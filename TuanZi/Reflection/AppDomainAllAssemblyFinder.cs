@@ -54,17 +54,17 @@ namespace TuanZi.Reflection
                         {
                             continue;
                         }
-                        if (name == "TuanZi")
+                        if (name == "TuanZiNS")
                         {
                             continue;
                         }
-                        if (name == "TuanZi.Core")
+                        if (name == "TuanZiNS.Core")
                         {
                             name = "TuanZi";
                         }
-                        else if (name.StartsWith("TuanZi."))
+                        else if (name.StartsWith("TuanZiNS."))
                         {
-                            name = name.Replace("TuanZi.", "TuanZi.");
+                            name = name.Replace("TuanZiNS.", "TuanZi.");
                         }
                         if (!names.Contains(name))
                         {

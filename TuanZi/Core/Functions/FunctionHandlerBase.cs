@@ -137,6 +137,7 @@ namespace TuanZi.Core.Functions
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, TFunction[] functions)
         {
+
             Check.NotNull(functions, nameof(functions));
             if (functions.Length == 0)
             {
