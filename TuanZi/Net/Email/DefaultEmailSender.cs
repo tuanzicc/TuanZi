@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace TuanZi.Net.Email
 {
-    public class DefaultEmailSender : IEmailSender
+    public class DefaultEmailSender : IEmailSender, ISingletonDependency
     {
         private readonly IServiceProvider _provider;
         public DefaultEmailSender(IServiceProvider provider)
