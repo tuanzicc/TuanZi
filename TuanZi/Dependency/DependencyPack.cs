@@ -93,6 +93,21 @@ namespace TuanZi.Dependency
             return services;
         }
 
+        private static Type[] GetImplementedInterfaces(Type type, bool thisisthit)
+        {
+            Type[] exceptInterfaces = { typeof(IDisposable) };
+            Type[] interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
+            for (int index = 0; index < interfaceTypes.Length; index++)
+            {
+                Type interfaceType = interfaceTypes[index];
+                if (interfaceType.IsGenericType && !interfaceType.IsGenericTypeDefinition && interfaceType.FullName == null)
+                {
+                    interfaceTypes[index] = interfaceType.GetGenericTypeDefinition();
+                }
+            }
+            return interfaceTypes;
+        }
+
         //Tuan
         private static Type[] GetImplementedInterfaces(Type type)
         {
