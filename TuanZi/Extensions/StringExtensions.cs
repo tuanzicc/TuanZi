@@ -525,7 +525,17 @@ namespace TuanZi.Extensions
             }
             return bytes;
         }
-        
+
+        public static string ToPlainString(this string str, bool decode = true)
+        {
+            if (str == null)
+                return null;
+            var reg = new Regex("<[^>]+>", RegexOptions.IgnoreCase);
+            var stripped = reg.Replace(str, string.Empty);
+            return (decode ? HttpUtility.HtmlDecode(stripped) : stripped).Trim();
+
+        }
+
         public static string ToUnicodeString(this string source)
         {
             Regex regex = new Regex(@"[^\u0000-\u00ff]");
