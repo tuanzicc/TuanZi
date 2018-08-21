@@ -2,10 +2,10 @@
 
 using System;
 using System.Linq;
-using System.DrawingCore.Drawing2D;
+using System.Drawing.Drawing2D;
 using System.IO;
-using System.DrawingCore;
-using System.DrawingCore.Imaging;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace TuanZi.AspNetCore.Imaging
 {

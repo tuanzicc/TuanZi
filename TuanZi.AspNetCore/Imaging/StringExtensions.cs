@@ -1,6 +1,6 @@
 ﻿
 
-using System.DrawingCore;
+using System.Drawing;
 
 namespace TuanZi.AspNetCore.Imaging
 {
@@ -15,7 +15,7 @@ namespace TuanZi.AspNetCore.Imaging
         /// <param name="layoutRectangle"></param>
         /// <param name="format"></param>
         /// <returns></returns>
-        public static System.DrawingCore.Image ToImage(this string s, int width, int height, Color background, Font font, Brush brush, RectangleF layoutRectangle, StringFormat format)
+        public static System.Drawing.Image ToImage(this string s, int width, int height, Color background, Font font, Brush brush, RectangleF layoutRectangle, StringFormat format)
         {
             var image = new Bitmap(width, height);
 

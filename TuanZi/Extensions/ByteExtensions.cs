@@ -17,7 +17,7 @@ namespace TuanZi.Extensions
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public static bool IsValidImage(byte[] bytes)
+        public static bool IsValidImage(this byte[] bytes)
         {
             try
             {
