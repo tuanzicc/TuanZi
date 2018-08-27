@@ -11,7 +11,7 @@ namespace TuanZi.Identity.Events
         public override void Handle(OnlineUserCacheRemoveEventData eventData)
         {
             IOnlineUserCache onlineUserCache = ServiceLocator.Instance.GetService<IOnlineUserCache>();
-            onlineUserCache.Remove(eventData.UserName);
+            onlineUserCache.Remove(eventData.UserNames);
         }
     }
 }

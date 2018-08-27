@@ -21,7 +21,7 @@ namespace TuanZi.Entity
     public abstract class DbContextBase : DbContext, IDbContext
     {
         private readonly ILogger _logger;
-        private readonly TuanDbContextOptions _TuanDbOptions;
+        private readonly TuanDbContextOptions _tuanDbOptions;
         private readonly IEntityConfigurationTypeFinder _typeFinder;
 
         protected DbContextBase(DbContextOptions options, IEntityConfigurationTypeFinder typeFinder)
@@ -30,8 +30,8 @@ namespace TuanZi.Entity
             _typeFinder = typeFinder;
             if (ServiceLocator.Instance.IsProviderEnabled)
             {
-                IOptions<TuanOptions> TuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
-                _TuanDbOptions = TuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
+                IOptions<TuanOptions> tuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
+                _tuanDbOptions = tuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
 
                 _logger = ServiceLocator.Instance.GetLogger(GetType());
             }
@@ -69,10 +69,18 @@ namespace TuanZi.Entity
             _logger?.LogInformation($"Context '{contextType}' registered {registers.Length} entity classes");
         }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (_tuanDbOptions != null && _tuanDbOptions.LazyLoadingProxiesEnabled)
+            {
+                optionsBuilder.UseLazyLoadingProxies();
+            }
+        }
+
         public override int SaveChanges()
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -92,7 +100,7 @@ namespace TuanZi.Entity
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }

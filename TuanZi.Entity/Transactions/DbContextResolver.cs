@@ -18,7 +18,7 @@ namespace TuanZi.Entity
         {
             _serviceProvider = serviceProvider;
         }
-        
+
         public IDbContext Resolve(DbContextResolveOptions resolveOptions)
         {
             Type dbContextType = resolveOptions.DbContextType;
@@ -26,13 +26,20 @@ namespace TuanZi.Entity
                 .FirstOrDefault(m => m.Type == resolveOptions.DatabaseType);
             if (builderCreator == null)
             {
-                throw new TuanException($"无法解析类型为“{resolveOptions.DatabaseType}”的 {typeof(IDbContextOptionsBuilderCreator).FullName} 实例");
+                throw new TuanException($"Unable to resolve {typeof(IDbContextOptionsBuilderCreator).FullName} instance of type '{resolveOptions.DatabaseType}'");
             }
-            DbContextOptions options = builderCreator.Create(resolveOptions.ConnectionString, resolveOptions.ExistingConnection).Options;
+            DbContextOptionsBuilder optionsBuilder = builderCreator.Create(resolveOptions.ConnectionString, resolveOptions.ExistingConnection);
+            DbContextModelCache modelCache = _serviceProvider.GetService<DbContextModelCache>();
+            var model = modelCache.Get(dbContextType);
+            if (model != null)
+            {
+                optionsBuilder.UseModel(model);
+            }
+            DbContextOptions options = optionsBuilder.Options;
 
             if (!(ActivatorUtilities.CreateInstance(_serviceProvider, dbContextType, options) is DbContext context))
             {
-                throw new TuanException($"实例化数据上下文“{dbContextType.AssemblyQualifiedName}”失败");
+                throw new TuanException($"Instantiating the data context '{dbContextType.AssemblyQualifiedName}' failed");
             }
             return context as IDbContext;
         }

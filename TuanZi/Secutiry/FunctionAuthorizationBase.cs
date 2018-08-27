@@ -5,17 +5,15 @@ using System.Security.Principal;
 using System.Threading;
 
 using TuanZi.Core.Functions;
+using TuanZi.Data;
 using TuanZi.Entity;
 using TuanZi.Secutiry.Claims;
 
 
 namespace TuanZi.Secutiry
 {
-  
-    public abstract class FunctionAuthorizationBase<TFunction> : IFunctionAuthorization
-        where TFunction : class, IFunction, IEntity<Guid>
+    public abstract class FunctionAuthorizationBase : IFunctionAuthorization
     {
-
         protected FunctionAuthorizationBase(IFunctionAuthCache functionAuthCache)
         {
             FunctionAuthCache = functionAuthCache;
@@ -26,10 +24,22 @@ namespace TuanZi.Secutiry
 
         protected virtual string SuperRoleName { get; }
 
-
         public AuthorizationResult Authorize(IFunction function, IPrincipal principal)
         {
             return AuthorizeCore(function, principal);
+        }
+
+        public virtual string[] GetOkRoles(IFunction function, IPrincipal principal)
+        {
+            if (!principal.Identity.IsAuthenticated)
+            {
+                return new string[0];
+            }
+
+            string[] userRoles = principal.Identity.GetRoles();
+            string[] functionRoles = FunctionAuthCache.GetFunctionRoles(function.Id);
+
+            return userRoles.Intersect(functionRoles).ToArray();
         }
 
         protected virtual AuthorizationResult AuthorizeCore(IFunction function, IPrincipal principal)
@@ -59,27 +69,49 @@ namespace TuanZi.Secutiry
 
         protected virtual AuthorizationResult AuthorizeRoleLimit(IFunction function, IPrincipal principal)
         {
-            if(!(principal.Identity is ClaimsIdentity identity))
+            if (!(principal.Identity is ClaimsIdentity identity))
             {
                 return new AuthorizationResult(AuthorizationStatus.Error, "The current user ID IIdentity is not in the correct format. Only the Identity of the ClaimsIdentity type is supported.");
             }
-            if (!(function is TFunction func))
-            {
-                return new AuthorizationResult(AuthorizationStatus.Error, $"The type of function to detect is '{function.GetType()}', not a required '{typeof(TFunction)}' type");
-            }
             string[] userRoleNames = identity.GetRoles().ToArray();
-            if (userRoleNames.Contains(SuperRoleName))
+            AuthorizationResult result = AuthorizeRoleNames(function, userRoleNames);
+            if (result.IsOk)
+            {
+                return result;
+            }
+            result = AuthorizeUserName(function, principal.Identity.GetUserName());
+            return result;
+        }
+
+        protected virtual AuthorizationResult AuthorizeRoleNames(IFunction function, params string[] roleNames)
+        {
+            Check.NotNull(roleNames, nameof(roleNames));
+
+            if (roleNames.Length == 0)
+            {
+                return new AuthorizationResult(AuthorizationStatus.Forbidden);
+            }
+            if (function.AccessType != FunctionAccessType.RoleLimit || roleNames.Contains(SuperRoleName))
+            {
+                return AuthorizationResult.OK;
+            }
+            string[] functionRoleNames = FunctionAuthCache.GetFunctionRoles(function.Id);
+            if (roleNames.Intersect(functionRoleNames).Any())
+            {
+                return AuthorizationResult.OK;
+            }
+            return new AuthorizationResult(AuthorizationStatus.Forbidden);
+        }
+
+        protected virtual AuthorizationResult AuthorizeUserName(IFunction function, string userName)
+        {
+            if (function.AccessType != FunctionAccessType.RoleLimit)
             {
                 return AuthorizationResult.OK;
             }
 
-            string[] functionRoleNames = FunctionAuthCache.GetFunctionRoles(func.Id);
-            if (userRoleNames.Intersect(functionRoleNames).Any())
-            {
-                return AuthorizationResult.OK;
-            }
-            Guid[] functionIds = FunctionAuthCache.GetUserFunctions(identity.GetUserName());
-            if (functionIds.Contains(func.Id))
+            Guid[] functionIds = FunctionAuthCache.GetUserFunctions(userName);
+            if (functionIds.Contains(function.Id))
             {
                 return AuthorizationResult.OK;
             }

@@ -9,7 +9,7 @@ namespace TuanZi.Secutiry
 
         void SetCache(DataAuthCacheItem item);
 
-        void RemoveCache(string roleName, string entityTypeFullName, DataAuthOperation operation);
+        void RemoveCache(DataAuthCacheItem item);
 
         FilterGroup GetFilterGroup(string roleName, string entityTypeFullName, DataAuthOperation operation);
     }

@@ -20,7 +20,7 @@ namespace TuanZi.Core.Packs
             return services;
         }
 
-        public virtual void UsePack(IApplicationBuilder app)
+        public virtual void UsePack(IServiceProvider provider)
         {
             IsEnabled = true;
         }

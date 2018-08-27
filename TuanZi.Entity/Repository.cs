@@ -19,9 +19,9 @@ using Z.EntityFramework.Plus;
 
 namespace TuanZi.Entity
 {
-    public partial class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
-       where TEntity : class, IEntity<TKey>
-       where TKey : IEquatable<TKey>
+    public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+        where TEntity : class, IEntity<TKey>
+        where TKey : IEquatable<TKey>
     {
         private readonly DbContext _dbContext;
         private readonly DbSet<TEntity> _dbSet;
@@ -255,7 +255,17 @@ namespace TuanZi.Entity
             return _dbSet.Find(key);
         }
 
-        public virtual IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true)
+        public virtual IQueryable<TEntity> Query()
+        {
+            return Query(null, true);
+        }
+
+        public virtual IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate)
+        {
+            return Query(predicate, true);
+        }
+
+        public virtual IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth)
         {
             return TrackQuery(predicate, filterByDataAuth).AsNoTracking();
         }
@@ -265,7 +275,17 @@ namespace TuanZi.Entity
             return TrackQuery(includePropertySelectors).AsNoTracking();
         }
 
-        public IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true)
+        public virtual IQueryable<TEntity> TrackQuery()
+        {
+            return TrackQuery(null, true);
+        }
+
+        public virtual IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate)
+        {
+            return TrackQuery(predicate, true);
+        }
+
+        public IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth)
         {
             IQueryable<TEntity> query = _dbSet.AsQueryable();
             if (filterByDataAuth)
@@ -283,12 +303,14 @@ namespace TuanZi.Entity
         public virtual IQueryable<TEntity> TrackQuery(params Expression<Func<TEntity, object>>[] includePropertySelectors)
         {
             IQueryable<TEntity> query = _dbSet.AsQueryable();
-            if (includePropertySelectors != null && includePropertySelectors.Length > 0)
+            if (includePropertySelectors == null || includePropertySelectors.Length == 0)
             {
-                foreach (Expression<Func<TEntity, object>> selector in includePropertySelectors)
-                {
-                    query = query.Include(selector);
-                }
+                return query;
+            }
+
+            foreach (Expression<Func<TEntity, object>> selector in includePropertySelectors)
+            {
+                query = query.Include(selector);
             }
             return query;
         }
@@ -467,6 +489,8 @@ namespace TuanZi.Entity
             }
             int count = await _dbContext.SaveChangesAsync();
             return count > 0
+                ? new OperationResult(OperationResultType.Success,
+                    names.Count > 0
                 ? new OperationResult(OperationResultType.Success, "{0} record(s) updated".FormatWith(dtos.Count))
                 : new OperationResult(OperationResultType.NoChanges);
         }

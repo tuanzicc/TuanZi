@@ -2,7 +2,7 @@
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Data;
 using TuanZi.Finders;
 using TuanZi.Reflection;
 
@@ -13,7 +13,7 @@ namespace TuanZi.Dependency
     {
         public ScopedDependencyTypeFinder()
         {
-            AllAssemblyFinder = new AppDomainAllAssemblyFinder();
+            AllAssemblyFinder = Singleton<IAllAssemblyFinder>.Instance ?? new AppDomainAllAssemblyFinder();
         }
 
         public IAllAssemblyFinder AllAssemblyFinder { get; set; }
@@ -21,7 +21,7 @@ namespace TuanZi.Dependency
         protected override Type[] FindAllItems()
         {
             Type baseType = typeof(IScopeDependency);
-            Type[] types = AllAssemblyFinder.FindAll(fromCache:true).SelectMany(assembly => assembly.GetTypes())
+            Type[] types = AllAssemblyFinder.FindAll(fromCache: true).SelectMany(assembly => assembly.GetTypes())
                 .Where(type => baseType.IsAssignableFrom(type) && !type.HasAttribute<IgnoreDependencyAttribute>() && !type.IsAbstract && !type.IsInterface)
                 .ToArray();
             return types;

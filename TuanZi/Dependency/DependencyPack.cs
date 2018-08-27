@@ -29,6 +29,7 @@ namespace TuanZi.Dependency
             ServiceLocator.Instance.SetServiceCollection(services);
 
             services.AddScoped<ScopedDictionary>();
+            services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
 
             Type[] dependencyTypes = ScanOptions.TransientTypeFinder.FindAll();
             AddTypeWithInterfaces(services, dependencyTypes, ServiceLifetime.Transient);
@@ -41,7 +42,7 @@ namespace TuanZi.Dependency
 
             return services;
         }
-        
+
         protected virtual IServiceCollection AddTypeWithInterfaces(IServiceCollection services, Type[] implementationTypes, ServiceLifetime lifetime)
         {
             foreach (Type implementationType in implementationTypes)
@@ -93,7 +94,7 @@ namespace TuanZi.Dependency
             return services;
         }
 
-        private static Type[] GetImplementedInterfaces(Type type, bool thisisthit)
+        private static Type[] GetImplementedInterfaces(Type type)
         {
             Type[] exceptInterfaces = { typeof(IDisposable) };
             Type[] interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
@@ -108,40 +109,9 @@ namespace TuanZi.Dependency
             return interfaceTypes;
         }
 
-        //Tuan
-        private static Type[] GetImplementedInterfaces(Type type)
+        public override void UsePack(IServiceProvider provider)
         {
-            Type[] exceptInterfaces = { typeof(IDisposable) };
-            TypeFilter theFilter = new TypeFilter(InterfaceFilter);
-            Type[] interfaceTypes = type.FindInterfaces(theFilter, type.BaseType).Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
-            if (interfaceTypes.Length == 0)
-                interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
-            for (int index = 0; index < interfaceTypes.Length; index++)
-            {
-                Type interfaceType = interfaceTypes[index];
-                if (interfaceType.IsGenericType && !interfaceType.IsGenericTypeDefinition && interfaceType.FullName == null)
-                {
-                    interfaceTypes[index] = interfaceType.GetGenericTypeDefinition();
-                }
-            }
-            return interfaceTypes;
-        }
-        public static bool InterfaceFilter(Type typeObj, Object criteriaObj)
-        {
-            Type baseClassType = (Type)criteriaObj;
-            Type[] interfaces_array = baseClassType.GetInterfaces();
-            for (int i = 0; i < interfaces_array.Length; i++)
-            {
-                if (typeObj.ToString() == interfaces_array[i].ToString())
-                    return false;
-            }
-            return true;
-        }
-
-
-        public override void UsePack(IApplicationBuilder app)
-        {
-            ServiceLocator.Instance.SetApplicationServiceProvider(app.ApplicationServices);
+            ServiceLocator.Instance.SetApplicationServiceProvider(provider);
             IsEnabled = true;
         }
     }

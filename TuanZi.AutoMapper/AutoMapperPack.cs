@@ -28,9 +28,8 @@ namespace TuanZi.AutoMapper
             return services;
         }
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            IServiceProvider provider = app.ApplicationServices;
             MapperConfigurationExpression cfg = provider.GetService<MapperConfigurationExpression>() ?? new MapperConfigurationExpression();
             
 

@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Core.Packs;
+using TuanZi.Core.Systems;
 
-
-namespace TuanZi.System
+namespace TuanZi.Systems
 {
     public class SystemPack : TuanPack
     {
@@ -14,7 +14,7 @@ namespace TuanZi.System
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             services.AddScoped<SystemManager>();
-            services.AddScoped<IKeyValueCoupleStore>(provider => provider.GetService<SystemManager>());
+            services.AddScoped<IKeyValueStore>(provider => provider.GetService<SystemManager>());
 
             return services;
         }

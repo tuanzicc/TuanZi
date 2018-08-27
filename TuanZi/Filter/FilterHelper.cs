@@ -126,18 +126,23 @@ namespace TuanZi.Filter
                 return exp;
             }
 
-            IDataAuthCache cache = ServiceLocator.Instance.GetService<IDataAuthCache>();
-            if (cache == null)
+            IDataAuthCache dataAuthCache = ServiceLocator.Instance.GetService<IDataAuthCache>();
+            if (dataAuthCache == null)
             {
                 return exp;
             }
 
             string[] roleNames = user.Identity.GetRoles();
-            string typeName = typeof(T).FullName;
+            ScopedDictionary scopedDict = ServiceLocator.Instance.GetService<ScopedDictionary>();
+            if (scopedDict?.Function != null)
+            {
+                roleNames = scopedDict.DataAuthValidRoleNames;
+            }
+            string typeName = typeof(T).GetFullNameWithModule();
             Expression<Func<T, bool>> subExp = null;
             foreach (string roleName in roleNames)
             {
-                FilterGroup subGroup = cache.GetFilterGroup(roleName, typeName, operation);
+                FilterGroup subGroup = dataAuthCache.GetFilterGroup(roleName, typeName, operation);
                 if (subGroup == null)
                 {
                     continue;

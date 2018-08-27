@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TuanZi.Collections;
 using TuanZi.Core.Modules;
 using TuanZi.Data;
@@ -14,10 +15,10 @@ using TuanZi.Exceptions;
 namespace TuanZi.Security
 {
     public abstract class ModuleHandlerBase<TModule, TModuleInputDto, TModuleKey, TModuleFunction> : IModuleHandler
-       where TModule : ModuleBase<TModuleKey>
-       where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
-       where TModuleKey : struct, IEquatable<TModuleKey>
-       where TModuleFunction : ModuleFunctionBase<TModuleKey>
+        where TModule : ModuleBase<TModuleKey>
+        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
+        where TModuleKey : struct, IEquatable<TModuleKey>
+        where TModuleFunction : ModuleFunctionBase<TModuleKey>
     {
         private readonly ServiceLocator _locator;
         private readonly IModuleInfoPicker _moduleInfoPicker;
@@ -26,7 +27,10 @@ namespace TuanZi.Security
         {
             _locator = ServiceLocator.Instance;
             _moduleInfoPicker = _locator.GetService<IModuleInfoPicker>();
+            Logger = _locator.GetLogger(GetType());
         }
+
+        protected ILogger Logger { get; }
 
         public void Initialize()
         {
@@ -48,6 +52,12 @@ namespace TuanZi.Security
             {
                 return;
             }
+
+            if (!moduleInfos.CheckSyncByHash(provider, Logger))
+            {
+                return;
+            }
+
             IModuleStore<TModule, TModuleInputDto, TModuleKey> moduleStore =
                 provider.GetService<IModuleStore<TModule, TModuleInputDto, TModuleKey>>();
             IModuleFunctionStore<TModuleFunction, TModuleKey> moduleFunctionStore =
@@ -58,7 +68,7 @@ namespace TuanZi.Security
                 .OrderByDescending(m => m.Position.Length).ToArray();
             string[] deletePositions = positionModules.Select(m => m.Position)
                 .Except(moduleInfos.Select(n => $"{n.Position}.{n.Code}"))
-                .Except("Root,Root.Site,Root.Admin,Root.Admin.Identity,Root.Admin.Security,Root.Admin.System".Split(','))
+                .Except(new[] { "Root" })
                 .ToArray();
             TModuleKey[] deleteModuleIds = positionModules.Where(m => deletePositions.Contains(m.Position)).Select(m => m.Id).ToArray();
             OperationResult result;
@@ -76,7 +86,22 @@ namespace TuanZi.Security
                 TModule parent = GetModule(moduleStore, info.Position);
                 if (parent == null)
                 {
-                    throw new TuanException($"Module information with path '{info.Position}' could not be found");
+                    int lastIndex = info.Position.LastIndexOf('.');
+                    string parent1Position = info.Position.Substring(0, lastIndex);
+                    TModule parent1 = GetModule(moduleStore, parent1Position);
+                    if (parent1 == null)
+                    {
+                        throw new TuanException($"Module information with path '{info.Position}' could not be found");
+                    }
+                    string parentCode = info.Position.Substring(lastIndex + 1, info.Position.Length - lastIndex - 1);
+                    ModuleInfo parentInfo = new ModuleInfo() { Code = parentCode, Name = info.PositionName ?? parentCode, Position = parent1Position };
+                    TModuleInputDto dto = GetDto(parentInfo, parent1, null);
+                    result = moduleStore.CreateModule(dto).Result;
+                    if (result.Errored)
+                    {
+                        throw new TuanException(result.Message);
+                    }
+                    parent = moduleStore.Modules.First(m => m.ParentId.Equals(parent1.Id) && m.Code == parentCode);
                 }
                 TModule module = moduleStore.Modules.FirstOrDefault(m => m.ParentId.Equals(parent.Id) && m.Code == info.Code);
                 if (module == null)
@@ -162,5 +187,6 @@ namespace TuanZi.Security
             return codes.ExpandAndToString(".");
         }
     }
+
 
 }

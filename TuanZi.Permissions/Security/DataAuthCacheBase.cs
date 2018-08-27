@@ -18,10 +18,10 @@ using TuanZi.Secutiry;
 namespace TuanZi.Security
 {
     public abstract class DataAuthCacheBase<TEntityRole, TRole, TEntityInfo, TRoleKey> : IDataAuthCache
-           where TEntityRole : EntityRoleBase<TRoleKey>
-           where TRole : RoleBase<TRoleKey>
-           where TEntityInfo : class, IEntityInfo
-           where TRoleKey : IEquatable<TRoleKey>
+        where TEntityRole : EntityRoleBase<TRoleKey>
+        where TRole : RoleBase<TRoleKey>
+        where TEntityInfo : class, IEntityInfo
+        where TRoleKey : IEquatable<TRoleKey>
     {
         private readonly IDistributedCache _cache;
         private readonly ILogger _logger;
@@ -69,10 +69,10 @@ namespace TuanZi.Security
             _logger.LogDebug($"Create a data permission rule cache for {name}");
         }
 
-        public void RemoveCache(string roleName, string entityTypeFullName, DataAuthOperation operation)
+        public void RemoveCache(DataAuthCacheItem item)
         {
-            string key = GetKey(roleName, entityTypeFullName, operation);
-            string name = GetName(roleName, entityTypeFullName, operation);
+            string key = GetKey(item.RoleName, item.EntityTypeFullName, item.Operation);
+            string name = GetName(item.RoleName, item.EntityTypeFullName, item.Operation);
             _cache.Remove(key);
             _logger.LogDebug($"Remove data permission rule cache for {name}");
         }

@@ -2,7 +2,7 @@
 using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.Data;
 using TuanZi.Finders;
 using TuanZi.Reflection;
 
@@ -13,7 +13,7 @@ namespace TuanZi.Dependency
     {
         public SingletonDependencyTypeFinder()
         {
-            AllAssemblyFinder = new AppDomainAllAssemblyFinder();
+            AllAssemblyFinder = Singleton<IAllAssemblyFinder>.Instance ?? new AppDomainAllAssemblyFinder();
         }
 
         public IAllAssemblyFinder AllAssemblyFinder { get; set; }

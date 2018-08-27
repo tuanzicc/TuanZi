@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-
+using System;
 using TuanZi.Core.Packs;
 using TuanZi.Entity.Transactions;
 
@@ -14,7 +14,7 @@ namespace TuanZi.Entity
         {
             services.AddSingleton<IEntityConfigurationTypeFinder, EntityConfigurationTypeFinder>();
             services.AddSingleton<IDbContextResolver, DbContextResolver>();
-
+            services.AddSingleton<DbContextModelCache>();
             services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IDbContextManager, DbContextManager>();
@@ -22,9 +22,9 @@ namespace TuanZi.Entity
             return services;
         }
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            IEntityConfigurationTypeFinder finder = app.ApplicationServices.GetService<IEntityConfigurationTypeFinder>();
+            IEntityConfigurationTypeFinder finder = provider.GetService<IEntityConfigurationTypeFinder>();
             finder?.Initialize();
             IsEnabled = true;
         }

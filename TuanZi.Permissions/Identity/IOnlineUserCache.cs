@@ -9,6 +9,6 @@ namespace TuanZi.Identity
 
         Task<OnlineUser> GetOrRefreshAsync(string userName);
 
-        void Remove(string userName);
+        void Remove(params string[] userNames);
     }
 }

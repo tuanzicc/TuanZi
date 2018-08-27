@@ -1,4 +1,4 @@
-﻿namespace TuanZi.System
+﻿namespace TuanZi.Core.Systems
 {
     public class SystemSettingKeys
     {

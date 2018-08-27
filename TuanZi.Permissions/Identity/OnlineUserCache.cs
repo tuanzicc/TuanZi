@@ -14,10 +14,10 @@ using TuanZi.Dependency;
 namespace TuanZi.Identity
 {
     public class OnlineUserCache<TUser, TUserKey, TRole, TRoleKey> : IOnlineUserCache
-           where TUser : UserBase<TUserKey>
-           where TUserKey : IEquatable<TUserKey>
-           where TRole : RoleBase<TRoleKey>
-           where TRoleKey : IEquatable<TRoleKey>
+        where TUser : UserBase<TUserKey>
+        where TUserKey : IEquatable<TUserKey>
+        where TRole : RoleBase<TRoleKey>
+        where TRoleKey : IEquatable<TRoleKey>
     {
         private readonly IDistributedCache _cache;
 
@@ -82,10 +82,13 @@ namespace TuanZi.Identity
                 options);
         }
 
-        public void Remove(string userName)
+        public void Remove(params string[] userNames)
         {
-            string key = $"Identity_OnlineUser_{userName}";
-            _cache.Remove(key);
+            foreach (string userName in userNames)
+            {
+                string key = $"Identity_OnlineUser_{userName}";
+                _cache.Remove(key);
+            }
         }
 
         private static OnlineUser GetOnlineUser(TUser user, string[] roles, bool isAdmin)

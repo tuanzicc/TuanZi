@@ -12,9 +12,13 @@ namespace TuanZi.Security.Events
         public override void Handle(DataAuthCacheRefreshEventData eventData)
         {
             IDataAuthCache cache = ServiceLocator.Instance.GetService<IDataAuthCache>();
-            foreach (DataAuthCacheItem cacheItem in eventData.CacheItems)
+            foreach (DataAuthCacheItem cacheItem in eventData.SetItems)
             {
                 cache.SetCache(cacheItem);
+            }
+            foreach (DataAuthCacheItem cacheItem in eventData.RemoveItems)
+            {
+                cache.RemoveCache(cacheItem);
             }
         }
     }

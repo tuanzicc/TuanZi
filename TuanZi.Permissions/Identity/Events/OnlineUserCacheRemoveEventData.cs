@@ -5,6 +5,6 @@ namespace TuanZi.Identity.Events
 {
     public class OnlineUserCacheRemoveEventData : EventDataBase
     {
-        public string UserName { get; set; }
+        public string[] UserNames { get; set; } = new string[0];
     }
 }

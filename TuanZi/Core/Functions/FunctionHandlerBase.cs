@@ -144,6 +144,11 @@ namespace TuanZi.Core.Functions
                 return;
             }
 
+            if (!functions.CheckSyncByHash(scopedProvider, Logger))
+            {
+                return;
+            }
+
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
             if (repository == null)
             {

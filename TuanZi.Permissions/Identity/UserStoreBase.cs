@@ -378,7 +378,7 @@ namespace TuanZi.Identity
 
             user.SecurityStamp = stamp;
 
-            OnlineUserCacheRemoveEventData eventData = new OnlineUserCacheRemoveEventData() { UserName = user.UserName };
+            OnlineUserCacheRemoveEventData eventData = new OnlineUserCacheRemoveEventData() { UserNames = new[] { user.UserName } };
             _eventBus.Publish(eventData);
 
             return Task.CompletedTask;

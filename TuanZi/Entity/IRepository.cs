@@ -46,11 +46,19 @@ namespace TuanZi.Entity
 
         TEntity Get(TKey key);
 
-        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true);
+        IQueryable<TEntity> Query();
+
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate);
+
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth);
 
         IQueryable<TEntity> Query(params Expression<Func<TEntity, object>>[] includePropertySelectors);
 
-        IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate = null, bool filterByDataAuth = true);
+        IQueryable<TEntity> TrackQuery();
+
+        IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate);
+
+        IQueryable<TEntity> TrackQuery(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth);
 
         IQueryable<TEntity> TrackQuery(params Expression<Func<TEntity, object>>[] includePropertySelectors);
 

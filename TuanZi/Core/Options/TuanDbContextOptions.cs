@@ -9,6 +9,7 @@ namespace TuanZi.Core.Options
     {
         public TuanDbContextOptions()
         {
+            LazyLoadingProxiesEnabled = false;
             AuditEntityEnabled = false;
             AutoMigrationEnabled = false;
         }
@@ -20,6 +21,8 @@ namespace TuanZi.Core.Options
         public string ConnectionString { get; set; }
 
         public DatabaseType DatabaseType { get; set; }
+
+        public bool LazyLoadingProxiesEnabled { get; set; }
 
         public bool AuditEntityEnabled { get; set; }
 

@@ -27,9 +27,9 @@ namespace TuanZi.EventBuses
             return services;
         }
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            IEventBusBuilder builder = app.ApplicationServices.GetService<IEventBusBuilder>();
+            IEventBusBuilder builder = provider.GetService<IEventBusBuilder>();
             builder.Build();
             IsEnabled = true;
         }

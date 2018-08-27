@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using TuanZi.Collections;
+using TuanZi.Exceptions;
 using TuanZi.Extensions;
 using TuanZi.Filter;
 using TuanZi.Mapping;
@@ -124,16 +125,22 @@ namespace TuanZi.Entity
             pageIndex.CheckGreaterThan("pageIndex", 0);
             pageSize.CheckGreaterThan("pageSize", 0);
 
-            if (!typeof(TEntity).IsEntityType())
-            {
-                throw new InvalidOperationException(Resources.QueryCacheExtensions_TypeNotEntityType.FormatWith(typeof(TEntity).FullName));
-            }
-
             total = source.Count(predicate);
             source = source.Where(predicate);
             if (sortConditions == null || sortConditions.Length == 0)
             {
-                source = source.OrderBy("Id");
+                if (typeof(TEntity).IsEntityType())
+                {
+                    source = source.OrderBy("Id");
+                }
+                else if (typeof(TEntity).IsBaseOn<ICreatedTime>())
+                {
+                    source = source.OrderBy("CreatedTime");
+                }
+                else
+                {
+                    throw new TuanException($"Type '{typeof(TEntity)}' did not add default sorting");
+                }
             }
             else
             {

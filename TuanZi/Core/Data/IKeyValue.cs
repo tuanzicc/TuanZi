@@ -1,6 +1,6 @@
 ﻿namespace TuanZi.Core.Data
 {
-    public interface IKeyValueCouple
+    public interface IKeyValue
     {
         string Key { get; set; }
 

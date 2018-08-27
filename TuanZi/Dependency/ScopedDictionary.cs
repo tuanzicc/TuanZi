@@ -12,6 +12,8 @@ namespace TuanZi.Dependency
     {
         public IFunction Function { get; set; }
 
+        public string[] DataAuthValidRoleNames { get; set; } = new string[0];
+
         public AuditOperationEntry AuditOperation { get; set; }
 
         public ClaimsIdentity Identity { get; set; }

@@ -32,16 +32,15 @@ namespace TuanZi.Entity
             IEntityConfigurationTypeFinder typeFinder = _serviceProvider.GetService<IEntityConfigurationTypeFinder>();
             Type entityType = typeof(TEntity);
             Type dbContextType = typeFinder.GetDbContextTypeForEntity(entityType);
-
             TuanDbContextOptions dbContextOptions = GetDbContextResolveOptions(dbContextType);
             DbContextResolveOptions resolveOptions = new DbContextResolveOptions(dbContextOptions);
-            IDbContextResolver contextResolver = _serviceProvider.GetService<IDbContextResolver>();
 
             DbContextBase dbContext = _dbContextMamager.Get(dbContextType, resolveOptions.ConnectionString);
             if (dbContext != null)
             {
                 return dbContext;
             }
+            IDbContextResolver contextResolver = _serviceProvider.GetService<IDbContextResolver>();
             dbContext = (DbContextBase)contextResolver.Resolve(resolveOptions);
             if (!dbContext.ExistsRelationalDatabase())
             {

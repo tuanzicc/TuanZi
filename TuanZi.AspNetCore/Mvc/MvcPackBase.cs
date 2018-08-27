@@ -11,7 +11,7 @@ using TuanZi.Net.Email;
 
 namespace TuanZi.AspNetCore.Mvc
 {
-    public abstract class MvcPackBase : TuanPack
+    public abstract class MvcPackBase : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Application;
 

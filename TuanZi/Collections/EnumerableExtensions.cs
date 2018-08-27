@@ -79,7 +79,6 @@ namespace TuanZi.Collections
             propertyName.CheckNotNullOrEmpty("propertyName");
             return CollectionPropertySorter<T>.OrderBy(source, propertyName, sortDirection);
         }
-
         public static IOrderedEnumerable<T> OrderBy<T>(this IEnumerable<T> source, SortCondition sortCondition)
         {
             sortCondition.CheckNotNull("sortCondition");

@@ -20,9 +20,8 @@ namespace TuanZi.Core.EntityInfos
             return services;
         }
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            IServiceProvider provider = app.ApplicationServices;
             IEntityInfoHandler handler = provider.GetService<IEntityInfoHandler>();
             handler.Initialize();
             IsEnabled = true;

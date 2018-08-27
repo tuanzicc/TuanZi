@@ -22,14 +22,20 @@ namespace TuanZi.AspNetCore.Mvc.Filters
         {
             IServiceProvider provider = context.HttpContext.RequestServices;
             IFunction function = context.GetExecuteFunction();
-            if (function == null || !function.AuditOperationEnabled)
+            if (function == null)
             {
                 return;
             }
-
             ScopedDictionary dict = provider.GetService<ScopedDictionary>();
             dict.Function = function;
+            IFunctionAuthorization functionAuthorization = provider.GetService<IFunctionAuthorization>();
+            string[] roleName = functionAuthorization.GetOkRoles(function, context.HttpContext.User);
+            dict.DataAuthValidRoleNames = roleName;
 
+            if (!function.AuditOperationEnabled)
+            {
+                return;
+            }
             AuditOperationEntry operation = new AuditOperationEntry
             {
                 FunctionName = function.Name,

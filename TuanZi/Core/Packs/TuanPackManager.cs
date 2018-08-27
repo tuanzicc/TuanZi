@@ -5,20 +5,22 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TuanZi.Core.Builders;
+using TuanZi.Data;
 using TuanZi.Reflection;
 
 
 namespace TuanZi.Core.Packs
 {
-    public class TuanPackManager
+    public class TuanPackManager : ITuanPackManager
     {
         private readonly ITuanBuilder _builder;
         private readonly List<TuanPack> _sourcePacks;
         private readonly TuanPackTypeFinder _typeFinder;
 
-        public TuanPackManager(ITuanBuilder builder, IAllAssemblyFinder allAssemblyFinder)
+        public TuanPackManager()
         {
-            _builder = builder;
+            _builder = Singleton<ITuanBuilder>.Instance;
+            IAllAssemblyFinder allAssemblyFinder = Singleton<IAllAssemblyFinder>.Instance;
             _typeFinder = new TuanPackTypeFinder(allAssemblyFinder);
             _sourcePacks = new List<TuanPack>();
             LoadedPacks = new List<TuanPack>();
@@ -28,7 +30,7 @@ namespace TuanZi.Core.Packs
 
         public IEnumerable<TuanPack> LoadedPacks { get; private set; }
 
-        public IServiceCollection LoadPacks(IServiceCollection services)
+        public virtual IServiceCollection LoadPacks(IServiceCollection services)
         {
             Type[] packTypes = _typeFinder.FindAll();
             _sourcePacks.Clear();
@@ -49,26 +51,30 @@ namespace TuanZi.Core.Packs
             packs = packs.OrderBy(m => m.Level).ThenBy(m => m.Order).ToList();
             LoadedPacks = packs;
 
-            foreach (TuanPack module in LoadedPacks)
+            foreach (TuanPack pack in LoadedPacks)
             {
-                services = module.AddServices(services);
+                services = pack.AddServices(services);
             }
 
             return services;
         }
 
-        public void UsePacks(IApplicationBuilder app)
+        public virtual void UsePack(IServiceProvider provider)
         {
-            ILogger<TuanPackManager> logger = app.ApplicationServices.GetService<ILogger<TuanPackManager>>();
+            ILogger logger = provider.GetLogger<TuanPackManager>();
             logger.LogInformation("Tuan framework initialization begins");
+            DateTime dtStart = DateTime.Now;
 
             foreach (TuanPack pack in LoadedPacks)
             {
-                pack.UsePack(app);
-                logger.LogInformation($"Module {pack.GetType()} loaded successfully");
+                pack.UsePack(provider);
+                logger.LogInformation($"Pack {pack.GetType()} Loaded");
             }
 
-            logger.LogInformation("Tuan framework initialization completed");
+            TimeSpan ts = DateTime.Now.Subtract(dtStart);
+            logger.LogInformation($"Tuan framework is initialized and takes time:{ts:g}");
         }
     }
+
+
 }

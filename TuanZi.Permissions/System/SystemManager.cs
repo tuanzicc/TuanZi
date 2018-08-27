@@ -6,19 +6,20 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 
 using TuanZi.Caching;
+using TuanZi.Core.Systems;
 using TuanZi.Data;
 using TuanZi.Entity;
 
 
-namespace TuanZi.System
+namespace TuanZi.Systems
 {
 
-    public class SystemManager : IKeyValueCoupleStore
+    public class SystemManager : IKeyValueStore
     {
-        private readonly IRepository<KeyValueCouple, Guid> _keyValueRepository;
+        private readonly IRepository<KeyValue, Guid> _keyValueRepository;
         private readonly IDistributedCache _cache;
 
-        public SystemManager(IRepository<KeyValueCouple, Guid> keyValueRepository,
+        public SystemManager(IRepository<KeyValue, Guid> keyValueRepository,
             IDistributedCache cache)
         {
             _keyValueRepository = keyValueRepository;
@@ -27,37 +28,37 @@ namespace TuanZi.System
 
         #region Implementation of IKeyValueCoupleStore
 
-        private const string AllKeyValueCouplesKey = "All_KeyValueCouple_Key";
+        private const string AllKeyValuesKey = "All_KeyValue_Key";
 
-        public IQueryable<KeyValueCouple> KeyValueCouples
+        public IQueryable<KeyValue> KeyValues
         {
             get { return _keyValueRepository.Query(); }
         }
 
-        public KeyValueCouple GetKeyValueCouple(string key)
+        public KeyValue GetKeyValue(string key)
         {
             const int seconds = 60 * 1000;
-            KeyValueCouple[] pairs = _cache.Get(AllKeyValueCouplesKey, () => _keyValueRepository.Query().ToArray(), seconds);
+            KeyValue[] pairs = _cache.Get(AllKeyValuesKey, () => _keyValueRepository.Query().ToArray(), seconds);
             return pairs.FirstOrDefault(m => m.Key == key);
         }
 
-        public Task<bool> CheckKeyValueCoupleExists(Expression<Func<KeyValueCouple, bool>> predicate, Guid id = default(Guid))
+        public Task<bool> CheckKeyValueExists(Expression<Func<KeyValue, bool>> predicate, Guid id = default(Guid))
         {
             return _keyValueRepository.CheckExistsAsync(predicate, id);
         }
 
-        public Task<OperationResult> CreateOrUpdateKeyValueCouple(string key, object value)
+        public Task<OperationResult> CreateOrUpdateKeyValue(string key, object value)
         {
-            KeyValueCouple pair = new KeyValueCouple(key, value);
-            return CreateOrUpdateKeyValueCouples(pair);
+            KeyValue pair = new KeyValue(key, value);
+            return CreateOrUpdateKeyValues(pair);
         }
 
-        public async Task<OperationResult> CreateOrUpdateKeyValueCouples(params KeyValueCouple[] dtos)
+        public async Task<OperationResult> CreateOrUpdateKeyValues(params KeyValue[] dtos)
         {
             Check.NotNull(dtos, nameof(dtos));
-            foreach (KeyValueCouple dto in dtos)
+            foreach (KeyValue dto in dtos)
             {
-                KeyValueCouple pair = _keyValueRepository.TrackQuery().FirstOrDefault(m => m.Key == dto.Key);
+                KeyValue pair = _keyValueRepository.TrackQuery().FirstOrDefault(m => m.Key == dto.Key);
                 if (pair == null)
                 {
                     pair = dto;
@@ -69,24 +70,24 @@ namespace TuanZi.System
                     await _keyValueRepository.UpdateAsync(pair);
                 }
             }
-            await _cache.RemoveAsync(AllKeyValueCouplesKey);
+            await _cache.RemoveAsync(AllKeyValuesKey);
             return OperationResult.Success;
         }
 
-        public async Task<OperationResult> DeleteKeyValueCouples(params Guid[] ids)
+        public async Task<OperationResult> DeleteKeyValues(params Guid[] ids)
         {
             OperationResult result = await _keyValueRepository.DeleteAsync(ids);
             if (result.Successed)
             {
-                await _cache.RemoveAsync(AllKeyValueCouplesKey);
+                await _cache.RemoveAsync(AllKeyValuesKey);
             }
             return result;
         }
 
-        public async Task<OperationResult> DeleteKeyValueCouples(string rootKey)
+        public async Task<OperationResult> DeleteKeyValues(string rootKey)
         {
             Guid[] ids = _keyValueRepository.Query(m => m.Key.StartsWith(rootKey)).Select(m => m.Id).ToArray();
-            return await DeleteKeyValueCouples(ids);
+            return await DeleteKeyValues(ids);
         }
 
         #endregion

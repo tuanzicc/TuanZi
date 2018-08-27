@@ -9,7 +9,7 @@ using TuanZi.Core.Packs;
 
 namespace TuanZi.AspNetCore.Mvc
 {
-    public class MvcFunctionPack : TuanPack
+    public class MvcFunctionPack : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Application;
 

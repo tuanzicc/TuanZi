@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TuanZi.AspNetCore\TuanZi.AspNetCore.csproj" />
     <ProjectReference Include="..\TuanZi\TuanZi.csproj" />
   </ItemGroup>
 

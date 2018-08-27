@@ -11,7 +11,6 @@ using TuanZi.Exceptions;
 
 namespace TuanZi.Dependency
 {
-
     public sealed class ServiceLocator : IDisposable
     {
         private static readonly Lazy<ServiceLocator> InstanceLazy = new Lazy<ServiceLocator>(() => new ServiceLocator());
@@ -233,6 +232,12 @@ namespace TuanZi.Dependency
             {
                 return null;
             }
+        }
+
+        public string GetConfiguration(string path)
+        {
+            IConfiguration config = GetService<IConfiguration>() ?? Singleton<IConfiguration>.Instance;
+            return config?[path];
         }
 
         public void Dispose()

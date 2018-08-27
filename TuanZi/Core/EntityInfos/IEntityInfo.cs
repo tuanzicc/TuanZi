@@ -4,7 +4,7 @@ using TuanZi.Entity;
 
 namespace TuanZi.Core.EntityInfos
 {
-    public interface IEntityInfo : IEntity<Guid>
+    public interface IEntityInfo : IEntity<Guid>, IEntityHash
     {
         string Name { get; set; }
 

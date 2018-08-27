@@ -15,24 +15,56 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceExtensions
     {
-        public static IServiceCollection AddTuan(this IServiceCollection services, Action<ITuanBuilder> builderAction = null)
+        public static IServiceCollection AddTuan<TTuanPackManager>(this IServiceCollection services, Action<ITuanBuilder> builderAction = null)
+            where TTuanPackManager : ITuanPackManager, new()
         {
             Check.NotNull(services, nameof(services));
+
+            if (Singleton<IAllAssemblyFinder>.Instance == null)
+            {
+                Singleton<IAllAssemblyFinder>.Instance = new AppDomainAllAssemblyFinder();
+            }
 
             ITuanBuilder builder = new TuanBuilder();
             if (builderAction != null)
             {
                 builderAction(builder);
             }
-            TuanPackManager manager = new TuanPackManager(builder, new AppDomainAllAssemblyFinder());
+            Singleton<ITuanBuilder>.Instance = builder;
+            TTuanPackManager manager = new TTuanPackManager();
+            services.AddSingleton<ITuanPackManager>(manager);
             manager.LoadPacks(services);
-            services.AddSingleton(provider => manager);
             return services;
         }
 
         public static TuanOptions GetTuanOptions(this IServiceProvider provider)
         {
             return provider.GetService<IOptions<TuanOptions>>()?.Value;
+        }
+
+        public static ILogger<T> GetLogger<T>(this IServiceProvider provider)
+        {
+            ILoggerFactory factory = provider.GetService<ILoggerFactory>();
+            return factory.CreateLogger<T>();
+        }
+
+        public static ILogger GetLogger(this IServiceProvider provider, Type type)
+        {
+            ILoggerFactory factory = provider.GetService<ILoggerFactory>();
+            return factory.CreateLogger(type);
+        }
+
+        public static ILogger GetLogger(this IServiceProvider provider, string name)
+        {
+            ILoggerFactory factory = provider.GetService<ILoggerFactory>();
+            return factory.CreateLogger(name);
+        }
+
+        public static IServiceProvider UseTuan(this IServiceProvider provider)
+        {
+            ITuanPackManager packManager = provider.GetService<ITuanPackManager>();
+            packManager.UsePack(provider);
+            return provider;
         }
     }
 }

@@ -17,9 +17,8 @@ namespace TuanZi.Entity.SqlServer
     {
         public override PackLevel Level => PackLevel.Framework;
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            IServiceProvider provider = app.ApplicationServices;
             using (IServiceScope scope = provider.CreateScope())
             {
                 ILogger logger = provider.GetService<ILoggerFactory>().CreateLogger(GetType());

@@ -13,9 +13,11 @@ namespace TuanZi.Entity.SqlServer
         {
             if (existingConnection == null)
             {
-                return new DbContextOptionsBuilder().UseSqlServer(connectionString);
+                DbContextOptionsBuilder optionsBuilder = new DbContextOptionsBuilder();
+
+                return optionsBuilder.UseSqlServer(connectionString, builder => builder.UseRowNumberForPaging());
             }
-            return new DbContextOptionsBuilder().UseSqlServer(existingConnection);
+            return new DbContextOptionsBuilder().UseSqlServer(existingConnection, builder => builder.UseRowNumberForPaging());
         }
     }
 }

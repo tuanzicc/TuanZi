@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-
+using TuanZi.AspNetCore;
 using TuanZi.Core;
 using TuanZi.Core.Packs;
 
 
 namespace TuanZi.Identity
 {
-    public abstract class IdentityPackBase<TUserStore, TRoleStore, TUser, TRole, TUserKey, TRoleKey> : TuanPack
+    public abstract class IdentityPackBase<TUserStore, TRoleStore, TUser, TRole, TUserKey, TRoleKey> : AspTuanPack
         where TUserStore : class, IUserStore<TUser>
         where TRoleStore : class, IRoleStore<TRole>
         where TUser : UserBase<TUserKey>

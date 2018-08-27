@@ -12,27 +12,25 @@ using TuanZi.Extensions;
 using TuanZi.Json;
 
 
-namespace TuanZi.System
+namespace TuanZi.Core.Systems
 {
-    public class KeyValueCouple : EntityBase<Guid>, ILockable, IKeyValueCouple
+    public class KeyValue : EntityBase<Guid>, ILockable, IKeyValue
     {
-        public KeyValueCouple()
+        public KeyValue()
         { }
 
-        public KeyValueCouple(string key, object value)
+        public KeyValue(string key, object value)
         {
             Key = key;
             Value = value;
         }
 
+        public string ValueJson { get; set; }
+
+        public string ValueType { get; set; }
+
         [Required]
         public string Key { get; set; }
-        
-        public string ValueJson { get; set; }
-        
-        public string ValueType { get; set; }
-        
-        public bool IsLocked { get; set; }
 
         [NotMapped]
         [JsonIgnore]
@@ -57,6 +55,8 @@ namespace TuanZi.System
                 ValueJson = value?.ToJsonString();
             }
         }
+
+        public bool IsLocked { get; set; }
 
         public T GetValue<T>()
         {

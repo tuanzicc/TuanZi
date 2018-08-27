@@ -87,6 +87,10 @@ namespace TuanZi.Core.EntityInfos
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, List<TEntityInfo> entityInfos)
         {
+            if (!entityInfos.CheckSyncByHash(scopedProvider, _logger))
+            {
+                return;
+            }
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
             if (repository == null)
             {

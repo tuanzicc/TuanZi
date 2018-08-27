@@ -16,9 +16,9 @@ namespace TuanZi.Entity.MySql
     {
         public override PackLevel Level => PackLevel.Framework;
 
-        public override void UsePack(IApplicationBuilder app)
+        public override void UsePack(IServiceProvider provider)
         {
-            using (IServiceScope scope = app.ApplicationServices.CreateScope())
+            using (IServiceScope scope = provider.CreateScope())
             {
                 TDbContext context = CreateDbContext(scope.ServiceProvider);
                 if (context != null)

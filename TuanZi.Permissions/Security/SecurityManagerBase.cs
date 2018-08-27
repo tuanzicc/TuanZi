@@ -20,33 +20,32 @@ using TuanZi.Secutiry;
 
 namespace TuanZi.Security
 {
-
     public abstract class SecurityManagerBase<TFunction, TFunctionInputDto, TEntityInfo, TEntityInfoInputDto, TModule, TModuleInputDto, TModuleKey,
-            TModuleFunction, TModuleRole, TModuleUser, TEntityRole, TEntityRoleInputDto, TUserRole, TRole, TRoleKey, TUser, TUserKey>
-        : IFunctionStore<TFunction, TFunctionInputDto>,
-          IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
-          IModuleStore<TModule, TModuleInputDto, TModuleKey>,
-          IModuleFunctionStore<TModuleFunction, TModuleKey>,
-          IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
-          IModuleUserStore<TModuleUser, TUserKey, TModuleKey>,
-          IEntityRoleStore<TEntityRole, TEntityRoleInputDto, TRoleKey>
-        where TFunction : IFunction
-        where TFunctionInputDto : FunctionInputDtoBase
-        where TEntityInfo : IEntityInfo
-        where TEntityInfoInputDto : EntityInfoInputDtoBase
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
-        where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
-        where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TEntityRole : EntityRoleBase<TRoleKey>
-        where TEntityRoleInputDto : EntityRoleInputDtoBase<TRoleKey>
-        where TUserRole : UserRoleBase<TUserKey, TRoleKey>
-        where TRole : RoleBase<TRoleKey>
-        where TUser : UserBase<TUserKey>
-        where TRoleKey : IEquatable<TRoleKey>
-        where TUserKey : IEquatable<TUserKey>
+           TModuleFunction, TModuleRole, TModuleUser, TEntityRole, TEntityRoleInputDto, TUserRole, TRole, TRoleKey, TUser, TUserKey>
+       : IFunctionStore<TFunction, TFunctionInputDto>,
+         IEntityInfoStore<TEntityInfo, TEntityInfoInputDto>,
+         IModuleStore<TModule, TModuleInputDto, TModuleKey>,
+         IModuleFunctionStore<TModuleFunction, TModuleKey>,
+         IModuleRoleStore<TModuleRole, TRoleKey, TModuleKey>,
+         IModuleUserStore<TModuleUser, TUserKey, TModuleKey>,
+         IEntityRoleStore<TEntityRole, TEntityRoleInputDto, TRoleKey>
+       where TFunction : IFunction
+       where TFunctionInputDto : FunctionInputDtoBase
+       where TEntityInfo : IEntityInfo
+       where TEntityInfoInputDto : EntityInfoInputDtoBase
+       where TModule : ModuleBase<TModuleKey>
+       where TModuleInputDto : ModuleInputDtoBase<TModuleKey>
+       where TModuleFunction : ModuleFunctionBase<TModuleKey>, new()
+       where TModuleRole : ModuleRoleBase<TModuleKey, TRoleKey>, new()
+       where TModuleUser : ModuleUserBase<TModuleKey, TUserKey>, new()
+       where TModuleKey : struct, IEquatable<TModuleKey>
+       where TEntityRole : EntityRoleBase<TRoleKey>
+       where TEntityRoleInputDto : EntityRoleInputDtoBase<TRoleKey>
+       where TUserRole : UserRoleBase<TUserKey, TRoleKey>
+       where TRole : RoleBase<TRoleKey>
+       where TUser : UserBase<TUserKey>
+       where TRoleKey : IEquatable<TRoleKey>
+       where TUserKey : IEquatable<TUserKey>
     {
         private readonly IRepository<TEntityInfo, Guid> _entityInfoRepository;
         private readonly IEventBus _eventBus;
@@ -562,7 +561,7 @@ namespace TuanZi.Security
 
         public virtual async Task<OperationResult> CreateEntityRoles(params TEntityRoleInputDto[] dtos)
         {
-            List<DataAuthCacheItem> cacheItems = new List<DataAuthCacheItem>();
+            DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData();
             OperationResult result = await _entityRoleRepository.InsertAsync(dtos,
                 async dto =>
                 {
@@ -576,7 +575,7 @@ namespace TuanZi.Security
                     {
                         throw new TuanException($"Entity '{dto.EntityId}'  does not exist.");
                     }
-                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId))
+                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId && m.Operation == dto.Operation))
                     {
                         throw new TuanException($"The data permission rule for the role '{role.Name}' and the entity '{entityInfo.Name}' already exists.");
                     }
@@ -585,17 +584,19 @@ namespace TuanZi.Security
                     {
                         throw new TuanException($"Data rule validation failed:{checkResult.Message}");
                     }
-                    cacheItems.Add(new DataAuthCacheItem()
+                    if (!dto.IsLocked)
                     {
-                        RoleName = role.Name,
-                        EntityTypeFullName = entityInfo.TypeName,
-                        Operation = dto.Operation,
-                        FilterGroup = dto.FilterGroup
-                    });
+                        eventData.SetItems.Add(new DataAuthCacheItem()
+                        {
+                            RoleName = role.Name,
+                            EntityTypeFullName = entityInfo.TypeName,
+                            Operation = dto.Operation,
+                            FilterGroup = dto.FilterGroup
+                        });
+                    }
                 });
-            if (result.Successed && cacheItems.Count > 0)
+            if (result.Successed && eventData.HasData())
             {
-                DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData() { CacheItems = cacheItems };
                 _eventBus.Publish(eventData);
             }
             return result;
@@ -603,7 +604,7 @@ namespace TuanZi.Security
 
         public virtual async Task<OperationResult> UpdateEntityRoles(params TEntityRoleInputDto[] dtos)
         {
-            List<DataAuthCacheItem> cacheItems = new List<DataAuthCacheItem>();
+            DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData();
             OperationResult result = await _entityRoleRepository.UpdateAsync(dtos,
                 async (dto, entity) =>
                 {
@@ -617,7 +618,7 @@ namespace TuanZi.Security
                     {
                         throw new TuanException($"Entity'{dto.EntityId}' does not exist.");
                     }
-                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId, dto.Id))
+                    if (await CheckEntityRoleExists(m => m.RoleId.Equals(dto.RoleId) && m.EntityId == dto.EntityId && m.Operation == dto.Operation, dto.Id))
                     {
                         throw new TuanException($"The data permission rule for the role '{role.Name}' and the entity '{entityInfo.Name}' already exists.");
                     }
@@ -626,17 +627,25 @@ namespace TuanZi.Security
                     {
                         throw new TuanException($"Data rule validation failed:{checkResult.Message}");
                     }
-                    cacheItems.Add(new DataAuthCacheItem()
+                    DataAuthCacheItem cacheItem = new DataAuthCacheItem()
                     {
                         RoleName = role.Name,
                         EntityTypeFullName = entityInfo.TypeName,
+                        Operation = dto.Operation,
                         FilterGroup = dto.FilterGroup
-                    });
+                    };
+                    if (dto.IsLocked)
+                    {
+                        eventData.RemoveItems.Add(cacheItem);
+                    }
+                    else
+                    {
+                        eventData.SetItems.Add(cacheItem);
+                    }
                 });
 
-            if (result.Successed && cacheItems.Count > 0)
+            if (result.Successed && eventData.HasData())
             {
-                DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData() { CacheItems = cacheItems };
                 _eventBus.Publish(eventData);
             }
             return result;
@@ -644,7 +653,7 @@ namespace TuanZi.Security
 
         public virtual async Task<OperationResult> DeleteEntityRoles(params Guid[] ids)
         {
-            List<(string, string)> list = new List<(string, string)>();
+            DataAuthCacheRefreshEventData eventData = new DataAuthCacheRefreshEventData();
             OperationResult result = await _entityRoleRepository.DeleteAsync(ids,
                 async entity =>
                 {
@@ -652,16 +661,12 @@ namespace TuanZi.Security
                     TEntityInfo entityInfo = await _entityInfoRepository.GetAsync(entity.EntityId);
                     if (role != null && entityInfo != null)
                     {
-                        list.Add((role.Name, entityInfo.TypeName));
+                        eventData.RemoveItems.Add(new DataAuthCacheItem() { RoleName = role.Name, EntityTypeFullName = entityInfo.TypeName, Operation = entity.Operation });
                     }
                 });
-            if (result.Successed && list.Count > 0)
+            if (result.Successed && eventData.HasData())
             {
-                IDataAuthCache cache = ServiceLocator.Instance.GetService<IDataAuthCache>();
-                foreach ((string roleName, string typeName) in list)
-                {
-                    cache.RemoveCache(roleName, typeName, DataAuthOperation.Delete);
-                }
+                _eventBus.Publish(eventData);
             }
             return result;
         }
@@ -679,7 +684,7 @@ namespace TuanZi.Security
                 }
                 if (rule.Value == null || rule.Value.ToString().IsNullOrWhiteSpace())
                 {
-                    return new OperationResult(OperationResultType.Error, $"属性名“{property.Display}”操作“{rule.Operate.ToDescription()}”的值不能为空");
+                    return new OperationResult(OperationResultType.Error, $"The value of the property name '{property.Display}' operation '{rule.Operate.ToDescription()}' cannot be empty");
                 }
             }
             if (group.Operate == FilterOperate.And)
@@ -716,4 +721,6 @@ namespace TuanZi.Security
 
         #endregion
     }
+
+
 }

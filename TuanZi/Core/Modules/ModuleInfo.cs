@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
 
 using TuanZi.Core.Functions;
-
+using TuanZi.Entity;
 
 namespace TuanZi.Core.Modules
 {
     [DebuggerDisplay("{ToDebugDisplay()}")]
-    public class ModuleInfo
+    public class ModuleInfo : IEntityHash
     {
         public string Name { get; set; }
 
