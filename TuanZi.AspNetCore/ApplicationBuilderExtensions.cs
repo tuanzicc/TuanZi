@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using TuanZi.AspNetCore;
 using TuanZi.Core;
 using TuanZi.Core.Packs;
 using TuanZi.Exceptions;

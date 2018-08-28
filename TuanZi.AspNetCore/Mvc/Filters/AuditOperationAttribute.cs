@@ -10,6 +10,7 @@ using TuanZi.Core.Functions;
 using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Exceptions;
+using TuanZi.Secutiry;
 using TuanZi.Secutiry.Claims;
 
 

@@ -19,7 +19,7 @@ using Z.EntityFramework.Plus;
 
 namespace TuanZi.Entity
 {
-    public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+    public partial class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
         where TEntity : class, IEntity<TKey>
         where TKey : IEquatable<TKey>
     {
@@ -489,10 +489,8 @@ namespace TuanZi.Entity
             }
             int count = await _dbContext.SaveChangesAsync();
             return count > 0
-                ? new OperationResult(OperationResultType.Success,
-                    names.Count > 0
-                ? new OperationResult(OperationResultType.Success, "{0} record(s) updated".FormatWith(dtos.Count))
-                : new OperationResult(OperationResultType.NoChanges);
+               ? new OperationResult(OperationResultType.Success, "{0} record(s) updated".FormatWith(dtos.Count))
+               : new OperationResult(OperationResultType.NoChanges);
         }
 
         public virtual async Task<int> UpdateBatchAsync(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TEntity>> updateExpression)

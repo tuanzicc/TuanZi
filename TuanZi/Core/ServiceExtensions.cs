@@ -9,7 +9,7 @@ using TuanZi.Core.Options;
 using TuanZi.Dependency;
 using TuanZi.Reflection;
 using TuanZi.Data;
-
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
