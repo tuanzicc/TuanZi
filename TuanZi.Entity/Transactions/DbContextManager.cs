@@ -63,7 +63,7 @@ namespace TuanZi.Entity.Transactions
             DbContextGroup group = _groups.GetOrDefault(connection.ConnectionString);
             if (group == null)
             {
-                throw new TuanException("开启事务时，指定连接对象的上下文组无法找到");
+                throw new TuanException("The context group specifying the connection object cannot be found when the transaction is started");
             }
             group.BeginOrUseTransaction(connection);
         }
@@ -73,7 +73,7 @@ namespace TuanZi.Entity.Transactions
             DbContextGroup group = _groups.GetOrDefault(connection.ConnectionString);
             if (group == null)
             {
-                throw new TuanException("开启事务时，指定连接对象的上下文组无法找到");
+                throw new TuanException("The context group specifying the connection object cannot be found when the transaction is started");
             }
             return group.BeginOrUseTransactionAsync(connection, cancellationToken);
         }

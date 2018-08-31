@@ -56,7 +56,7 @@ namespace TuanZi.Entity.Transactions
 
         public async Task BeginOrUseTransactionAsync(DbConnection connection, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (_transaction == null)
+            if (_transaction?.Connection == null)
             {
                 if (connection.State != ConnectionState.Open)
                 {
