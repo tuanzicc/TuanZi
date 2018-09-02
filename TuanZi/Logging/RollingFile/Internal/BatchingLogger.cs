@@ -58,7 +58,12 @@ namespace TuanZi.Logging.RollingFile.Internal
             builder.Append("] ");
             builder.Append(_category);
             builder.Append(": ");
-            builder.AppendLine(formatter(state, exception));
+            try
+            {
+                builder.AppendLine(formatter(state, exception));
+            }
+            catch { }
+           
 
             if (exception != null)
             {

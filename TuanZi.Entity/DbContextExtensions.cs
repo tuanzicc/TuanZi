@@ -20,7 +20,7 @@ using TuanZi.Exceptions;
 
 namespace TuanZi.Entity
 {
-    public static class DbContextExtensions
+    public static partial class DbContextExtensions
     {
         public static bool IsRelationalTransaction(this DbContext context)
         {
