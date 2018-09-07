@@ -20,14 +20,22 @@ namespace TuanZi.CodeGenerator
             {
                 return;
             }
-            
+
             Name = type.Name;
             FullName = type.FullName;
             Namespace = type.Namespace;
             Display = type.GetDescription();
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (PropertyInfo property in properties.Where(m => !m.HasAttribute<IgnoreGenPropertyAttribute>()))
+            foreach (PropertyInfo property in properties)
             {
+                if (property.HasAttribute<IgnoreGenPropertyAttribute>())
+                {
+                    continue;
+                }
+                if (property.GetMethod.IsVirtual && !property.GetMethod.IsFinal)
+                {
+                    continue;
+                }
                 if (PropertyMetadatas == null)
                 {
                     PropertyMetadatas = new List<PropertyMetadata>();
@@ -35,7 +43,7 @@ namespace TuanZi.CodeGenerator
                 PropertyMetadatas.Add(new PropertyMetadata(property));
             }
         }
-        
+
         public string Name { get; set; }
 
         public string FullName { get; set; }

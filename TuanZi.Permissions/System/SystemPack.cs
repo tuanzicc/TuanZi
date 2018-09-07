@@ -13,8 +13,8 @@ namespace TuanZi.Systems
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddScoped<SystemManager>();
-            services.AddScoped<IKeyValueStore>(provider => provider.GetService<SystemManager>());
+            services.AddScoped<KeyValueStore>();
+            services.AddScoped<IKeyValueStore>(provider => provider.GetService<KeyValueStore>());
 
             return services;
         }

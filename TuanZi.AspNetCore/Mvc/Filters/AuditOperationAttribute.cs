@@ -63,7 +63,7 @@ namespace TuanZi.AspNetCore.Mvc.Filters
                 return;
             }
             dict.AuditOperation.EndedTime = DateTime.Now;
-            IUnitOfWork unitOfWork = provider.GetService<IUnitOfWork>();
+            IUnitOfWork unitOfWork = provider.GetUnitOfWork<Function, Guid>();
             unitOfWork?.Rollback();
 
             IAuditStore store = provider.GetService<IAuditStore>();

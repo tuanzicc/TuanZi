@@ -35,7 +35,7 @@ namespace TuanZi.AspNetCore.UI
             return Type == AjaxResultType.Error;
         }
 
-        public static AjaxResult Success(object data)
+        public static AjaxResult Success(object data = null)
         {
             return new AjaxResult("Success", AjaxResultType.Success, data);
         }

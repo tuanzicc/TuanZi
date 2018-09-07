@@ -133,7 +133,7 @@ namespace TuanZi.Security
                     }
                 }
             }
-            IUnitOfWork unitOfWork = provider.GetService<IUnitOfWork>();
+            IUnitOfWork unitOfWork = provider.GetUnitOfWork<TModule, TModuleKey>();
             unitOfWork.Commit();
         }
 

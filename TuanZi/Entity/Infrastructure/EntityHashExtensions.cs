@@ -17,6 +17,8 @@ namespace TuanZi.Entity
 {
     public static class EntityHashExtensions
     {
+
+
         public static bool CheckSyncByHash(this IEnumerable<IEntityHash> entityHashes, IServiceProvider provider, ILogger logger)
         {
             IEntityHash[] hashes = entityHashes as IEntityHash[] ?? entityHashes.ToArray();
@@ -28,14 +30,14 @@ namespace TuanZi.Entity
             IKeyValueStore store = provider.GetService<IKeyValueStore>();
             string entityType = hashes[0].GetType().FullName;
             string key = $"TuanZi.Initialize.SyncToDatabaseHash-{entityType}";
-            KeyValue couple = store.GetKeyValue(key);
-            if (couple != null && couple.Value?.ToString() == hash)
+            var keyValue = store.GetKeyValue(key);
+            if (keyValue != null && keyValue.Value?.ToString() == hash)
             {
                 logger.LogInformation($"Content signature of {hashes.Length} basic data '{entityType}' {hash} Same as last time, cancel database synchronization");
                 return false;
             }
             OperationResult result = store.CreateOrUpdateKeyValue(key, hash).Result;
-            logger.LogInformation($"Content signature of {hashes.Length} basic data '{entityType}' {hash} Unlike the last {couple?.Value}, database synchronization will be performed");
+            logger.LogInformation($"Content signature of {hashes.Length} basic data '{entityType}' {hash} Unlike the last {keyValue?.Value}, database synchronization will be performed");
             return true;
         }
 

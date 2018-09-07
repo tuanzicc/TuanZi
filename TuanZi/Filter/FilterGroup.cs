@@ -47,12 +47,20 @@ namespace TuanZi.Filter
             }
         }
 
-        public void AddRule(FilterRule rule)
+        public FilterGroup AddRule(FilterRule rule)
         {
             if (Rules.All(m => !m.Equals(rule)))
             {
                 Rules.Add(rule);
             }
+
+            return this;
+        }
+
+        public FilterGroup AddRule(string field, object value, FilterOperate operate = FilterOperate.Equal)
+        {
+            FilterRule rule = new FilterRule(field, value, operate);
+            return AddRule(rule);
         }
     }
 }

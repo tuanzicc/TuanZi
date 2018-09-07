@@ -15,11 +15,11 @@ namespace TuanZi.AspNetCore.Mvc.Filters
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class UnitOfWorkAttribute : ActionFilterAttribute
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public UnitOfWorkAttribute()
         {
-            _unitOfWork = ServiceLocator.Instance.GetService<IUnitOfWork>();
+            _unitOfWorkManager = ServiceLocator.Instance.GetService<IUnitOfWorkManager>();
         }
 
         public override void OnResultExecuted(ResultExecutedContext context)
@@ -35,7 +35,7 @@ namespace TuanZi.AspNetCore.Mvc.Filters
                     message = ajax.Content;
                     if (ajax.Successed())
                     {
-                        _unitOfWork?.Commit();
+                        _unitOfWorkManager?.Commit();
                     }
                 }
 
@@ -48,10 +48,10 @@ namespace TuanZi.AspNetCore.Mvc.Filters
                     message = ajax.Content;
                     if (ajax.Successed())
                     {
-                        _unitOfWork?.Commit();
+                        _unitOfWorkManager?.Commit();
                     }
                 }
-                _unitOfWork?.Commit();
+                _unitOfWorkManager?.Commit();
             }
             else if (context.HttpContext.Response.StatusCode >= 400)
             {
@@ -77,7 +77,7 @@ namespace TuanZi.AspNetCore.Mvc.Filters
             else
             {
                 type = AjaxResultType.Success;
-                _unitOfWork?.Commit();
+                _unitOfWorkManager?.Commit();
             }
             if (dict.AuditOperation != null)
             {
