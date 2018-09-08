@@ -383,7 +383,7 @@ namespace TuanZi.Entity
 
         public virtual async Task<int> DeleteAsync(TKey key)
         {
-            CheckEntityKey(key, nameof(key));
+            CheckEntityKey(key, nameof(key)); 
 
             TEntity entity = await _dbSet.FindAsync(key);
             return await DeleteAsync(entity);
