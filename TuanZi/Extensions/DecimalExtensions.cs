@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace TuanZi
+namespace TuanZi.Extensions
 {
     public static class DecimalExtensions
     {
@@ -58,11 +58,11 @@ namespace TuanZi
         }
 
 
-        public static double Round(this double obj, int decimals)
+        public static double ToRound(this double obj, int decimals)
         {
             return double.Parse(Math.Round(obj, decimals).ToString());
         }
-        public static decimal Round(this decimal obj, int decimals)
+        public static decimal ToRound(this decimal obj, int decimals)
         {
             return decimal.Parse(Math.Round(obj, decimals).ToString());
         }

@@ -355,6 +355,61 @@ namespace TuanZi.Extensions
             return new string(value.Reverse().ToArray());
         }
 
+        public static string ToSingular(this string word)
+        {
+            Regex plural1 = new Regex("(?<keep>[^aeiou])ies$");
+            Regex plural2 = new Regex("(?<keep>[aeiou]y)s$");
+            Regex plural3 = new Regex("(?<keep>[sxzh])es$");
+            Regex plural4 = new Regex("(?<keep>[^sxzhyu])s$");
+
+            if (plural1.IsMatch(word))
+            {
+                return plural1.Replace(word, "${keep}y");
+            }
+            if (plural2.IsMatch(word))
+            {
+                return plural2.Replace(word, "${keep}");
+            }
+            if (plural3.IsMatch(word))
+            {
+                return plural3.Replace(word, "${keep}");
+            }
+            if (plural4.IsMatch(word))
+            {
+                return plural4.Replace(word, "${keep}");
+            }
+
+            return word;
+        }
+
+        public static string ToPlural(this string word)
+        {
+            Regex plural1 = new Regex("(?<keep>[^aeiou])y$");
+            Regex plural2 = new Regex("(?<keep>[aeiou]y)$");
+            Regex plural3 = new Regex("(?<keep>[sxzh])$");
+            Regex plural4 = new Regex("(?<keep>[^sxzhy])$");
+
+            if (plural1.IsMatch(word))
+            {
+                return plural1.Replace(word, "${keep}ies");
+            }
+            if (plural2.IsMatch(word))
+            {
+                return plural2.Replace(word, "${keep}s");
+            }
+            if (plural3.IsMatch(word))
+            {
+                return plural3.Replace(word, "${keep}es");
+            }
+            if (plural4.IsMatch(word))
+            {
+                return plural4.Replace(word, "${keep}s");
+            }
+
+            return word;
+        }
+
+
         public static bool IsImageFile(this string filename)
         {
             if (!File.Exists(filename))

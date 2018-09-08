@@ -37,6 +37,10 @@ namespace TuanZi.Secutiry
             }
 
             string[] userRoles = principal.Identity.GetRoles();
+            if (function.AccessType != FunctionAccessType.RoleLimit)
+            {
+                return userRoles;
+            }
             string[] functionRoles = FunctionAuthCache.GetFunctionRoles(function.Id);
 
             return userRoles.Intersect(functionRoles).ToArray();

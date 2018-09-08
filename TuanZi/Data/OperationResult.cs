@@ -31,6 +31,16 @@ namespace TuanZi.Data
         public static OperationResult Success { get; private set; }
 
         public new static OperationResult NoChanges { get; private set; }
+
+        public OperationResult<T> ToOperationResult<T>()
+        {
+            T data = default(T);
+            if (Data is T variable)
+            {
+                data = variable;
+            }
+            return new OperationResult<T>(ResultType, Message, data);
+        }
     }
 
 
@@ -77,6 +87,11 @@ namespace TuanZi.Data
                 bool contains = new[] { OperationResultType.ValidError, OperationResultType.QueryNull, OperationResultType.Error }.Contains(ResultType);
                 return contains;
             }
+        }
+
+        public OperationResult ToOperationResult()
+        {
+            return new OperationResult(ResultType, Message, Data);
         }
     }
 }

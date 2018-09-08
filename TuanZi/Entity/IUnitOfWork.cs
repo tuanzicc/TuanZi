@@ -11,6 +11,12 @@ namespace TuanZi.Entity
 
         IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>;
 
+        IDbContext GetDbContext(Type entityType);
+
+        void BeginOrUseTransaction();
+
+        Task BeginOrUseTransactionAsync(CancellationToken cancellationToken = default(CancellationToken));
+
         void Commit();
 
         void Rollback();

@@ -3,13 +3,12 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-using Newtonsoft.Json;
-
 using TuanZi.Core.Data;
 using TuanZi.Entity;
 using TuanZi.Exceptions;
 using TuanZi.Extensions;
 using TuanZi.Json;
+using TuanZi.Reflection;
 
 
 namespace TuanZi.Core.Systems
@@ -33,7 +32,6 @@ namespace TuanZi.Core.Systems
         public string Key { get; set; }
 
         [NotMapped]
-        [JsonIgnore]
         public object Value
         {
             get
@@ -51,7 +49,7 @@ namespace TuanZi.Core.Systems
             }
             set
             {
-                ValueType = value?.GetType().ToString();
+                ValueType = value?.GetType().GetFullNameWithModule();
                 ValueJson = value?.ToJsonString();
             }
         }
@@ -69,7 +67,14 @@ namespace TuanZi.Core.Systems
             {
                 return (T)value;
             }
-            throw new TuanException($"The incoming type '{typeof(T)}' does not match the actual data type '{ValueType}' when getting a strongly typed dictionary value");
+            try
+            {
+                return value.CastTo<T>();
+            }
+            catch (Exception)
+            {
+                throw new TuanException($"The incoming type '{typeof(T)}' does not match the actual data type '{ValueType}' when getting a strongly typed dictionary value");
+            }
         }
     }
 }

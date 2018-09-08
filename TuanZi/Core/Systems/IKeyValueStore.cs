@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using TuanZi.Core.Data;
 using TuanZi.Data;
 
 
@@ -12,13 +13,13 @@ namespace TuanZi.Core.Systems
     {
         IQueryable<KeyValue> KeyValues { get; }
 
-        KeyValue GetKeyValue(string key);
+        IKeyValue GetKeyValue(string key);
 
         Task<bool> CheckKeyValueExists(Expression<Func<KeyValue, bool>> predicate, Guid id = default(Guid));
 
         Task<OperationResult> CreateOrUpdateKeyValue(string key, object value);
 
-        Task<OperationResult> CreateOrUpdateKeyValues(params KeyValue[] dtos);
+        Task<OperationResult> CreateOrUpdateKeyValues(params IKeyValue[] dtos);
 
         Task<OperationResult> DeleteKeyValues(params Guid[] ids);
 

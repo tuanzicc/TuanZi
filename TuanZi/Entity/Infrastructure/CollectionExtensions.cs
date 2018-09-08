@@ -79,9 +79,9 @@ namespace TuanZi.Entity
             return new PageResult<TOutputDto>() { Total = total, Data = data };
         }
 
-        public static IQueryable<TOutputDto> ToOutput<TEntity, TOutputDto>(this IQueryable<TEntity> source)
+        public static IQueryable<TOutputDto> ToOutput<TEntity, TOutputDto>(this IQueryable<TEntity> source, bool getKey = false)
         {
-            if (!typeof(TOutputDto).IsBaseOn<IDataAuthEnabled>())
+            if (!typeof(TOutputDto).IsBaseOn<IDataAuthEnabled>() || getKey)
             {
                 return MapperExtensions.ToOutput<TEntity, TOutputDto>(source);
             }

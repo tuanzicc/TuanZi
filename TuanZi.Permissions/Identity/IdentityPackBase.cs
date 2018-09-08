@@ -13,12 +13,12 @@ using TuanZi.Core.Packs;
 namespace TuanZi.Identity
 {
     public abstract class IdentityPackBase<TUserStore, TRoleStore, TUser, TRole, TUserKey, TRoleKey> : AspTuanPack
-        where TUserStore : class, IUserStore<TUser>
-        where TRoleStore : class, IRoleStore<TRole>
-        where TUser : UserBase<TUserKey>
-        where TRole : RoleBase<TRoleKey>
-        where TUserKey : IEquatable<TUserKey>
-        where TRoleKey : IEquatable<TRoleKey>
+         where TUserStore : class, IUserStore<TUser>
+         where TRoleStore : class, IRoleStore<TRole>
+         where TUser : UserBase<TUserKey>
+         where TRole : RoleBase<TRoleKey>
+         where TUserKey : IEquatable<TUserKey>
+         where TRoleKey : IEquatable<TRoleKey>
     {
         public override PackLevel Level => PackLevel.Application;
 
@@ -34,9 +34,13 @@ namespace TuanZi.Identity
             });
 
             services.AddSingleton<IOnlineUserCache, OnlineUserCache<TUser, TUserKey, TRole, TRoleKey>>();
+            services.AddSingleton<IOnlineUserProvider, OnlineUserProvider<TUser, TUserKey, TRole, TRoleKey>>();
 
             Action<IdentityOptions> identityOptionsAction = IdentityOptionsAction();
             IdentityBuilder builder = services.AddIdentity<TUser, TRole>(identityOptionsAction);
+
+           // services.Replace(new ServiceDescriptor(typeof(IdentityErrorDescriber), typeof(IdentityErrorDescriberZhHans), ServiceLifetime.Scoped));
+
             OnIdentityBuild(builder);
 
             Action<CookieAuthenticationOptions> cookieOptionsAction = CookieOptionsAction();

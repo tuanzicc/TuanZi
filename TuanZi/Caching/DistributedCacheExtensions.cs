@@ -527,7 +527,7 @@ namespace TuanZi.Caching
             source = source != null
                 ? source.Skip((pageIndex - 1) * pageSize).Take(pageSize)
                 : Enumerable.Empty<TEntity>().AsQueryable();
-            IQueryable<TOutputDto> query = source.ToOutput<TEntity, TOutputDto>();
+            IQueryable<TOutputDto> query = source.ToOutput<TEntity, TOutputDto>(true);
             return GetKey(query.Expression, keyParams);
         }
 

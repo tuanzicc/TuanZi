@@ -21,7 +21,7 @@ namespace TuanZi.Entity
     public abstract class DbContextBase : DbContext, IDbContext
     {
         private readonly ILogger _logger;
-        private readonly TuanDbContextOptions _tuanDbOptions;
+        private readonly TuanDbContextOptions _TuanDbOptions;
         private readonly IEntityConfigurationTypeFinder _typeFinder;
 
         protected DbContextBase(DbContextOptions options, IEntityConfigurationTypeFinder typeFinder)
@@ -30,31 +30,31 @@ namespace TuanZi.Entity
             _typeFinder = typeFinder;
             if (ServiceLocator.Instance.IsProviderEnabled)
             {
-                IOptions<TuanOptions> tuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
-                _tuanDbOptions = tuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
+                IOptions<TuanOptions> TuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
+                _TuanDbOptions = TuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
 
                 _logger = ServiceLocator.Instance.GetLogger(GetType());
             }
         }
 
-        public DbContextGroup ContextGroup { get; set; }
+        public UnitOfWork UnitOfWork { get; set; }
 
         public void BeginOrUseTransaction()
         {
-            if (ContextGroup == null)
+            if (UnitOfWork == null)
             {
                 return;
             }
-            ContextGroup.BeginOrUseTransaction(this);
+            UnitOfWork.BeginOrUseTransaction();
         }
 
-        public async Task BeginOrUseTransactionAsync()
+        public async Task BeginOrUseTransactionAsync(CancellationToken cancellationToken)
         {
-            if (ContextGroup == null)
+            if (UnitOfWork == null)
             {
                 return;
             }
-            await ContextGroup.BeginOrUseTransactionAsync(this, CancellationToken.None);
+            await UnitOfWork.BeginOrUseTransactionAsync(cancellationToken);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,7 +71,7 @@ namespace TuanZi.Entity
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (_tuanDbOptions != null && _tuanDbOptions.LazyLoadingProxiesEnabled)
+            if (_TuanDbOptions != null && _TuanDbOptions.LazyLoadingProxiesEnabled)
             {
                 optionsBuilder.UseLazyLoadingProxies();
             }
@@ -80,7 +80,7 @@ namespace TuanZi.Entity
         public override int SaveChanges()
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -100,12 +100,12 @@ namespace TuanZi.Entity
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_tuanDbOptions != null && _tuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
             {
                 auditEntities = this.GetAuditEntities();
             }
 
-            await BeginOrUseTransactionAsync();
+            await BeginOrUseTransactionAsync(cancellationToken);
 
             int count = await base.SaveChangesAsync(cancellationToken);
             if (count > 0 && auditEntities.Count > 0 && ServiceLocator.InScoped())
@@ -122,7 +122,7 @@ namespace TuanZi.Entity
         public override void Dispose()
         {
             base.Dispose();
-            ContextGroup = null;
+            UnitOfWork = null;
         }
 
         #endregion

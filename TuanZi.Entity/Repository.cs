@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
@@ -27,10 +28,10 @@ namespace TuanZi.Entity
         private readonly DbSet<TEntity> _dbSet;
         private readonly ILogger _logger;
 
-        public Repository(IUnitOfWork unitOfWork)
+        public Repository(IUnitOfWorkManager unitOfWorkManager)
         {
-            UnitOfWork = unitOfWork;
-            _dbContext = (DbContext)unitOfWork.GetDbContext<TEntity, TKey>();
+            UnitOfWork = unitOfWorkManager.GetUnitOfWork<TEntity, TKey>();
+            _dbContext = (DbContext)UnitOfWork.GetDbContext<TEntity, TKey>();
             _dbSet = _dbContext.Set<TEntity>();
             _logger = ServiceLocator.Instance.GetLogger<Repository<TEntity, TKey>>();
         }
@@ -254,6 +255,17 @@ namespace TuanZi.Entity
 
             return _dbSet.Find(key);
         }
+        public TEntity GetFirst(Expression<Func<TEntity, bool>> predicate)
+        {
+            predicate.CheckNotNull("predicate");
+            return GetFirst(predicate, true);
+        }
+
+        public TEntity GetFirst(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            return Query(predicate, filterByDataAuth).FirstOrDefault();
+        }
 
         public virtual IQueryable<TEntity> Query()
         {
@@ -436,7 +448,7 @@ namespace TuanZi.Entity
         {
             Check.NotNull(predicate, nameof(predicate));
 
-            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync();
+            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync(CancellationToken.None);
             return await _dbSet.Where(predicate).DeleteAsync();
         }
 
@@ -498,7 +510,7 @@ namespace TuanZi.Entity
             Check.NotNull(predicate, nameof(predicate));
             Check.NotNull(updateExpression, nameof(updateExpression));
 
-            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync();
+            await ((DbContextBase)_dbContext).BeginOrUseTransactionAsync(CancellationToken.None);
             return await _dbSet.Where(predicate).UpdateAsync(updateExpression);
         }
 
@@ -519,6 +531,18 @@ namespace TuanZi.Entity
             CheckEntityKey(key, nameof(key));
 
             return await _dbSet.FindAsync(key);
+        }
+
+        public virtual async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            predicate.CheckNotNull("predicate");
+            return await GetFirstAsync(predicate, true);
+        }
+
+        public virtual async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth)
+        {
+            Check.NotNull(predicate, nameof(predicate));
+            return await Query(predicate, filterByDataAuth).FirstOrDefaultAsync();
         }
 
         #endregion

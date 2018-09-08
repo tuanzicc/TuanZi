@@ -10,6 +10,7 @@ using TuanZi.Dependency;
 using TuanZi.Reflection;
 using TuanZi.Data;
 using Microsoft.Extensions.Logging;
+using TuanZi.Entity;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -58,6 +59,12 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ILoggerFactory factory = provider.GetService<ILoggerFactory>();
             return factory.CreateLogger(name);
+        }
+
+        public static IUnitOfWork GetUnitOfWork<TEntity, TKey>(this IServiceProvider provider) where TEntity : IEntity<TKey>
+        {
+            IUnitOfWorkManager unitOfWorkManager = provider.GetService<IUnitOfWorkManager>();
+            return unitOfWorkManager.GetUnitOfWork<TEntity, TKey>();
         }
 
         public static IServiceProvider UseTuan(this IServiceProvider provider)
