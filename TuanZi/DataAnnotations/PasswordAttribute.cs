@@ -69,35 +69,35 @@ namespace TuanZi.DataAnnotations
             return !RequiredNonAlphanumeric || input.IsMatch(@"[^a-zA-Z\d\s:]");
         }
 
-        public override string FormatErrorMessage(string name)
-        {
-            name.CheckNotNullOrEmpty("name" );
-            if (_value.Length < RequiredLength)
-            {
-                return "{0} length must be greater than {1} charaters".FormatWith(name, RequiredLength);
-            }
-            if (RequiredDigit && !_value.IsMatch(@"[0-9]"))
-            {
-                return "{0} must have at least one numeric character".FormatWith(name);
-            }
-            if (!CanOnlyDigit && _value.IsMatch(@"^[0-9]+$"))
-            {
-                return "{0} not allowed to be all numeric characters";
-            }
-            if (RequiredLowercase && !_value.IsMatch(@"[a-z]"))
-            {
-                return "{0} must have at least one lowercase letter".FormatWith(name);
-            }
-            if (RequiredUppercase && !_value.IsMatch(@"[A-Z]"))
-            {
-                return "{0} must have at least one uppercase letter".FormatWith(name);
-            }
-            if (RequiredNonAlphanumeric && !_value.IsMatch(@"[^a-zA-Z\d\s:]"))
-            {
-                return "{0} must have at least one non alphanumeric character".FormatWith(name);
-            }
-            return base.FormatErrorMessage(name);
-        }
+        //public override string FormatErrorMessage(string name)
+        //{
+        //    name.CheckNotNullOrEmpty("name" );
+        //    if (_value.Length < RequiredLength)
+        //    {
+        //        return "{0} length must be greater than {1} charaters".FormatWith(name, RequiredLength);
+        //    }
+        //    if (RequiredDigit && !_value.IsMatch(@"[0-9]"))
+        //    {
+        //        return "{0} must have at least one numeric character".FormatWith(name);
+        //    }
+        //    if (!CanOnlyDigit && _value.IsMatch(@"^[0-9]+$"))
+        //    {
+        //        return "{0} not allowed to be all numeric characters";
+        //    }
+        //    if (RequiredLowercase && !_value.IsMatch(@"[a-z]"))
+        //    {
+        //        return "{0} must have at least one lowercase letter".FormatWith(name);
+        //    }
+        //    if (RequiredUppercase && !_value.IsMatch(@"[A-Z]"))
+        //    {
+        //        return "{0} must have at least one uppercase letter".FormatWith(name);
+        //    }
+        //    if (RequiredNonAlphanumeric && !_value.IsMatch(@"[^a-zA-Z\d\s:]"))
+        //    {
+        //        return "{0} must have at least one non alphanumeric character".FormatWith(name);
+        //    }
+        //    return base.FormatErrorMessage(name);
+        //}
 
         #endregion
     }
