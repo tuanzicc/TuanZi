@@ -15,6 +15,8 @@ namespace TuanZi.Identity
             CreatedTime = DateTime.Now;
         }
 
+        public virtual Guid? AppId { get; set; }
+
         [Required]
         [DisplayName("User Name")]
         public string UserName { get; set; }
