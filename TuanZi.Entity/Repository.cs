@@ -123,6 +123,8 @@ namespace TuanZi.Entity
             CheckEntityKey(key, nameof(key));
 
             TEntity entity = _dbSet.Find(key);
+            if (entity == null)
+                return 0;
             return Delete(entity);
         }
 
@@ -395,9 +397,12 @@ namespace TuanZi.Entity
 
         public virtual async Task<int> DeleteAsync(TKey key)
         {
-            CheckEntityKey(key, nameof(key));
+            CheckEntityKey(key, nameof(key)); 
 
             TEntity entity = await _dbSet.FindAsync(key);
+            if (entity == null)
+                return 0;
+
             return await DeleteAsync(entity);
         }
 
