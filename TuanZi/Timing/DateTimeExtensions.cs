@@ -236,7 +236,7 @@ namespace TuanZi
         }
 
 
-        public static DateTime AddWeekDays(DateTime date, int days)
+        public static DateTime AddWeekDays(this DateTime date, int days)
         {
             if (days == 0) return date;
             int i = 0;
