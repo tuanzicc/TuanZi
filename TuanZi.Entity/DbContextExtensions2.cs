@@ -44,6 +44,50 @@ namespace TuanZi.Entity
             return context.Database.ExecuteSqlCommandAsync(new RawSqlString(sql), parameters);
         }
 
-     
+
+        public static IList<T> SqlQuery<T>(this IDbContext dbContext, string sql, params object[] parameters)
+            where T : new()
+        {
+            var conn = ((DbContext)dbContext).Database.GetDbConnection();
+            try
+            {
+                conn.Open();
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.Parameters.AddRange(parameters);
+                    var propts = typeof(T).GetProperties();
+                    var rtnList = new List<T>();
+                    T model;
+                    object val;
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            model = new T();
+                            foreach (var l in propts)
+                            {
+                                val = reader[l.Name];
+                                if (val == DBNull.Value)
+                                {
+                                    l.SetValue(model, null);
+                                }
+                                else
+                                {
+                                    l.SetValue(model, val);
+                                }
+                            }
+                            rtnList.Add(model);
+                        }
+                    }
+                    return rtnList;
+                }
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
     }
 }
