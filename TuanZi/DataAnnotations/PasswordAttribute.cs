@@ -6,7 +6,7 @@ namespace TuanZi.DataAnnotations
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public class PasswordAttribute : DataTypeAttribute
-    {
+    { 
         private string _value;
 
         public PasswordAttribute()
