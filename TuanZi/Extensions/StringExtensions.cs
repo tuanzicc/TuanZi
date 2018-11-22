@@ -343,6 +343,20 @@ namespace TuanZi.Extensions
         }
 
         [DebuggerStepThrough]
+        public static bool IsCaseSensitiveContains(this string value, string comparing)
+        {
+            value = value ?? string.Empty;
+            return value.Contains(comparing, StringComparison.Ordinal);
+        }
+
+        [DebuggerStepThrough]
+        public static bool IsCaseInsensitiveContains(this string value, string comparing)
+        {
+            value = value ?? string.Empty;
+            return value.Contains(comparing, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [DebuggerStepThrough]
         public static string FormatWith(this string format, params object[] args)
         {
             format.CheckNotNull("format");
