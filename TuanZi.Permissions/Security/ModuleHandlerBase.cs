@@ -53,15 +53,27 @@ namespace TuanZi.Security
                 return;
             }
 
-            if (!moduleInfos.CheckSyncByHash(provider, Logger))
+            IModuleStore<TModule, TModuleInputDto, TModuleKey> moduleStore =
+                provider.GetService<IModuleStore<TModule, TModuleInputDto, TModuleKey>>();
+            if (moduleStore == null)
             {
+                Logger.LogWarning("The service of IRepository<,> is not found, please initialize the Entity Pack module.");
                 return;
             }
 
-            IModuleStore<TModule, TModuleInputDto, TModuleKey> moduleStore =
-                provider.GetService<IModuleStore<TModule, TModuleInputDto, TModuleKey>>();
             IModuleFunctionStore<TModuleFunction, TModuleKey> moduleFunctionStore =
                 provider.GetService<IModuleFunctionStore<TModuleFunction, TModuleKey>>();
+            if (moduleFunctionStore == null)
+            {
+                Logger.LogWarning("The service of IRepository<,> is not found. Please initialize the EntityModule module.");
+                return;
+            }
+
+            if (!moduleInfos.CheckSyncByHash(provider, Logger))
+            {
+                Logger.LogInformation("The module data signature is the same as last time, synchronization has been cancelled");
+                return;
+            }
 
             TModule[] modules = moduleStore.Modules.ToArray();
             var positionModules = modules.Select(m => new { m.Id, Position = GetModulePosition(modules, m) })
@@ -84,6 +96,7 @@ namespace TuanZi.Security
             foreach (ModuleInfo info in moduleInfos)
             {
                 TModule parent = GetModule(moduleStore, info.Position);
+
                 if (parent == null)
                 {
                     int lastIndex = info.Position.LastIndexOf('.');
@@ -91,7 +104,7 @@ namespace TuanZi.Security
                     TModule parent1 = GetModule(moduleStore, parent1Position);
                     if (parent1 == null)
                     {
-                        throw new TuanException($"Module information with path '{info.Position}' could not be found");
+                        throw new TuanException($"Module information with path '{parent1Position}' could not be found");
                     }
                     string parentCode = info.Position.Substring(lastIndex + 1, info.Position.Length - lastIndex - 1);
                     ModuleInfo parentInfo = new ModuleInfo() { Code = parentCode, Name = info.PositionName ?? parentCode, Position = parent1Position };
@@ -104,6 +117,7 @@ namespace TuanZi.Security
                     parent = moduleStore.Modules.First(m => m.ParentId.Equals(parent1.Id) && m.Code == parentCode);
                 }
                 TModule module = moduleStore.Modules.FirstOrDefault(m => m.ParentId.Equals(parent.Id) && m.Code == info.Code);
+
                 if (module == null)
                 {
                     TModuleInputDto dto = GetDto(info, parent, null);
@@ -133,10 +147,12 @@ namespace TuanZi.Security
                     }
                 }
             }
+
             IUnitOfWork unitOfWork = provider.GetUnitOfWork<TModule, TModuleKey>();
             unitOfWork.Commit();
         }
 
+        
         private readonly IDictionary<string, TModule> _positionDictionary = new Dictionary<string, TModule>();
         private TModule GetModule(IModuleStore<TModule, TModuleInputDto, TModuleKey> moduleStore, string position)
         {

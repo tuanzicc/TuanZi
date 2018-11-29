@@ -1,4 +1,7 @@
-﻿namespace TuanZi.Data
+﻿using System;
+using TuanZi.Extensions;
+
+namespace TuanZi.Data
 {
     public abstract class TuanResult<TResultType> : TuanResult<TResultType, object>, ITuanResult<TResultType>
     {
@@ -38,6 +41,10 @@
 
         protected TuanResult(TResultType type, string message, TData data)
         {
+            if (message == null && typeof(TResultType).IsEnum)
+            {
+                message = (type as Enum)?.ToDescription();
+            }
             ResultType = type;
             _message = message;
             Data = data;

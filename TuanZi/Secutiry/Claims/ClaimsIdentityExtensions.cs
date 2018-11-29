@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using TuanZi.Data;
+using TuanZi.Extensions;
 
 namespace TuanZi.Secutiry.Claims
 {
@@ -29,7 +30,7 @@ namespace TuanZi.Secutiry.Claims
             return claimsIdentity.Claims.Where(m => m.Type == type).Select(m => m.Value).ToArray();
         }
 
-        public static T GetUserId<T>(this IIdentity identity) where T : IConvertible
+        public static T GetUserId<T>(this IIdentity identity)
         {
             Check.NotNull(identity, nameof(identity));
             if (!(identity is ClaimsIdentity claimsIdentity))
@@ -41,7 +42,7 @@ namespace TuanZi.Secutiry.Claims
             {
                 return default(T);
             }
-            return (T)Convert.ChangeType(value, typeof(T));
+            return value.CastTo<T>();
         }
 
         public static string GetUserId(this IIdentity identity)

@@ -87,15 +87,20 @@ namespace TuanZi.Core.EntityInfos
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, List<TEntityInfo> entityInfos)
         {
-            if (!entityInfos.CheckSyncByHash(scopedProvider, _logger))
-            {
-                return;
-            }
+
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
             if (repository == null)
             {
-                throw new TuanException("The service of IRepository<,> is not found, please initialize the Entity Pack module");
+                _logger.LogWarning("The service of IRepository<,> is not found, please initialize the Entity Pack module");
+                return;
             }
+
+            if (!entityInfos.CheckSyncByHash(scopedProvider, _logger))
+            {
+                _logger.LogInformation("The module data signature is the same as last time, synchronization has been cancelled");
+                return;
+            }
+
             TEntityInfo[] dbItems = repository.TrackQuery(null, false).ToArray();
 
             TEntityInfo[] removeItems = dbItems.Except(entityInfos, EqualityHelper<TEntityInfo>.CreateComparer(m => m.TypeName)).ToArray();
@@ -158,6 +163,10 @@ namespace TuanZi.Core.EntityInfos
         protected virtual TEntityInfo[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
+            if (repository == null)
+            {
+                return new TEntityInfo[0];
+            }
             return repository.Query(null, false).ToArray();
         }
 

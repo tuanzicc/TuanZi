@@ -144,16 +144,19 @@ namespace TuanZi.Core.Functions
                 return;
             }
 
-            if (!functions.CheckSyncByHash(scopedProvider, Logger))
-            {
-                return;
-            }
-
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
             if (repository == null)
             {
-                throw new TuanException("The service of IRepository<,> is not found, please initialize the EntityPack module");
+                Logger.LogWarning("The service of IRepository<,> is not found, please initialize the Entity Pack module");
+                return;
             }
+
+            if (!functions.CheckSyncByHash(scopedProvider, Logger))
+            {
+                Logger.LogInformation("The module data signature is the same as last time, synchronization has been cancelled");
+                return;
+            }
+
             TFunction[] dbItems = repository.TrackQuery().ToArray();
 
             TFunction[] removeItems = dbItems.Except(functions,
@@ -239,6 +242,10 @@ namespace TuanZi.Core.Functions
         protected virtual TFunction[] GetFromDatabase(IServiceProvider scopedProvider)
         {
             IRepository<TFunction, Guid> repository = scopedProvider.GetService<IRepository<TFunction, Guid>>();
+            if (repository == null)
+            {
+                return new TFunction[0];
+            }
             return repository.Query().ToArray();
         }
 

@@ -12,7 +12,8 @@ namespace TuanZi.Core.Systems
     public interface IKeyValueStore
     {
         IQueryable<KeyValue> KeyValues { get; }
-
+        TSetting GetSetting<TSetting>() where TSetting : ISetting, new();
+        Task<OperationResult> SaveSetting(ISetting setting);
         IKeyValue GetKeyValue(string key);
 
         Task<bool> CheckKeyValueExists(Expression<Func<KeyValue, bool>> predicate, Guid id = default(Guid));
