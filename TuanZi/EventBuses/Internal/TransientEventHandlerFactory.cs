@@ -6,14 +6,10 @@ namespace TuanZi.EventBuses.Internal
     internal class TransientEventHandlerFactory<TEventHandler> : IEventHandlerFactory
         where TEventHandler : IEventHandler, new()
     {
-        public IEventHandler GetHandler()
+        public EventHandlerDisposeWrapper GetHandler()
         {
-            return new TEventHandler();
-        }
-
-        public void ReleaseHandler(IEventHandler handler)
-        {
-            (handler as IDisposable)?.Dispose();
+            IEventHandler handler = new TEventHandler();
+            return new EventHandlerDisposeWrapper(handler, () => (handler as IDisposable)?.Dispose());
         }
     }
 }

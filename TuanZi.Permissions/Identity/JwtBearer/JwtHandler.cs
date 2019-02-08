@@ -15,9 +15,8 @@ namespace TuanZi.Identity.JwtBearer
 {
     public class JwtHelper
     {
-        public static string CreateToken(Claim[] claims)
+        public static string CreateToken(Claim[] claims, TuanOptions options)
         {
-            TuanOptions options = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>().Value;
             JwtOptions jwtOptions = options.Jwt;
             string secret = jwtOptions.Secret;
             if (secret == null)

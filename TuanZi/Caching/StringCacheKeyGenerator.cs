@@ -1,6 +1,7 @@
 ﻿using TuanZi.Collections;
 using TuanZi.Extensions;
 
+
 namespace TuanZi.Caching
 {
     public class StringCacheKeyGenerator : ICacheKeyGenerator

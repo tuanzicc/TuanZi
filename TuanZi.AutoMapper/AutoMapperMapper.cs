@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-
 using TuanZi.Dependency;
 
 using IMapper = TuanZi.Mapping.IMapper;
@@ -12,6 +12,7 @@ using IMapper = TuanZi.Mapping.IMapper;
 
 namespace TuanZi.AutoMapper
 {
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     public class AutoMapperMapper : IMapper
     {
         public TTarget MapTo<TTarget>(object source)

@@ -3,13 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using TuanZi.Collections;
 using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Reflection;
 
 
 namespace TuanZi.EventBuses.Internal
 {
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     internal class InMemoryEventStore : IEventStore
     {
         private readonly ConcurrentDictionary<Type, List<IEventHandlerFactory>> _handlerFactories;

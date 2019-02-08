@@ -7,18 +7,24 @@ using TuanZi.Secutiry;
 
 namespace TuanZi.Security.Events
 {
-    public class DataAuthCacheRefreshEventHandler : EventHandlerBase<DataAuthCacheRefreshEventData>, ITransientDependency
+    public class DataAuthCacheRefreshEventHandler : EventHandlerBase<DataAuthCacheRefreshEventData>
     {
+        private readonly IDataAuthCache _authCache;
+
+        public DataAuthCacheRefreshEventHandler(IDataAuthCache authCache)
+        {
+            _authCache = authCache;
+        }
+
         public override void Handle(DataAuthCacheRefreshEventData eventData)
         {
-            IDataAuthCache cache = ServiceLocator.Instance.GetService<IDataAuthCache>();
             foreach (DataAuthCacheItem cacheItem in eventData.SetItems)
             {
-                cache.SetCache(cacheItem);
+                _authCache.SetCache(cacheItem);
             }
             foreach (DataAuthCacheItem cacheItem in eventData.RemoveItems)
             {
-                cache.RemoveCache(cacheItem);
+                _authCache.RemoveCache(cacheItem);
             }
         }
     }

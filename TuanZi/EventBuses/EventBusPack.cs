@@ -1,9 +1,8 @@
 ﻿using System;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TuanZi.Core.Packs;
-using TuanZi.EventBuses.Internal;
+using TuanZi.Dependency;
 
 
 namespace TuanZi.EventBuses
@@ -16,13 +15,13 @@ namespace TuanZi.EventBuses
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton<IEventHandlerTypeFinder, EventHandlerTypeFinder>();
-            services.AddSingleton<IEventBus, PassThroughEventBus>();
-            services.AddSingleton<IEventSubscriber>(provider => provider.GetService<IEventBus>());
-            services.AddSingleton<IEventPublisher>(provider => provider.GetService<IEventBus>());
-
-            services.AddSingleton<IEventStore, InMemoryEventStore>();
-            services.AddSingleton<IEventBusBuilder, EventBusBuilder>();
+            IEventHandlerTypeFinder handlerTypeFinder =
+                services.GetOrAddTypeFinder<IEventHandlerTypeFinder>(assemblyFinder => new EventHandlerTypeFinder(assemblyFinder));
+            Type[] eventHandlerTypes = handlerTypeFinder.FindAll();
+            foreach (Type handlerType in eventHandlerTypes)
+            {
+                services.TryAddTransient(handlerType);
+            }
 
             return services;
         }

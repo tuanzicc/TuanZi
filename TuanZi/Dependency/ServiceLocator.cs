@@ -12,6 +12,7 @@ using TuanZi.Exceptions;
 
 namespace TuanZi.Dependency
 {
+    [Obsolete("This class will be removed in version 1.0")]
     public sealed class ServiceLocator : IDisposable
     {
         private static readonly Lazy<ServiceLocator> InstanceLazy = new Lazy<ServiceLocator>(() => new ServiceLocator());
@@ -54,7 +55,7 @@ namespace TuanZi.Dependency
             _provider = provider;
         }
 
-        public void ExcuteScopedWork(Action<IServiceProvider> action)
+        public void ExecuteScopedWork(Action<IServiceProvider> action)
         {
             if (_provider == null)
             {
@@ -77,7 +78,7 @@ namespace TuanZi.Dependency
             }
         }
 
-        public async Task ExcuteScopedWorkAsync(Func<IServiceProvider, Task> action)
+        public async Task ExecuteScopedWorkAsync(Func<IServiceProvider, Task> action)
         {
             if (_provider == null)
             {
@@ -100,7 +101,7 @@ namespace TuanZi.Dependency
             }
         }
 
-        public TResult ExcuteScopedWork<TResult>(Func<IServiceProvider, TResult> func)
+        public TResult ExecuteScopedWork<TResult>(Func<IServiceProvider, TResult> func)
         {
             if (_provider == null)
             {
@@ -123,7 +124,7 @@ namespace TuanZi.Dependency
             }
         }
 
-        public async Task<TResult> ExcuteScopedWorkAsync<TResult>(Func<IServiceProvider, Task<TResult>> func)
+        public async Task<TResult> ExecuteScopedWorkAsync<TResult>(Func<IServiceProvider, Task<TResult>> func)
         {
             if (_provider == null)
             {
@@ -237,7 +238,7 @@ namespace TuanZi.Dependency
 
         public string GetConfiguration(string path)
         {
-            IConfiguration config = GetService<IConfiguration>() ?? Singleton<IConfiguration>.Instance;
+            IConfiguration config = GetService<IConfiguration>() ?? _services.GetConfiguration();
             return config?[path];
         }
 
@@ -247,4 +248,5 @@ namespace TuanZi.Dependency
             _provider = null;
         }
     }
+
 }

@@ -9,12 +9,9 @@
 
         public IEventHandler HandlerInstance { get; }
 
-        public IEventHandler GetHandler()
+        public EventHandlerDisposeWrapper GetHandler()
         {
-            return HandlerInstance;
+            return new EventHandlerDisposeWrapper(HandlerInstance);
         }
-
-        public void ReleaseHandler(IEventHandler handler)
-        { }
     }
 }

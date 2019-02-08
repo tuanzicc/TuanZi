@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using TuanZi.Dependency;
 using TuanZi.EventBuses;
 using TuanZi.Extensions;
@@ -9,6 +11,7 @@ using TuanZi.Extensions;
 
 namespace TuanZi.Audits
 {
+    [Dependency(ServiceLifetime.Transient, AddSelf = true)]
     public class AuditEntityEventHandler : EventHandlerBase<AuditEntityEventData>
     {
         private readonly ScopedDictionary _scopedDictionary;

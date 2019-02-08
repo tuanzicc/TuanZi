@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,88 +14,124 @@ namespace TuanZi.Dependency
 {
     public class DependencyPack : TuanPack
     {
-        public DependencyPack()
-        {
-            ScanOptions = new ServiceScanOptions();
-        }
-
         public override PackLevel Level => PackLevel.Core;
 
         public override int Order => 1;
-
-        protected virtual ServiceScanOptions ScanOptions { get; }
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             ServiceLocator.Instance.SetServiceCollection(services);
 
-            services.AddScoped<ScopedDictionary>();
             services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
 
-            Type[] dependencyTypes = ScanOptions.TransientTypeFinder.FindAll();
-            AddTypeWithInterfaces(services, dependencyTypes, ServiceLifetime.Transient);
+            IDependencyTypeFinder dependencyTypeFinder =
+                services.GetOrAddTypeFinder<IDependencyTypeFinder>(assemblyFinder => new DependencyTypeFinder(assemblyFinder));
 
-            dependencyTypes = ScanOptions.ScopedTypeFinder.FindAll();
-            AddTypeWithInterfaces(services, dependencyTypes, ServiceLifetime.Scoped);
-
-            dependencyTypes = ScanOptions.SingletonTypeFinder.FindAll();
-            AddTypeWithInterfaces(services, dependencyTypes, ServiceLifetime.Singleton);
+            Type[] dependencyTypes = dependencyTypeFinder.FindAll();
+            foreach (Type dependencyType in dependencyTypes)
+            {
+                AddToServices(services, dependencyType);
+            }
 
             return services;
         }
 
-        protected virtual IServiceCollection AddTypeWithInterfaces(IServiceCollection services, Type[] implementationTypes, ServiceLifetime lifetime)
+        public override void UsePack(IServiceProvider provider)
         {
-            foreach (Type implementationType in implementationTypes)
+            ServiceLocator.Instance.SetApplicationServiceProvider(provider);
+            IsEnabled = true;
+        }
+
+        protected virtual void AddToServices(IServiceCollection services, Type implementationType)
+        {
+            if (implementationType.IsAbstract || implementationType.IsInterface)
             {
-                if (implementationType.IsAbstract || implementationType.IsInterface)
+                return;
+            }
+            ServiceLifetime? lifetime = GetLifetimeOrNull(implementationType);
+            if (lifetime == null)
+            {
+                return;
+            }
+            DependencyAttribute dependencyAttribute = implementationType.GetAttribute<DependencyAttribute>();
+            Type[] serviceTypes = GetImplementedInterfaces(implementationType);
+
+            if (serviceTypes.Length == 0)
+            {
+                services.TryAdd(new ServiceDescriptor(implementationType, implementationType, lifetime.Value));
+                return;
+            }
+
+            if (dependencyAttribute?.AddSelf == true)
+            {
+                services.TryAdd(new ServiceDescriptor(implementationType, implementationType, lifetime.Value));
+            }
+
+            for (int i = 0; i < serviceTypes.Length; i++)
+            {
+                Type serviceType = serviceTypes[i];
+                ServiceDescriptor descriptor = new ServiceDescriptor(serviceType, implementationType, lifetime.Value);
+                if (lifetime.Value == ServiceLifetime.Transient)
                 {
+                    services.TryAddEnumerable(descriptor);
                     continue;
                 }
-                Type[] interfaceTypes = GetImplementedInterfaces(implementationType);
-                if (interfaceTypes.Length == 0)
+
+                bool multiple = serviceType.HasAttribute<MultipleDependencyAttribute>();
+                if (i == 0)
                 {
-                    services.TryAdd(new ServiceDescriptor(implementationType, implementationType, lifetime));
-                    continue;
-                }
-                for (int i = 0; i < interfaceTypes.Length; i++)
-                {
-                    Type interfaceType = interfaceTypes[i];
-                    if (lifetime == ServiceLifetime.Transient)
+                    if (multiple)
                     {
-                        services.TryAddEnumerable(new ServiceDescriptor(interfaceType, implementationType, lifetime));
-                        continue;
-                    }
-                    bool multiple = interfaceType.HasAttribute<MultipleDependencyAttribute>();
-                    if (i == 0)
-                    {
-                        if (multiple)
-                        {
-                            services.Add(new ServiceDescriptor(interfaceType, implementationType, lifetime));
-                        }
-                        else
-                        {
-                            services.TryAdd(new ServiceDescriptor(interfaceType, implementationType, lifetime));
-                        }
+                        services.Add(descriptor);
                     }
                     else
                     {
-                        Type firstInterfaceType = interfaceTypes[0];
-                        if (multiple)
-                        {
-                            services.Add(new ServiceDescriptor(interfaceType, provider => provider.GetService(firstInterfaceType), lifetime));
-                        }
-                        else
-                        {
-                            services.TryAdd(new ServiceDescriptor(interfaceType, provider => provider.GetService(firstInterfaceType), lifetime));
-                        }
+                        AddSingleService(services, descriptor, dependencyAttribute);
+                    }
+                }
+                else
+                {
+                    Type firstServiceType = serviceTypes[0];
+                    descriptor = new ServiceDescriptor(serviceType, provider => provider.GetService(firstServiceType), lifetime.Value);
+                    if (multiple)
+                    {
+                        services.Add(descriptor);
+                    }
+                    else
+                    {
+                        AddSingleService(services, descriptor, dependencyAttribute);
                     }
                 }
             }
-            return services;
         }
 
-        private static Type[] GetImplementedInterfaces(Type type, bool thisisthit)
+        protected virtual ServiceLifetime? GetLifetimeOrNull(Type type)
+        {
+            DependencyAttribute attribute = type.GetAttribute<DependencyAttribute>();
+            if (attribute != null)
+            {
+                return attribute.Lifetime;
+            }
+
+            if (type.IsDeriveClassFrom<ITransientDependency>())
+            {
+                return ServiceLifetime.Transient;
+            }
+
+            if (type.IsDeriveClassFrom<IScopeDependency>())
+            {
+                return ServiceLifetime.Scoped;
+            }
+
+            if (type.IsDeriveClassFrom<ISingletonDependency>())
+            {
+                return ServiceLifetime.Singleton;
+            }
+
+            return null;
+        }
+
+        protected virtual Type[] GetImplementedInterfaces(Type type)
         {
             Type[] exceptInterfaces = { typeof(IDisposable) };
             Type[] interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
@@ -109,40 +146,22 @@ namespace TuanZi.Dependency
             return interfaceTypes;
         }
 
-        //Tuan
-        private static Type[] GetImplementedInterfaces(Type type)
+        private static void AddSingleService(IServiceCollection services,
+            ServiceDescriptor descriptor,
+            [CanBeNull] DependencyAttribute dependencyAttribute)
         {
-            Type[] exceptInterfaces = { typeof(IDisposable) };
-            TypeFilter theFilter = new TypeFilter(InterfaceFilter);
-            Type[] interfaceTypes = type.FindInterfaces(theFilter, type.BaseType).Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
-            if (interfaceTypes.Length == 0)
-                interfaceTypes = type.GetInterfaces().Where(t => !exceptInterfaces.Contains(t) && !t.HasAttribute<IgnoreDependencyAttribute>()).ToArray();
-            for (int index = 0; index < interfaceTypes.Length; index++)
+            if (dependencyAttribute?.ReplaceExisting == true)
             {
-                Type interfaceType = interfaceTypes[index];
-                if (interfaceType.IsGenericType && !interfaceType.IsGenericTypeDefinition && interfaceType.FullName == null)
-                {
-                    interfaceTypes[index] = interfaceType.GetGenericTypeDefinition();
-                }
+                services.Replace(descriptor);
             }
-            return interfaceTypes;
-        }
-        public static bool InterfaceFilter(Type typeObj, Object criteriaObj)
-        {
-            Type baseClassType = (Type)criteriaObj;
-            Type[] interfaces_array = baseClassType.GetInterfaces();
-            for (int i = 0; i < interfaces_array.Length; i++)
+            else if (dependencyAttribute?.TryAdd == true)
             {
-                if (typeObj.ToString() == interfaces_array[i].ToString())
-                    return false;
+                services.TryAdd(descriptor);
             }
-            return true;
-        }
-
-        public override void UsePack(IServiceProvider provider)
-        {
-            ServiceLocator.Instance.SetApplicationServiceProvider(provider);
-            IsEnabled = true;
+            else
+            {
+                services.Add(descriptor);
+            }
         }
     }
 }

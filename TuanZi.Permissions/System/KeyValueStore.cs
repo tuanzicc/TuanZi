@@ -29,10 +29,7 @@ namespace TuanZi.Systems
             _cache = cache;
         }
 
-        public IQueryable<KeyValue> KeyValues
-        {
-            get { return _keyValueRepository.Query(); }
-        }
+        public IQueryable<KeyValue> KeyValues => _keyValueRepository.Query();
 
         public TSetting GetSetting<TSetting>() where TSetting : ISetting, new()
         {

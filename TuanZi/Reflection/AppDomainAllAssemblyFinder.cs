@@ -7,7 +7,6 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyModel;
 
 using TuanZi.Collections;
-using TuanZi.Dependency;
 using TuanZi.Finders;
 
 namespace TuanZi.Reflection

@@ -11,17 +11,22 @@ using TuanZi.EventBuses.Internal;
 using TuanZi.Reflection;
 using TuanZi.Data;
 using TuanZi.Extensions;
+using TuanZi.Dependency;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TuanZi.EventBuses
 {
 
     public abstract class EventBusBase : IEventBus
     {
-        protected EventBusBase(IEventStore eventStore, ILogger logger)
+        protected EventBusBase(IHybridServiceScopeFactory serviceScopeFactory, IServiceProvider serviceProvider)
         {
-            EventStore = eventStore;
-            Logger = logger;
+            ServiceScopeFactory = serviceScopeFactory;
+            EventStore = serviceProvider.GetService<IEventStore>();
+            Logger = serviceProvider.GetLogger(GetType());
         }
+
+        protected IHybridServiceScopeFactory ServiceScopeFactory { get; }
 
         protected IEventStore EventStore { get; }
 
@@ -61,17 +66,17 @@ namespace TuanZi.EventBuses
         {
             Check.NotNull(eventHandlerTypes, nameof(eventHandlerTypes));
 
-            foreach (Type handlerType in eventHandlerTypes)
+            foreach (Type eventHandlerType in eventHandlerTypes)
             {
-                Type handlerInterface = handlerType.GetInterface("IEventHandler`1");
+                Type handlerInterface = eventHandlerType.GetInterface("IEventHandler`1");
                 if (handlerInterface == null)
                 {
                     continue;
                 }
-                Type eventType = handlerInterface.GetGenericArguments()[0];
-                IEventHandlerFactory factory = new IocEventHandlerFactory(handlerType);
-                EventStore.Add(eventType, factory);
-                Logger.LogDebug($"Create a subscription pairing of event '{eventType}' to processor '{handlerType}'");
+                Type eventDataType = handlerInterface.GetGenericArguments()[0];
+                IEventHandlerFactory factory = new IocEventHandlerFactory(ServiceScopeFactory, eventHandlerType);
+                EventStore.Add(eventDataType, factory);
+                Logger.LogDebug($"Create a subscription pairing of event '{eventDataType}' to processor '{eventHandlerType}'");
             }
             Logger.LogInformation($"creates event subscriptions for {eventHandlerTypes.Length} event handlers from the assembly");
         }
@@ -169,50 +174,66 @@ namespace TuanZi.EventBuses
 
         protected void InvokeHandler(IEventHandlerFactory factory, Type eventType, IEventData eventData, bool wait = true)
         {
-            IEventHandler handler = factory.GetHandler();
-            if (handler == null)
+            EventHandlerDisposeWrapper handlerWrapper = factory.GetHandler();
+            IEventHandler handler = handlerWrapper.EventHandler;
+            try
             {
-                Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
-                return;
-            }
-            if (!handler.CanHandle(eventData))
-            {
-                return;
-            }
-            if (wait)
-            {
-                Run(factory, handler, eventType, eventData);
-            }
-            else
-            {
-                Task.Run(() =>
+                if (handler == null)
+                {
+                    Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
+                    return;
+                }
+                if (!handler.CanHandle(eventData))
+                {
+                    return;
+                }
+                if (wait)
                 {
                     Run(factory, handler, eventType, eventData);
-                });
+                }
+                else
+                {
+                    Task.Run(() =>
+                    {
+                        Run(factory, handler, eventType, eventData);
+                    });
+                }
+            }
+            finally
+            {
+                handlerWrapper.Dispose();
             }
         }
 
         protected virtual Task InvokeHandlerAsync(IEventHandlerFactory factory, Type eventType, IEventData eventData, bool wait = true)
         {
-            IEventHandler handler = factory.GetHandler();
-            if (handler == null)
+            EventHandlerDisposeWrapper handlerWrapper = factory.GetHandler();
+            IEventHandler handler = handlerWrapper.EventHandler;
+            try
             {
-                Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
+                if (handler == null)
+                {
+                    Logger.LogWarning($"Event handler for event source '{eventData.GetType()}' could not be found");
+                    return Task.FromResult(0);
+                }
+                if (!handler.CanHandle(eventData))
+                {
+                    return Task.FromResult(0);
+                }
+                if (wait)
+                {
+                    return RunAsync(factory, handler, eventType, eventData);
+                }
+                Task.Run(async () =>
+                {
+                    await RunAsync(factory, handler, eventType, eventData);
+                });
                 return Task.FromResult(0);
             }
-            if (!handler.CanHandle(eventData))
+            finally
             {
-                return Task.FromResult(0);
+                handlerWrapper.Dispose();
             }
-            if (wait)
-            {
-                return RunAsync(factory, handler, eventType, eventData);
-            }
-            Task.Run(async () =>
-            {
-                await RunAsync(factory, handler, eventType, eventData);
-            });
-            return Task.FromResult(0);
         }
 
         private void Run(IEventHandlerFactory factory, IEventHandler handler, Type eventType, IEventData eventData)
@@ -226,10 +247,6 @@ namespace TuanZi.EventBuses
                 string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
                 Logger.LogError(ex, msg);
             }
-            finally
-            {
-                factory.ReleaseHandler(handler);
-            }
         }
 
         private Task RunAsync(IEventHandlerFactory factory, IEventHandler handler, Type eventType, IEventData eventData)
@@ -242,10 +259,6 @@ namespace TuanZi.EventBuses
             {
                 string msg = $"Exception thrown when executing handler '{handler.GetType()}'{0}' for event '{eventType.Name}'{0}': {ex.Message}";
                 Logger.LogError(ex, msg);
-            }
-            finally
-            {
-                factory.ReleaseHandler(handler);
             }
             return Task.FromResult(0);
         }

@@ -15,20 +15,23 @@ using TuanZi.Reflection;
 namespace TuanZi.Core.EntityInfos
 {
     public abstract class EntityInfoHandlerBase<TEntityInfo, TEntityInfoHandler> : IEntityInfoHandler
-       where TEntityInfo : class, IEntityInfo, new()
+        where TEntityInfo : class, IEntityInfo, new()
     {
-        private readonly List<TEntityInfo> _entityInfos = new List<TEntityInfo>();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IEntityTypeFinder _entityTypeFinder;
         private readonly ILogger _logger;
+        private readonly List<TEntityInfo> _entityInfos = new List<TEntityInfo>();
 
-        protected EntityInfoHandlerBase(ILoggerFactory loggerFactory)
+        protected EntityInfoHandlerBase(IServiceProvider serviceProvider)
         {
-            _logger = loggerFactory.CreateLogger<TEntityInfoHandler>();
+            _serviceProvider = serviceProvider;
+            _entityTypeFinder = serviceProvider.GetService<IEntityTypeFinder>();
+            _logger = serviceProvider.GetLogger<TEntityInfoHandler>();
         }
 
         public void Initialize()
         {
-            IEntityTypeFinder entityTypeFinder = ServiceLocator.Instance.GetService<IEntityTypeFinder>();
-            Type[] entityTypes = entityTypeFinder.FindAll(true);
+            Type[] entityTypes = _entityTypeFinder.FindAll(true);
             _logger.LogInformation($"The data entity processor starts to initialize and finds {entityTypes.Length} entity classes.");
             foreach (Type entityType in entityTypes)
             {
@@ -41,7 +44,7 @@ namespace TuanZi.Core.EntityInfos
                 _entityInfos.Add(entityInfo);
             }
 
-            ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            _serviceProvider.ExecuteScopedWork(provider =>
             {
                 SyncToDatabase(provider, _entityInfos);
             });
@@ -78,7 +81,7 @@ namespace TuanZi.Core.EntityInfos
 
         public void RefreshCache()
         {
-            ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            _serviceProvider.ExecuteScopedWork(provider =>
             {
                 _entityInfos.Clear();
                 _entityInfos.AddRange(GetFromDatabase(provider));
@@ -87,7 +90,6 @@ namespace TuanZi.Core.EntityInfos
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, List<TEntityInfo> entityInfos)
         {
-
             IRepository<TEntityInfo, Guid> repository = scopedProvider.GetService<IRepository<TEntityInfo, Guid>>();
             if (repository == null)
             {
@@ -142,19 +144,18 @@ namespace TuanZi.Core.EntityInfos
                 string msg = "Entity Changes";
                 if (addCount > 0)
                 {
-                    msg += $"，Added {addCount}";
-                    _logger.LogInformation($"Added {addItems.Length} Entities: {addItems.Select(m => m.TypeName).ExpandAndToString()}");
-                }
-                if (updateCount > 0)
-                {
-                    msg += $"，Updated {updateCount}";
-
-                    _logger.LogInformation($"Updated {updateCount} Entities");
+                    msg += $", Added {addCount}";
+                    _logger.LogInformation($"Added {removeItems.Length} Entities: {removeItems.Select(m => m.TypeName).ExpandAndToString()}");
                 }
                 if (removeCount > 0)
                 {
-                    msg += $"，Deleted {removeCount}";
-                    _logger.LogInformation($"Deleted {removeItems.Length} Entities: {removeItems.Select(m => m.TypeName).ExpandAndToString()}");
+                    msg += $", Deleted {removeCount}";
+                    _logger.LogInformation($"Deleted {addItems.Length} Entities: {addItems.Select(m => m.TypeName).ExpandAndToString()}");
+                }
+                if (updateCount > 0)
+                {
+                    msg += $", Updated {updateCount}";
+                    _logger.LogInformation($"Updated {updateCount} Entities");
                 }
                 _logger.LogInformation(msg);
             }
@@ -169,7 +170,7 @@ namespace TuanZi.Core.EntityInfos
             }
             return repository.Query(null, false).ToArray();
         }
-
     }
+
 
 }

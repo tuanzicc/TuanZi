@@ -7,7 +7,7 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Core.Packs
 {
-    public class TuanPackTypeFinder : BaseTypeFinderBase<TuanPack>, ITypeFinder
+    public class TuanPackTypeFinder : BaseTypeFinderBase<TuanPack>, ITuanPackTypeFinder
     {
         public TuanPackTypeFinder(IAllAssemblyFinder allAssemblyFinder)
             : base(allAssemblyFinder)

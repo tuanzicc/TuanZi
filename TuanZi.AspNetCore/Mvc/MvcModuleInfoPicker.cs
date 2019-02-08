@@ -15,6 +15,10 @@ namespace TuanZi.AspNetCore.Mvc
 {
     public class MvcModuleInfoPicker : ModuleInfoPickerBase<Function>
     {
+        public MvcModuleInfoPicker(IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        { }
+
         protected override ModuleInfo[] GetModules(Type type, string[] existPaths)
         {
             ModuleInfoAttribute infoAttr = type.GetAttribute<ModuleInfoAttribute>();
@@ -110,7 +114,7 @@ namespace TuanZi.AspNetCore.Mvc
             if (area == null)
             {
                 return attrPosition == null
-                    ? $"Root.Site"
+                    ? "Root.Site"
                     : $"Root.Site.{attrPosition}";
             }
             return attrPosition == null

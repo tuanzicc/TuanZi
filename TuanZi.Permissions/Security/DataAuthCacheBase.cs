@@ -23,18 +23,20 @@ namespace TuanZi.Security
         where TEntityInfo : class, IEntityInfo
         where TRoleKey : IEquatable<TRoleKey>
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IDistributedCache _cache;
         private readonly ILogger _logger;
 
-        protected DataAuthCacheBase()
+        protected DataAuthCacheBase(IServiceProvider serviceProvider)
         {
-            _cache = ServiceLocator.Instance.GetService<IDistributedCache>();
-            _logger = ServiceLocator.Instance.GetLogger(GetType());
+            _serviceProvider = serviceProvider;
+            _cache = serviceProvider.GetService<IDistributedCache>();
+            _logger = serviceProvider.GetLogger(GetType());
         }
 
-        public void BuildCaches()
+        public virtual void BuildCaches()
         {
-            var entityRoles = ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            var entityRoles = _serviceProvider.ExecuteScopedWork(provider =>
             {
                 IRepository<TEntityRole, Guid> entityRoleRepository = provider.GetService<IRepository<TEntityRole, Guid>>();
                 IRepository<TRole, TRoleKey> roleRepository = provider.GetService<IRepository<TRole, TRoleKey>>();
@@ -60,7 +62,7 @@ namespace TuanZi.Security
             _logger.LogInformation($"Data permissions: create {entityRoles.Length} data permission filter rule cache");
         }
 
-        public void SetCache(DataAuthCacheItem item)
+        public virtual void SetCache(DataAuthCacheItem item)
         {
             string key = GetKey(item.RoleName, item.EntityTypeFullName, item.Operation);
             string name = GetName(item.RoleName, item.EntityTypeFullName, item.Operation);
@@ -69,7 +71,7 @@ namespace TuanZi.Security
             _logger.LogDebug($"Create a data permission rule cache for {name}");
         }
 
-        public void RemoveCache(DataAuthCacheItem item)
+        public virtual void RemoveCache(DataAuthCacheItem item)
         {
             string key = GetKey(item.RoleName, item.EntityTypeFullName, item.Operation);
             string name = GetName(item.RoleName, item.EntityTypeFullName, item.Operation);
@@ -77,7 +79,7 @@ namespace TuanZi.Security
             _logger.LogDebug($"Remove data permission rule cache for {name}");
         }
 
-        public FilterGroup GetFilterGroup(string roleName, string entityTypeFullName, DataAuthOperation operation)
+        public virtual FilterGroup GetFilterGroup(string roleName, string entityTypeFullName, DataAuthOperation operation)
         {
             string key = GetKey(roleName, entityTypeFullName, operation);
             return _cache.Get<FilterGroup>(key);

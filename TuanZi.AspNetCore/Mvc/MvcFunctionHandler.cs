@@ -4,23 +4,22 @@ using System.Reflection;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+
 using TuanZi.AspNetCore.Mvc.Filters;
 using TuanZi.Core;
 using TuanZi.Core.Functions;
-using TuanZi.Dependency;
 using TuanZi.Exceptions;
 using TuanZi.Reflection;
-
 
 namespace TuanZi.AspNetCore.Mvc
 {
     public class MvcFunctionHandler : FunctionHandlerBase<Function>
     {
-        public MvcFunctionHandler()
+        public MvcFunctionHandler(IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
-            IAllAssemblyFinder allAssemblyFinder = ServiceLocator.Instance.GetService<IAllAssemblyFinder>();
-            FunctionTypeFinder = new MvcControllerTypeFinder(allAssemblyFinder);
+            FunctionTypeFinder = serviceProvider.GetService<IFunctionTypeFinder>();
             MethodInfoFinder = new PublicInstanceMethodInfoFinder();
         }
 

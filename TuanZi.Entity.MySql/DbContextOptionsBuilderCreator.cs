@@ -1,10 +1,12 @@
 ﻿using System.Data.Common;
 
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.DependencyInjection;
+using TuanZi.Dependency;
 
 namespace TuanZi.Entity.MySql
 {
+    [Dependency(ServiceLifetime.Singleton)]
     public class DbContextOptionsBuilderCreator : IDbContextOptionsBuilderCreator
     {
         public DatabaseType Type { get; } = DatabaseType.MySql;

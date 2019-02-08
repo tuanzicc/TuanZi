@@ -1,10 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Security.Principal;
 
-using TuanZi.AspNetCore.Infrastructure;
-using TuanZi.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+
 using TuanZi.Core.Packs;
-using TuanZi.Dependency;
-
 
 namespace TuanZi.AspNetCore
 {
@@ -14,12 +13,21 @@ namespace TuanZi.AspNetCore
 
         public override int Order => 2;
 
+        #region Overrides of TuanPack
+
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton<IScopedServiceResolver, RequestScopedServiceResolver>();
-            services.AddScoped<UnitOfWorkAttribute>();
+            services.AddHttpContextAccessor();
+
+            services.AddTransient<IPrincipal>(provider =>
+            {
+                IHttpContextAccessor accessor = provider.GetService<IHttpContextAccessor>();
+                return accessor?.HttpContext?.User;
+            });
 
             return services;
         }
+
+        #endregion
     }
 }

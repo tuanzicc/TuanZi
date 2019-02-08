@@ -1,6 +1,9 @@
 ﻿using System;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using TuanZi.Core.Builders;
@@ -9,7 +12,6 @@ using TuanZi.Core.Options;
 using TuanZi.Dependency;
 using TuanZi.Reflection;
 using TuanZi.Data;
-using Microsoft.Extensions.Logging;
 using TuanZi.Entity;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -21,21 +23,21 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Check.NotNull(services, nameof(services));
 
-            if (Singleton<IAllAssemblyFinder>.Instance == null)
-            {
-                Singleton<IAllAssemblyFinder>.Instance = new AppDomainAllAssemblyFinder();
-            }
+            services.TryAddSingleton<IAllAssemblyFinder>(new AppDomainAllAssemblyFinder());
 
-            ITuanBuilder builder = new TuanBuilder();
-            if (builderAction != null)
-            {
-                builderAction(builder);
-            }
-            Singleton<ITuanBuilder>.Instance = builder;
+            ITuanBuilder builder = services.GetSingletonInstanceOrNull<ITuanBuilder>() ?? new TuanBuilder();
+            builderAction?.Invoke(builder);
+            services.TryAddSingleton<ITuanBuilder>(builder);
+
             TTuanPackManager manager = new TTuanPackManager();
             services.AddSingleton<ITuanPackManager>(manager);
             manager.LoadPacks(services);
             return services;
+        }
+
+        public static IConfiguration GetConfiguration(this IServiceCollection services)
+        {
+            return services.GetSingletonInstance<IConfiguration>();
         }
 
         public static TuanOptions GetTuanOptions(this IServiceProvider provider)
@@ -65,6 +67,12 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             IUnitOfWorkManager unitOfWorkManager = provider.GetService<IUnitOfWorkManager>();
             return unitOfWorkManager.GetUnitOfWork<TEntity, TKey>();
+        }
+
+        public static IDbContext GetDbContext<TEntity, TKey>(this IServiceProvider provider) where TEntity : IEntity<TKey>
+        {
+            IUnitOfWorkManager unitOfWorkManager = provider.GetService<IUnitOfWorkManager>();
+            return unitOfWorkManager.GetDbContext<TEntity, TKey>();
         }
 
         public static IServiceProvider UseTuan(this IServiceProvider provider)

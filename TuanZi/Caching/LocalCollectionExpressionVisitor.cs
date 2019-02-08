@@ -1,4 +1,11 @@
-﻿//TuanZi.Me
+﻿// -----------------------------------------------------------------------
+//  <copyright file="LocalCollectionExpressionVisitor.cs" company="柳柳软件">
+//      Copyright (c) 2014-2016 TuanZi. All rights reserved.
+//  </copyright>
+//  <site>http://www.TuanZi.org</site>
+//  <last-editor>郭明锋</last-editor>
+//  <last-date>2016-11-16 23:34</last-date>
+// -----------------------------------------------------------------------
 
 using System;
 using System.Collections;

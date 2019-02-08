@@ -33,7 +33,7 @@ namespace TuanZi.Entity
 
         public bool HasCommited { get; private set; }
 
-        public virtual IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>
+        public virtual IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey>
         {
             Type entityType = typeof(TEntity);
             return GetDbContext(entityType);
@@ -41,8 +41,7 @@ namespace TuanZi.Entity
 
         public IDbContext GetDbContext(Type entityType)
         {
-            Type baseType = typeof(IEntity<>);
-            if (!entityType.IsBaseOn(baseType))
+            if (!entityType.IsEntityType())
             {
                 throw new TuanException($"Type '{entityType}' is not an entity type");
             }
@@ -207,6 +206,8 @@ namespace TuanZi.Entity
             }
         }
     }
+
+    
 
 
 }

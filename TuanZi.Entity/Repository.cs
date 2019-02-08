@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TuanZi.Collections;
 using TuanZi.Data;
@@ -28,12 +29,12 @@ namespace TuanZi.Entity
         private readonly DbSet<TEntity> _dbSet;
         private readonly ILogger _logger;
 
-        public Repository(IUnitOfWorkManager unitOfWorkManager)
+        public Repository(IServiceProvider serviceProvider)
         {
-            UnitOfWork = unitOfWorkManager.GetUnitOfWork<TEntity, TKey>();
+            UnitOfWork = serviceProvider.GetUnitOfWork<TEntity, TKey>();
             _dbContext = (DbContext)UnitOfWork.GetDbContext<TEntity, TKey>();
             _dbSet = _dbContext.Set<TEntity>();
-            _logger = ServiceLocator.Instance.GetLogger<Repository<TEntity, TKey>>();
+            _logger = serviceProvider.GetLogger<Repository<TEntity, TKey>>();
         }
 
         public IUnitOfWork UnitOfWork { get; }
@@ -123,8 +124,6 @@ namespace TuanZi.Entity
             CheckEntityKey(key, nameof(key));
 
             TEntity entity = _dbSet.Find(key);
-            if (entity == null)
-                return 0;
             return Delete(entity);
         }
 
@@ -257,6 +256,7 @@ namespace TuanZi.Entity
 
             return _dbSet.Find(key);
         }
+
         public TEntity GetFirst(Expression<Func<TEntity, bool>> predicate)
         {
             predicate.CheckNotNull("predicate");
@@ -397,12 +397,9 @@ namespace TuanZi.Entity
 
         public virtual async Task<int> DeleteAsync(TKey key)
         {
-            CheckEntityKey(key, nameof(key)); 
+            CheckEntityKey(key, nameof(key));
 
             TEntity entity = await _dbSet.FindAsync(key);
-            if (entity == null)
-                return 0;
-
             return await DeleteAsync(entity);
         }
 
@@ -536,18 +533,6 @@ namespace TuanZi.Entity
             CheckEntityKey(key, nameof(key));
 
             return await _dbSet.FindAsync(key);
-        }
-
-        public virtual async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> predicate)
-        {
-            predicate.CheckNotNull("predicate");
-            return await GetFirstAsync(predicate, true);
-        }
-
-        public virtual async Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth)
-        {
-            Check.NotNull(predicate, nameof(predicate));
-            return await Query(predicate, filterByDataAuth).FirstOrDefaultAsync();
         }
 
         #endregion

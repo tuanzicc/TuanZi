@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Reflection;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using TuanZi.Dependency;
-using TuanZi.Reflection;
 
 
 namespace TuanZi.EventBuses.Internal
 {
-
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     internal class EventBusBuilder : IEventBusBuilder
     {
         private readonly IEventHandlerTypeFinder _typeFinder;

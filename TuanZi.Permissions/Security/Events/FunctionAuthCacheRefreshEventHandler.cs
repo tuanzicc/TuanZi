@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using TuanZi.AspNetCore;
 using TuanZi.Dependency;
 using TuanZi.EventBuses;
 using TuanZi.Secutiry;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace TuanZi.Security.Events
 {
-    public class FunctionAuthCacheRefreshEventHandler : EventHandlerBase<FunctionAuthCacheRefreshEventData>, ITransientDependency
+    public class FunctionAuthCacheRefreshEventHandler : EventHandlerBase<FunctionAuthCacheRefreshEventData>
     {
         private readonly IServiceProvider _provider;
 
@@ -19,7 +21,7 @@ namespace TuanZi.Security.Events
 
         public override void Handle(FunctionAuthCacheRefreshEventData eventData)
         {
-            if (!ServiceLocator.InScoped())
+            if (!_provider.InHttpRequest())
             {
                 return;
             }

@@ -29,7 +29,7 @@ namespace TuanZi.Log4Net
 
         public Log4NetLoggerProvider(string log4NetConfigFile)
         {
-            string file = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultLog4NetFileName);
+            string file = log4NetConfigFile ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultLog4NetFileName);
             Assembly assembly = Assembly.GetEntryAssembly() ?? GetCallingAssemblyFromStartup();
             _loggerRepository = LogManager.CreateRepository(assembly, typeof(Hierarchy));
 
@@ -58,7 +58,7 @@ namespace TuanZi.Log4Net
 
         public Microsoft.Extensions.Logging.ILogger CreateLogger(string categoryName)
         {
-            return new Log4NetLogger(_loggerRepository.Name, categoryName);
+            return _loggers.GetOrAdd(categoryName, key => new Log4NetLogger(_loggerRepository.Name, key));
         }
 
         private static Assembly GetCallingAssemblyFromStartup()
@@ -71,7 +71,7 @@ namespace TuanZi.Log4Net
 
                 if (string.Equals(type?.Name, "Startup", StringComparison.OrdinalIgnoreCase))
                 {
-                    return type.Assembly;
+                    return type?.Assembly;
                 }
             }
             return null;

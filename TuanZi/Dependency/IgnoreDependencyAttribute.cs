@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TuanZi.Dependency
 {
-    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Interface)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public class IgnoreDependencyAttribute : Attribute
     {
     }

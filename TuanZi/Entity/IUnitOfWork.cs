@@ -9,7 +9,7 @@ namespace TuanZi.Entity
     {
         bool HasCommited { get; }
 
-        IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey> where TKey : IEquatable<TKey>;
+        IDbContext GetDbContext<TEntity, TKey>() where TEntity : IEntity<TKey>;
 
         IDbContext GetDbContext(Type entityType);
 

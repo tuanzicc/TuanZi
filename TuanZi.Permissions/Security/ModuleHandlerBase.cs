@@ -15,19 +15,19 @@ using TuanZi.Exceptions;
 namespace TuanZi.Security
 {
     public abstract class ModuleHandlerBase<TModule, TModuleInputDto, TModuleKey, TModuleFunction> : IModuleHandler
-        where TModule : ModuleBase<TModuleKey>
-        where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
-        where TModuleKey : struct, IEquatable<TModuleKey>
-        where TModuleFunction : ModuleFunctionBase<TModuleKey>
+       where TModule : ModuleBase<TModuleKey>
+       where TModuleInputDto : ModuleInputDtoBase<TModuleKey>, new()
+       where TModuleKey : struct, IEquatable<TModuleKey>
+       where TModuleFunction : ModuleFunctionBase<TModuleKey>
     {
-        private readonly ServiceLocator _locator;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IModuleInfoPicker _moduleInfoPicker;
 
-        protected ModuleHandlerBase()
+        protected ModuleHandlerBase(IServiceProvider serviceProvider)
         {
-            _locator = ServiceLocator.Instance;
-            _moduleInfoPicker = _locator.GetService<IModuleInfoPicker>();
-            Logger = _locator.GetLogger(GetType());
+            _serviceProvider = serviceProvider;
+            _moduleInfoPicker = serviceProvider.GetService<IModuleInfoPicker>();
+            Logger = serviceProvider.GetLogger(GetType());
         }
 
         protected ILogger Logger { get; }
@@ -39,7 +39,7 @@ namespace TuanZi.Security
             {
                 return;
             }
-            _locator.ExcuteScopedWork(provider =>
+            _serviceProvider.ExecuteScopedWork(provider =>
             {
                 SyncToDatabase(provider, moduleInfos);
             });
@@ -96,7 +96,6 @@ namespace TuanZi.Security
             foreach (ModuleInfo info in moduleInfos)
             {
                 TModule parent = GetModule(moduleStore, info.Position);
-
                 if (parent == null)
                 {
                     int lastIndex = info.Position.LastIndexOf('.');
@@ -117,7 +116,6 @@ namespace TuanZi.Security
                     parent = moduleStore.Modules.First(m => m.ParentId.Equals(parent1.Id) && m.Code == parentCode);
                 }
                 TModule module = moduleStore.Modules.FirstOrDefault(m => m.ParentId.Equals(parent.Id) && m.Code == info.Code);
-
                 if (module == null)
                 {
                     TModuleInputDto dto = GetDto(info, parent, null);
@@ -152,7 +150,6 @@ namespace TuanZi.Security
             unitOfWork.Commit();
         }
 
-        
         private readonly IDictionary<string, TModule> _positionDictionary = new Dictionary<string, TModule>();
         private TModule GetModule(IModuleStore<TModule, TModuleInputDto, TModuleKey> moduleStore, string position)
         {
@@ -203,6 +200,7 @@ namespace TuanZi.Security
             return codes.ExpandAndToString(".");
         }
     }
+
 
 
 }

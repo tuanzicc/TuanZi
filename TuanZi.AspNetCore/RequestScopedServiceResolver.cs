@@ -9,6 +9,7 @@ using TuanZi.Dependency;
 
 namespace TuanZi.AspNetCore
 {
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     public class RequestScopedServiceResolver : IScopedServiceResolver
     {
         private readonly IHttpContextAccessor _httpContextAccessor;

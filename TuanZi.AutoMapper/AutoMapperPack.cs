@@ -3,9 +3,8 @@ using System.Linq;
 
 using AutoMapper;
 using AutoMapper.Configuration;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TuanZi.Core.Packs;
 using TuanZi.Mapping;
 
@@ -20,11 +19,7 @@ namespace TuanZi.AutoMapper
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton(new MapperConfigurationExpression());
-            services.AddSingleton<IMapFromAttributeTypeFinder, MapFromAttributeTypeFinder>();
-            services.AddSingleton<IMapToAttributeTypeFinder, MapToAttributeTypeFinder>();
-            services.AddSingleton<IMapper, AutoMapperMapper>();
-
+            services.TryAddSingleton<MapperConfigurationExpression>(new MapperConfigurationExpression());
             return services;
         }
 

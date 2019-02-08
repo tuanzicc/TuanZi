@@ -16,15 +16,16 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Core.Functions
 {
-
     public abstract class FunctionHandlerBase<TFunction> : IFunctionHandler
-      where TFunction : class, IEntity<Guid>, IFunction, new()
+        where TFunction : class, IEntity<Guid>, IFunction, new()
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly List<TFunction> _functions = new List<TFunction>();
 
-        protected FunctionHandlerBase()
+        protected FunctionHandlerBase(IServiceProvider serviceProvider)
         {
-            Logger = ServiceLocator.Instance.GetLogger(GetType());
+            _serviceProvider = serviceProvider;
+            Logger = serviceProvider.GetLogger(GetType());
         }
 
         protected ILogger Logger { get; }
@@ -41,7 +42,7 @@ namespace TuanZi.Core.Functions
             TFunction[] functions = GetFunctions(functionTypes);
             Logger.LogInformation($"Function information is initialized, and a total of {functions.Length} function information is found.");
 
-            ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            _serviceProvider.ExecuteScopedWork(provider =>
             {
                 SyncToDatabase(provider, functions);
             });
@@ -63,7 +64,7 @@ namespace TuanZi.Core.Functions
 
         public void RefreshCache()
         {
-            ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            _serviceProvider.ExecuteScopedWork(provider =>
             {
                 _functions.Clear();
                 _functions.AddRange(GetFromDatabase(provider));
@@ -137,7 +138,6 @@ namespace TuanZi.Core.Functions
 
         protected virtual void SyncToDatabase(IServiceProvider scopedProvider, TFunction[] functions)
         {
-
             Check.NotNull(functions, nameof(functions));
             if (functions.Length == 0)
             {
@@ -157,7 +157,7 @@ namespace TuanZi.Core.Functions
                 return;
             }
 
-            TFunction[] dbItems = repository.TrackQuery().ToArray();
+            TFunction[] dbItems = repository.TrackQuery(null, false).ToArray();
 
             TFunction[] removeItems = dbItems.Except(functions,
                 EqualityHelper<TFunction>.CreateComparer(m => m.Area + m.Controller + m.Action)).ToArray();
@@ -246,10 +246,13 @@ namespace TuanZi.Core.Functions
             {
                 return new TFunction[0];
             }
-            return repository.Query().ToArray();
+            return repository.Query(null, false).ToArray();
         }
 
     }
+
+
+   
 
 
 

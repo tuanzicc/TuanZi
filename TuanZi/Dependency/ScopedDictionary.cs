@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Concurrent;
 using System.Security.Claims;
 
@@ -8,6 +9,7 @@ using TuanZi.Core.Functions;
 
 namespace TuanZi.Dependency
 {
+    [Dependency(ServiceLifetime.Scoped, AddSelf = true)]
     public class ScopedDictionary : ConcurrentDictionary<string, object>, IDisposable
     {
         public IFunction Function { get; set; }

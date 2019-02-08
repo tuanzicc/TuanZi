@@ -38,7 +38,8 @@ namespace TuanZi.Entity
             if (migrations.Length > 0)
             {
                 dbContext.Database.Migrate();
-                ILogger logger = ServiceLocator.Instance.GetLogger("TuanZi.Entity.DbContextExtensions");
+                ILoggerFactory loggerFactory = dbContext.GetService<ILoggerFactory>();
+                ILogger logger = loggerFactory.CreateLogger("OSharp.Entity.DbContextExtensions");
                 logger.LogInformation($"A pending migration record for {migrations.Length} has been submitted:{migrations.ExpandAndToString()}");
             }
         }
@@ -89,13 +90,13 @@ namespace TuanZi.Entity
         public static IList<AuditEntityEntry> GetAuditEntities(this DbContext context)
         {
             List<AuditEntityEntry> result = new List<AuditEntityEntry>();
-            ScopedDictionary scopedDict = ServiceLocator.Instance.GetService<ScopedDictionary>();
+            ScopedDictionary scopedDict = context.GetService<ScopedDictionary>();
             IFunction function = scopedDict?.Function;
             if (function == null || !function.AuditEntityEnabled)
             {
                 return result;
             }
-            IEntityInfoHandler entityInfoHandler = ServiceLocator.Instance.GetService<IEntityInfoHandler>();
+            IEntityInfoHandler entityInfoHandler = context.GetService<IEntityInfoHandler>();
             if (entityInfoHandler == null)
             {
                 return result;

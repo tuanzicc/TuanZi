@@ -1,27 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TuanZi.Core.Builders;
-using TuanZi.Data;
-using TuanZi.Reflection;
+using TuanZi.Dependency;
 
 
 namespace TuanZi.Core.Packs
 {
     public class TuanPackManager : ITuanPackManager
     {
-        private readonly ITuanBuilder _builder;
         private readonly List<TuanPack> _sourcePacks;
-        private readonly TuanPackTypeFinder _typeFinder;
 
         public TuanPackManager()
         {
-            _builder = Singleton<ITuanBuilder>.Instance;
-            IAllAssemblyFinder allAssemblyFinder = Singleton<IAllAssemblyFinder>.Instance;
-            _typeFinder = new TuanPackTypeFinder(allAssemblyFinder);
             _sourcePacks = new List<TuanPack>();
             LoadedPacks = new List<TuanPack>();
         }
@@ -32,21 +25,25 @@ namespace TuanZi.Core.Packs
 
         public virtual IServiceCollection LoadPacks(IServiceCollection services)
         {
-            Type[] packTypes = _typeFinder.FindAll();
+            ITuanPackTypeFinder packTypeFinder =
+                services.GetOrAddTypeFinder<ITuanPackTypeFinder>(assemblyFinder => new TuanPackTypeFinder(assemblyFinder));
+            Type[] packTypes = packTypeFinder.FindAll();
             _sourcePacks.Clear();
             _sourcePacks.AddRange(packTypes.Select(m => (TuanPack)Activator.CreateInstance(m)));
+
+            ITuanBuilder builder = services.GetSingletonInstance<ITuanBuilder>();
             List<TuanPack> packs;
-            if (_builder.Packs.Any())
+            if (builder.Packs.Any())
             {
                 packs = _sourcePacks.Where(m => m.Level == PackLevel.Core)
-                    .Union(_sourcePacks.Where(m => _builder.Packs.Contains(m.GetType()))).Distinct().ToList();
+                    .Union(_sourcePacks.Where(m => builder.Packs.Contains(m.GetType()))).Distinct().ToList();
                 IEnumerable<Type> dependModuleTypes = packs.SelectMany(m => m.GetDependModuleTypes());
                 packs = packs.Union(_sourcePacks.Where(m => dependModuleTypes.Contains(m.GetType()))).Distinct().ToList();
             }
             else
             {
                 packs = _sourcePacks.ToList();
-                packs.RemoveAll(m => _builder.ExcludedPacks.Contains(m.GetType()));
+                packs.RemoveAll(m => builder.ExcludedPacks.Contains(m.GetType()));
             }
             packs = packs.OrderBy(m => m.Level).ThenBy(m => m.Order).ToList();
             LoadedPacks = packs;
@@ -75,6 +72,4 @@ namespace TuanZi.Core.Packs
             logger.LogInformation($"Tuan framework is initialized and takes time:{ts:g}");
         }
     }
-
-
 }

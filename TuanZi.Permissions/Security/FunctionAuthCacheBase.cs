@@ -32,18 +32,20 @@ namespace TuanZi.Security
        where TUser : UserBase<TUserKey>
        where TUserKey : IEquatable<TUserKey>
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IDistributedCache _cache;
         private readonly ILogger _logger;
 
-        protected FunctionAuthCacheBase()
+        protected FunctionAuthCacheBase(IServiceProvider serviceProvider)
         {
-            _cache = ServiceLocator.Instance.GetService<IDistributedCache>();
-            _logger = ServiceLocator.Instance.GetLogger(GetType());
+            _serviceProvider = serviceProvider;
+            _cache = serviceProvider.GetService<IDistributedCache>();
+            _logger = serviceProvider.GetLogger(GetType());
         }
 
         public virtual void BuildRoleCaches()
         {
-            TFunction[] functions = ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            TFunction[] functions = _serviceProvider.ExecuteScopedWork(provider =>
             {
                 IRepository<TFunction, Guid> functionRepository = provider.GetService<IRepository<TFunction, Guid>>();
                 return functionRepository.Query(null, false).ToArray();
@@ -85,7 +87,7 @@ namespace TuanZi.Security
                 _logger.LogDebug($"Get the 'Function-Roles[]' cache of the function '{functionId}' from the cache");
                 return roleNames;
             }
-            roleNames = ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            roleNames = _serviceProvider.ExecuteScopedWork(provider =>
             {
                 IRepository<TModuleFunction, Guid> moduleFunctionRepository = provider.GetService<IRepository<TModuleFunction, Guid>>();
                 TModuleKey[] moduleIds = moduleFunctionRepository.Query(m => m.FunctionId.Equals(functionId)).Select(m => m.ModuleId).Distinct()
@@ -120,7 +122,7 @@ namespace TuanZi.Security
                 _logger.LogDebug($"Get the 'User-Function[]' cache of the user '{userName}' from the cache");
                 return functionIds;
             }
-            functionIds = ServiceLocator.Instance.ExcuteScopedWork(provider =>
+            functionIds = _serviceProvider.ExecuteScopedWork(provider =>
             {
                 IRepository<TUser, TUserKey> userRepository = provider.GetService<IRepository<TUser, TUserKey>>();
                 TUserKey userId = userRepository.Query(m => m.UserName == userName).Select(m => m.Id).FirstOrDefault();
@@ -145,4 +147,6 @@ namespace TuanZi.Security
             return functionIds;
         }
     }
+
+  
 }

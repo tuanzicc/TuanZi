@@ -2,14 +2,18 @@
 using System.Linq;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 
+
+using TuanZi.Dependency;
 using TuanZi.Entity.Transactions;
 using TuanZi.Exceptions;
 
 
 namespace TuanZi.Entity
 {
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     public class DbContextResolver : IDbContextResolver
     {
         private readonly IServiceProvider _serviceProvider;
@@ -29,12 +33,14 @@ namespace TuanZi.Entity
                 throw new TuanException($"Unable to resolve {typeof(IDbContextOptionsBuilderCreator).FullName} instance of type '{resolveOptions.DatabaseType}'");
             }
             DbContextOptionsBuilder optionsBuilder = builderCreator.Create(resolveOptions.ConnectionString, resolveOptions.ExistingConnection);
+
             DbContextModelCache modelCache = _serviceProvider.GetService<DbContextModelCache>();
-            var model = modelCache.Get(dbContextType);
+            IModel model = modelCache.Get(dbContextType);
             if (model != null)
             {
                 optionsBuilder.UseModel(model);
             }
+
             DbContextOptions options = optionsBuilder.Options;
 
             if (!(ActivatorUtilities.CreateInstance(_serviceProvider, dbContextType, options) is DbContext context))

@@ -45,7 +45,10 @@ namespace TuanZi.Entity
         bool CheckExists(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey));
 
         TEntity Get(TKey key);
+
         TEntity GetFirst(Expression<Func<TEntity, bool>> predicate);
+
+        TEntity GetFirst(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth);
 
         IQueryable<TEntity> Query();
 
@@ -94,7 +97,7 @@ namespace TuanZi.Entity
         Task<bool> CheckExistsAsync(Expression<Func<TEntity, bool>> predicate, TKey id = default(TKey));
 
         Task<TEntity> GetAsync(TKey key);
-        Task<TEntity> GetFirstAsync(Expression<Func<TEntity, bool>> predicate);
+
         #endregion
     }
 }

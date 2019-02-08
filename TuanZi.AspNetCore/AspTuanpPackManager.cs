@@ -17,8 +17,6 @@ namespace TuanZi.AspNetCore
 {
     public class AspTuanPackManager : TuanPackManager, IAspUsePack
     {
-        
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void UsePack(IServiceProvider provider)
         {

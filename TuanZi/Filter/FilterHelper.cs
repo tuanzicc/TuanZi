@@ -17,10 +17,10 @@ using TuanZi.Secutiry.Claims;
 
 namespace TuanZi.Filter
 {
-    
+
     public static class FilterHelper
     {
-        #region Fields.8742
+        #region Fields
 
         private static readonly Dictionary<FilterOperate, Func<Expression, Expression, Expression>> ExpressionDict =
             new Dictionary<FilterOperate, Func<Expression, Expression, Expression>>
@@ -49,7 +49,7 @@ namespace TuanZi.Filter
                     {
                         if (left.Type != typeof(string))
                         {
-                            throw new NotSupportedException("'StartsWith' {0}' comparison mode only supports type of string");
+                             throw new NotSupportedException("'StartsWith' {0}' comparison mode only supports type of string");
                         }
                         return Expression.Call(left,
                             typeof(string).GetMethod("StartsWith", new[] { typeof(string) })
@@ -63,7 +63,7 @@ namespace TuanZi.Filter
                     {
                         if (left.Type != typeof(string))
                         {
-                            throw new NotSupportedException("'EndsWith' {0}' comparison mode only supports type of string");
+                             throw new NotSupportedException("'EndsWith' {0}' comparison mode only supports type of string");
                         }
                         return Expression.Call(left,
                             typeof(string).GetMethod("EndsWith", new[] { typeof(string) })
@@ -77,7 +77,7 @@ namespace TuanZi.Filter
                     {
                         if (left.Type != typeof(string))
                         {
-                             throw new NotSupportedException("'Contains' {0}' comparison mode only supports type of string");
+                            throw new NotSupportedException("'Contains' {0}' comparison mode only supports type of string");
                         }
                         return Expression.Call(left,
                             typeof(string).GetMethod("Contains", new[] { typeof(string) })
@@ -91,7 +91,7 @@ namespace TuanZi.Filter
                     {
                         if (left.Type != typeof(string))
                         {
-                             throw new NotSupportedException("'NotContains' {0}' comparison mode only supports type of string");
+                           throw new NotSupportedException("'NotContains' {0}' comparison mode only supports type of string");
                         }
                         return Expression.Not(Expression.Call(left,
                             typeof(string).GetMethod("Contains", new[] { typeof(string) })
@@ -103,6 +103,7 @@ namespace TuanZi.Filter
 
         #endregion
 
+        [Obsolete("IFilterService")]
         public static Expression<Func<T, bool>> GetExpression<T>(FilterGroup group)
         {
             group.CheckNotNull("group");
@@ -112,6 +113,7 @@ namespace TuanZi.Filter
             return expression;
         }
 
+        [Obsolete("IFilterService")]
         public static Expression<Func<T, bool>> GetDataFilterExpression<T>(FilterGroup group = null,
             DataAuthOperation operation = DataAuthOperation.Read)
         {
@@ -161,14 +163,7 @@ namespace TuanZi.Filter
             return exp;
         }
 
-        public static Expression<Func<T, bool>> GetExpression<T>(FilterRule rule)
-        {
-            ParameterExpression param = Expression.Parameter(typeof(T), "m");
-            Expression body = GetExpressionBody(param, rule);
-            Expression<Func<T, bool>> expression = Expression.Lambda<Func<T, bool>>(body, param);
-            return expression;
-        }
-
+        [Obsolete("IFilterService")]
         public static OperationResult CheckFilterGroup(FilterGroup group, Type type)
         {
             try
@@ -182,6 +177,7 @@ namespace TuanZi.Filter
                 return new OperationResult(OperationResultType.Error, $"Conditional group validation failed:{ex.Message}");
             }
         }
+
 
         public static string ToOperateCode(this FilterOperate operate)
         {
@@ -209,10 +205,10 @@ namespace TuanZi.Filter
                     return operate;
                 }
             }
-            throw new NotSupportedException("The query operation that gets the opcode does not support the code when it is enumerated:" + code);
+            throw new NotSupportedException("The query operation that obtains the opcode does not support the code when it is enumerated:" + code);
         }
 
-        #region Privates
+        #region privates
 
         private static Expression GetExpressionBody(ParameterExpression param, FilterGroup group)
         {

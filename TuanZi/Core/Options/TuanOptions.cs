@@ -12,18 +12,22 @@ namespace TuanZi.Core.Options
     {
         public TuanOptions()
         {
-            DbContextOptionses = new ConcurrentDictionary<string, TuanDbContextOptions>(StringComparer.OrdinalIgnoreCase);
+            DbContexts = new ConcurrentDictionary<string, TuanDbContextOptions>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public IDictionary<string, TuanDbContextOptions> DbContextOptionses { get; }
+        public IDictionary<string, TuanDbContextOptions> DbContexts { get; }
 
         public MailSenderOptions MailSender { get; set; }
 
         public JwtOptions Jwt { get; set; }
 
+        public RedisOptions Redis { get; set; }
+
+        public SwaggerOptions Swagger { get; set; }
+
         public TuanDbContextOptions GetDbContextOptions(Type dbContextType)
         {
-            return DbContextOptionses.Values.SingleOrDefault(m => m.DbContextType == dbContextType);
+            return DbContexts.Values.SingleOrDefault(m => m.DbContextType == dbContextType);
         }
     }
 }

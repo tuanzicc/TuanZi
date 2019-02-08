@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 using TuanZi.Entity;
 using TuanZi.Exceptions;
-
+using TuanZi.Extensions;
 
 namespace TuanZi.Core.Options
 {
@@ -44,6 +44,28 @@ namespace TuanZi.Core.Options
                 }
                 options.Jwt = jwt;
             }
+
+            section = _configuration.GetSection("Tuan:Redis");
+            RedisOptions redis = section.Get<RedisOptions>();
+            if (redis != null)
+            {
+                if (redis.Configuration.IsMissing())
+                {
+                    throw new TuanException("The configuration of the Redis node in the configuration file cannot be empty.");
+                }
+                options.Redis = redis;
+            }
+
+            section = _configuration.GetSection("Tuan:Swagger");
+            SwaggerOptions swagger = section.Get<SwaggerOptions>();
+            if (swagger != null)
+            {
+                if (swagger.Url.IsMissing())
+                {
+                    throw new TuanException("The Url of the Swagger node in the configuration file cannot be empty.");
+                }
+                options.Swagger = swagger;
+            }
         }
 
         private void SetDbContextOptionses(TuanOptions options)
@@ -63,7 +85,7 @@ namespace TuanZi.Core.Options
                     ConnectionString = connectionString,
                     DatabaseType = DatabaseType.SqlServer
                 };
-                options.DbContextOptionses.Add("DefaultDbContext", dbContextOptions);
+                options.DbContexts.Add("DefaultDbContext", dbContextOptions);
                 return;
             }
             var repeated = dict.Values.GroupBy(m => m.DbContextType).FirstOrDefault(m => m.Count() > 1);
@@ -74,8 +96,10 @@ namespace TuanZi.Core.Options
 
             foreach (KeyValuePair<string, TuanDbContextOptions> pair in dict)
             {
-                options.DbContextOptionses.Add(pair.Key, pair.Value);
+                options.DbContexts.Add(pair.Key, pair.Value);
             }
         }
     }
+
+   
 }

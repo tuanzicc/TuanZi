@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using TuanZi.Collections;
 using TuanZi.Core.Functions;
 using TuanZi.Data;
-using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Reflection;
 
@@ -15,13 +15,12 @@ using TuanZi.Reflection;
 namespace TuanZi.Core.Modules
 {
     public abstract class ModuleInfoPickerBase<TFunction> : IModuleInfoPicker
-        where TFunction : class, IEntity<Guid>, IFunction, new()
+       where TFunction : class, IEntity<Guid>, IFunction, new()
     {
-        protected ModuleInfoPickerBase()
+        protected ModuleInfoPickerBase(IServiceProvider serviceProvider)
         {
-            ServiceLocator locator = ServiceLocator.Instance;
-            Logger = locator.GetService<ILoggerFactory>().CreateLogger(GetType());
-            FunctionHandler = locator.GetService<IFunctionHandler>();
+            Logger = serviceProvider.GetLogger(GetType());
+            FunctionHandler = serviceProvider.GetService<IFunctionHandler>();
         }
 
         protected ILogger Logger { get; }

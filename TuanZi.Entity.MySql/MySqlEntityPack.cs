@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-
+using System;
+using System.Linq;
 using TuanZi.Core.Packs;
 
 
 namespace TuanZi.Entity.MySql
 {
-    [DependsOnPacks(typeof(EntityPack))]
-    public class MySqlEntityPack : TuanPack
+    public class MySqlEntityPack : EntityPackBase
     {
         public override PackLevel Level => PackLevel.Framework;
 
@@ -14,8 +14,22 @@ namespace TuanZi.Entity.MySql
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton<IDbContextOptionsBuilderCreator, DbContextOptionsBuilderCreator>();
+            services = base.AddServices(services);
+
+            services.AddScoped(typeof(ISqlExecutor<,>), typeof(MySqlDapperSqlExecutor<,>));
+
             return services;
+        }
+
+        public override void UsePack(IServiceProvider provider)
+        {
+            bool? hasMySql = provider.GetTuanOptions()?.DbContexts?.Values.Any(m => m.DatabaseType == DatabaseType.MySql);
+            if (hasMySql == null || !hasMySql.Value)
+            {
+                return;
+            }
+
+            base.UsePack(provider);
         }
     }
 }

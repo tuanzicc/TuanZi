@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -9,21 +10,11 @@ using TuanZi.Reflection;
 
 namespace TuanZi.Mapping
 {
-    public class MapToAttributeTypeFinder : FinderBase<Type>, IMapToAttributeTypeFinder
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
+    public class MapToAttributeTypeFinder : AttributeTypeFinderBase<MapToAttribute>, IMapToAttributeTypeFinder
     {
-        private readonly IAllAssemblyFinder _allAssemblyFinder;
-
         public MapToAttributeTypeFinder(IAllAssemblyFinder allAssemblyFinder)
-        {
-            _allAssemblyFinder = allAssemblyFinder;
-        }
-
-        protected override Type[] FindAllItems()
-        {
-            Assembly[] assemblies = _allAssemblyFinder.FindAll(true);
-            return assemblies.SelectMany(assembly => assembly.GetTypes())
-                .Where(type => type.IsClass && type.HasAttribute<MapToAttribute>() && !type.IsAbstract)
-                .Distinct().ToArray();
-        }
+            : base(allAssemblyFinder)
+        { }
     }
 }

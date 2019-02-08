@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,7 +18,7 @@ using TuanZi.EventBuses;
 
 namespace TuanZi.Entity
 {
-    
+
     public abstract class DbContextBase : DbContext, IDbContext
     {
         private readonly ILogger _logger;
@@ -28,13 +29,9 @@ namespace TuanZi.Entity
             : base(options)
         {
             _typeFinder = typeFinder;
-            if (ServiceLocator.Instance.IsProviderEnabled)
-            {
-                IOptions<TuanOptions> TuanOptions = ServiceLocator.Instance.GetService<IOptions<TuanOptions>>();
-                _TuanDbOptions = TuanOptions?.Value.DbContextOptionses.Values.FirstOrDefault(m => m.DbContextType == GetType());
-
-                _logger = ServiceLocator.Instance.GetLogger(GetType());
-            }
+            IOptions<TuanOptions> TuanOptions = this.GetService<IOptions<TuanOptions>>();
+            _TuanDbOptions = TuanOptions?.Value.DbContexts.Values.FirstOrDefault(m => m.DbContextType == GetType());
+            _logger = this.GetService<ILoggerFactory>().CreateLogger(GetType());
         }
 
         public UnitOfWork UnitOfWork { get; set; }
@@ -80,18 +77,17 @@ namespace TuanZi.Entity
         public override int SaveChanges()
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
-            var d = this.Database;
             BeginOrUseTransaction();
 
             int count = base.SaveChanges();
-            if (count > 0 && auditEntities.Count > 0 && ServiceLocator.InScoped())
+            if (count > 0 && auditEntities.Count > 0)
             {
                 AuditEntityEventData eventData = new AuditEntityEventData(auditEntities);
-                IEventBus eventBus = ServiceLocator.Instance.GetService<IEventBus>();
+                IEventBus eventBus = this.GetService<IEventBus>();
                 eventBus.Publish(this, eventData);
             }
             return count;
@@ -100,7 +96,7 @@ namespace TuanZi.Entity
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
         {
             IList<AuditEntityEntry> auditEntities = new List<AuditEntityEntry>();
-            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled && ServiceLocator.InScoped())
+            if (_TuanDbOptions != null && _TuanDbOptions.AuditEntityEnabled)
             {
                 auditEntities = this.GetAuditEntities();
             }
@@ -108,10 +104,10 @@ namespace TuanZi.Entity
             await BeginOrUseTransactionAsync(cancellationToken);
 
             int count = await base.SaveChangesAsync(cancellationToken);
-            if (count > 0 && auditEntities.Count > 0 && ServiceLocator.InScoped())
+            if (count > 0 && auditEntities.Count > 0)
             {
                 AuditEntityEventData eventData = new AuditEntityEventData(auditEntities);
-                IEventBus eventBus = ServiceLocator.Instance.GetService<IEventBus>();
+                IEventBus eventBus = this.GetService<IEventBus>();
                 await eventBus.PublishAsync(this, eventData);
             }
             return count;

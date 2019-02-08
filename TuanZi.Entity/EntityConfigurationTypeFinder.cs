@@ -4,22 +4,23 @@ using System.Linq;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.Extensions.DependencyInjection;
 
-using TuanZi.Exceptions;
-using TuanZi.Finders;
-using TuanZi.Core;
 using TuanZi.Core.EntityInfos;
 using TuanZi.Core.Functions;
+using TuanZi.Dependency;
+using TuanZi.Exceptions;
 using TuanZi.Reflection;
 
 
 namespace TuanZi.Entity
 {
-
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true)]
     public class EntityConfigurationTypeFinder : BaseTypeFinderBase<IEntityRegister>, IEntityConfigurationTypeFinder
     {
         private readonly IDictionary<Type, IEntityRegister[]> _entityRegistersDict
             = new Dictionary<Type, IEntityRegister[]>();
+        private bool _initialized = false;
 
         public EntityConfigurationTypeFinder(IAllAssemblyFinder allAssemblyFinder)
             : base(allAssemblyFinder)
@@ -28,12 +29,12 @@ namespace TuanZi.Entity
         public void Initialize()
         {
             IDictionary<Type, IEntityRegister[]> dict = _entityRegistersDict;
-            dict.Clear();
             Type[] types = FindAll(true);
-            if (types.Length == 0)
+            if (types.Length == 0 || _initialized)
             {
                 return;
             }
+            dict.Clear();
             List<IEntityRegister> registers = types.Select(type => Activator.CreateInstance(type) as IEntityRegister).ToList();
             List<IGrouping<Type, IEntityRegister>> groups = registers.GroupBy(m => m.DbContextType).ToList();
             Type key;
@@ -69,6 +70,8 @@ namespace TuanZi.Entity
 
                 dict[key] = list.ToArray();
             }
+
+            _initialized = true;
         }
 
         public IEntityRegister[] GetEntityRegisters(Type dbContextType)
@@ -111,4 +114,5 @@ namespace TuanZi.Entity
             }
         }
     }
+
 }

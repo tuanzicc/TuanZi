@@ -2,12 +2,14 @@ using System;
 using System.Collections.Concurrent;
 
 using Microsoft.EntityFrameworkCore.Metadata;
-
+using Microsoft.Extensions.DependencyInjection;
+using TuanZi.Dependency;
 using TuanZi.Extensions;
 
 
 namespace TuanZi.Entity
 {
+    [Dependency(ServiceLifetime.Singleton, TryAdd = true, AddSelf = true)]
     public class DbContextModelCache
     {
         private readonly ConcurrentDictionary<Type, IModel> _dict = new ConcurrentDictionary<Type, IModel>();

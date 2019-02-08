@@ -1,0 +1,42 @@
+﻿@using System;
+@using TuanZi.CodeGeneration.Schema;
+@{
+    EntityMetadata entity = Model;
+    string keyType = TypeHelper.ToSingleTypeName(entity.PrimaryKeyTypeFullName);
+}
+// -----------------------------------------------------------------------
+//  <copyright file="@(entity.Name)Configuration.cs" company="@entity.Module.Project.Company">
+//      @entity.Module.Project.Copyright
+//  </copyright>
+//  <site>@entity.Module.Project.SiteUrl</site>
+//  <last-editor>@entity.Module.Project.Creator</last-editor>
+//  <last-date>@DateTime.Now.ToString("yyyy/MM/dd HH:mm")</last-date>
+// -----------------------------------------------------------------------
+
+using System;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+using TuanZi.Entity;
+
+using @(entity.Module.Namespace).Entities;
+
+
+namespace @(entity.Module.Project.NamespacePrefix).EntityConfiguration.@entity.Module.Name
+{
+    /// &lt;summary&gt;
+    /// 实体数据配置类：@(entity.Display)信息
+    /// &lt;/summary&gt;
+    public class @(entity.Name)Configuration : EntityTypeConfigurationBase&lt;@($"{entity.Name}, {keyType}")&gt;
+    {
+        /// &lt;summary&gt;
+        /// 重写以实现实体类型各个属性的数据库配置
+        /// &lt;/summary&gt;
+        /// &lt;param name="builder"&gt;实体类型创建器&lt;/param&gt;
+        public override void Configure(EntityTypeBuilder&lt;@entity.Name&gt; builder)
+        {
+            
+        }
+    }
+}

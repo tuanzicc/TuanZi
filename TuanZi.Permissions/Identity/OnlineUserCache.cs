@@ -14,16 +14,18 @@ using TuanZi.Dependency;
 namespace TuanZi.Identity
 {
     public class OnlineUserCache<TUser, TUserKey, TRole, TRoleKey> : IOnlineUserCache
-         where TUser : UserBase<TUserKey>
-         where TUserKey : IEquatable<TUserKey>
-         where TRole : RoleBase<TRoleKey>
-         where TRoleKey : IEquatable<TRoleKey>
+        where TUser : UserBase<TUserKey>
+        where TUserKey : IEquatable<TUserKey>
+        where TRole : RoleBase<TRoleKey>
+        where TRoleKey : IEquatable<TRoleKey>
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly IDistributedCache _cache;
 
-        public OnlineUserCache(IDistributedCache cache)
+        public OnlineUserCache(IServiceProvider serviceProvider)
         {
-            _cache = cache;
+            _serviceProvider = serviceProvider;
+            _cache = serviceProvider.GetService<IDistributedCache>();
         }
 
         public virtual OnlineUser GetOrRefresh(string userName)
@@ -35,7 +37,7 @@ namespace TuanZi.Identity
             return _cache.Get<OnlineUser>(key,
                 () =>
                 {
-                    return ServiceLocator.Instance.ExcuteScopedWork<OnlineUser>(provider =>
+                    return _serviceProvider.ExecuteScopedWork<OnlineUser>(provider =>
                     {
                         IOnlineUserProvider onlineUserProvider = provider.GetService<IOnlineUserProvider>();
                         return onlineUserProvider.Create(provider, userName).Result;
@@ -44,7 +46,7 @@ namespace TuanZi.Identity
                 options);
         }
 
-        public async Task<OnlineUser> GetOrRefreshAsync(string userName)
+        public virtual async Task<OnlineUser> GetOrRefreshAsync(string userName)
         {
             string key = $"Identity_OnlineUser_{userName}";
 
@@ -53,7 +55,7 @@ namespace TuanZi.Identity
             return await _cache.GetAsync<OnlineUser>(key,
                 () =>
                 {
-                    return ServiceLocator.Instance.ExcuteScopedWorkAsync<OnlineUser>(async provider =>
+                    return _serviceProvider.ExecuteScopedWorkAsync<OnlineUser>(async provider =>
                     {
                         IOnlineUserProvider onlineUserProvider = provider.GetService<IOnlineUserProvider>();
                         return await onlineUserProvider.Create(provider, userName);
@@ -62,7 +64,7 @@ namespace TuanZi.Identity
                 options);
         }
 
-        public void Remove(params string[] userNames)
+        public virtual void Remove(params string[] userNames)
         {
             foreach (string userName in userNames)
             {
@@ -71,4 +73,5 @@ namespace TuanZi.Identity
             }
         }
     }
+
 }

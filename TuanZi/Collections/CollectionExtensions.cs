@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Text;
+using System.Linq;
 using TuanZi.Data;
 using TuanZi.Extensions;
 
@@ -25,6 +25,19 @@ namespace TuanZi.Collections
             {
                 collection.Add(value);
             }
+        }
+
+        public static T GetOrAdd<T>(this ICollection<T> collection, Func<T, bool> selector, Func<T> factory)
+        {
+            Check.NotNull(collection, nameof(collection));
+            T item = collection.FirstOrDefault(selector);
+            if (item == null)
+            {
+                item = factory();
+                collection.Add(item);
+            }
+
+            return item;
         }
 
         public static void AddRange(this NameValueCollection initial, NameValueCollection other)

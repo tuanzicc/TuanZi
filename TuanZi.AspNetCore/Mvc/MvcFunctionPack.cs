@@ -2,10 +2,11 @@
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TuanZi.Core.Functions;
 using TuanZi.Core.Modules;
 using TuanZi.Core.Packs;
-
+using TuanZi.Dependency;
 
 namespace TuanZi.AspNetCore.Mvc
 {
@@ -15,8 +16,9 @@ namespace TuanZi.AspNetCore.Mvc
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
+            services.GetOrAddTypeFinder<IFunctionTypeFinder>(assemblyFinder => new MvcControllerTypeFinder(assemblyFinder));
             services.AddSingleton<IFunctionHandler, MvcFunctionHandler>();
-            services.AddSingleton<IModuleInfoPicker, MvcModuleInfoPicker>();
+            services.TryAddSingleton<IModuleInfoPicker, MvcModuleInfoPicker>();
 
             return services;
         }

@@ -13,13 +13,14 @@ using TuanZi.Entity;
 namespace TuanZi.AspNetCore.Mvc.Filters
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    [Dependency(ServiceLifetime.Scoped, AddSelf = true)]
     public class UnitOfWorkAttribute : ActionFilterAttribute
     {
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
-        public UnitOfWorkAttribute()
+        public UnitOfWorkAttribute(IServiceProvider serviceProvider)
         {
-            _unitOfWorkManager = ServiceLocator.Instance.GetService<IUnitOfWorkManager>();
+            _unitOfWorkManager = serviceProvider.GetService<IUnitOfWorkManager>();
         }
 
         public override void OnResultExecuted(ResultExecutedContext context)

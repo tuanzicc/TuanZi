@@ -86,8 +86,8 @@ namespace TuanZi.AspNetCore.Mvc
         {
             url = url.StartsWith("https://") || url.StartsWith("http://")
                 ? new Uri(url).AbsolutePath : !url.StartsWith("/") ? $"/{url}" : url;
-            IServiceProvider services = controller.HttpContext.RequestServices;
-            IHttpContextFactory factory = services.GetService<IHttpContextFactory>();
+            IServiceProvider provider = controller.HttpContext.RequestServices;
+            IHttpContextFactory factory = provider.GetService<IHttpContextFactory>();
             HttpContext httpContext = factory.Create(controller.HttpContext.Features);
             httpContext.Request.Path = url;
             httpContext.Request.Method = "POST";
@@ -106,7 +106,7 @@ namespace TuanZi.AspNetCore.Mvc
             string areaName = dict.GetOrDefault("area")?.ToString();
             string controllerName = dict.GetOrDefault("controller")?.ToString();
             string actionName = dict.GetOrDefault("action")?.ToString();
-            IFunctionHandler handler = services.GetService<IFunctionHandler>();
+            IFunctionHandler handler = provider.GetService<IFunctionHandler>();
             return handler?.GetFunction(areaName, controllerName, actionName);
         }
 
@@ -123,14 +123,14 @@ namespace TuanZi.AspNetCore.Mvc
 
         public static bool CheckFunctionAuth(this Controller controller, string actionName, string controllerName, string areaName = null)
         {
-            IServiceProvider services = controller.HttpContext.RequestServices;
-            IFunctionHandler functionHandler = services.GetService<IFunctionHandler>();
+            IServiceProvider provider = controller.HttpContext.RequestServices;
+            IFunctionHandler functionHandler = provider.GetService<IFunctionHandler>();
             IFunction function = functionHandler?.GetFunction(areaName, controllerName, actionName);
             if (function == null)
             {
                 return false;
             }
-            IFunctionAuthorization authorization = services.GetService<IFunctionAuthorization>();
+            IFunctionAuthorization authorization = provider.GetService<IFunctionAuthorization>();
             return authorization.Authorize(function, controller.User).IsOk;
         }
     }

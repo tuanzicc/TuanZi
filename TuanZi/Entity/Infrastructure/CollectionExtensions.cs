@@ -14,6 +14,7 @@ using TuanZi.Secutiry;
 
 namespace TuanZi.Entity
 {
+
     public static class CollectionExtensions
     {
         public static PageResult<TResult> ToPage<TEntity, TResult>(this IQueryable<TEntity> source,
@@ -25,11 +26,8 @@ namespace TuanZi.Entity
             predicate.CheckNotNull("predicate");
             pageCondition.CheckNotNull("pageCondition");
             selector.CheckNotNull("selector");
-            return source.ToPage(predicate,
-                pageCondition.PageIndex,
-                pageCondition.PageSize,
-                pageCondition.SortConditions,
-                selector);
+
+            return source.ToPage(predicate, pageCondition.PageIndex, pageCondition.PageSize, pageCondition.SortConditions, selector);
         }
 
         public static PageResult<TResult> ToPage<TEntity, TResult>(this IQueryable<TEntity> source,

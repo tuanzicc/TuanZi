@@ -1,11 +1,13 @@
 ﻿using System;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
+using TuanZi.Caching;
 using TuanZi.Core.Options;
-using TuanZi.Dependency;
-using TuanZi.Reflection;
+using TuanZi.Entity;
+using TuanZi.Entity.Infrastructure;
+using TuanZi.Filter;
 
 namespace TuanZi.Core.Packs
 {
@@ -15,8 +17,13 @@ namespace TuanZi.Core.Packs
 
         public override IServiceCollection AddServices(IServiceCollection services)
         {
-            services.AddSingleton<IAllAssemblyFinder, AppDomainAllAssemblyFinder>();
-            services.AddSingleton<IConfigureOptions<TuanOptions>, TuanOptionsSetup>();
+            services.TryAddSingleton<IConfigureOptions<TuanOptions>, TuanOptionsSetup>();
+            services.TryAddSingleton<IEntityTypeFinder, EntityTypeFinder>();
+            services.TryAddSingleton<IInputDtoTypeFinder, InputDtoTypeFinder>();
+            services.TryAddSingleton<IOutputDtoTypeFinder, OutputDtoTypeFinder>();
+
+            services.TryAddSingleton<ICacheService, CacheService>();
+            services.TryAddScoped<IFilterService, FilterService>();
 
             return services;
         }
