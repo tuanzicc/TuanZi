@@ -4,12 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\Libs\</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\TuanZi.AspNetCore\TuanZi.AspNetCore.csproj" />
+    <ProjectReference Include="..\TuanZi.Entity\TuanZi.Entity.csproj" />
     <ProjectReference Include="..\TuanZi\TuanZi.csproj" />
   </ItemGroup>
 

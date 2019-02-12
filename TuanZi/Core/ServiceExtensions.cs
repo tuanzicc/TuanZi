@@ -13,6 +13,7 @@ using TuanZi.Dependency;
 using TuanZi.Reflection;
 using TuanZi.Data;
 using TuanZi.Entity;
+using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -75,11 +76,18 @@ namespace Microsoft.Extensions.DependencyInjection
             return unitOfWorkManager.GetDbContext<TEntity, TKey>();
         }
 
+        public static HttpContext GetHttpContext(this IServiceProvider provider)
+        {
+            return provider.GetService<HttpContext>();
+        }
+
         public static IServiceProvider UseTuan(this IServiceProvider provider)
         {
             ITuanPackManager packManager = provider.GetService<ITuanPackManager>();
             packManager.UsePack(provider);
             return provider;
         }
+
+
     }
 }

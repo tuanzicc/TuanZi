@@ -33,15 +33,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.Redis", "TuanZi.Redi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.Swagger", "TuanZi.Swagger\TuanZi.Swagger.csproj", "{F48957EC-C0F6-4617-B8D2-DBDB89882B5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.Hangfire", "TuanZi.Hangfire\TuanZi.Hangfire.csproj", "{A2660DDA-A3E9-4A52-B5DB-80E04D907A1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.Hangfire", "TuanZi.Hangfire\TuanZi.Hangfire.csproj", "{A2660DDA-A3E9-4A52-B5DB-80E04D907A1C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.Log4Net", "TuanZi.Log4Net\TuanZi.Log4Net.csproj", "{8C63068D-D7BC-413C-982B-F90A3FB4F64A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.PostgreSql", "TuanZi.PostgreSql\TuanZi.PostgreSql.csproj", "{A9110B8C-6C79-4CF0-8752-D860564104C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.PostgreSql", "TuanZi.PostgreSql\TuanZi.PostgreSql.csproj", "{A9110B8C-6C79-4CF0-8752-D860564104C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.MiniProfiler", "TuanZi.MiniProfiler\TuanZi.MiniProfiler.csproj", "{C5F3B2B1-44E9-46ED-A883-829407E10A0F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.MiniProfiler", "TuanZi.MiniProfiler\TuanZi.MiniProfiler.csproj", "{C5F3B2B1-44E9-46ED-A883-829407E10A0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.CodeGeneration", "TuanZi.CodeGeneration\TuanZi.CodeGeneration.csproj", "{A360BE5A-2B2E-456C-BD06-54A47B6223E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TuanZi.CodeGeneration", "TuanZi.CodeGeneration\TuanZi.CodeGeneration.csproj", "{A360BE5A-2B2E-456C-BD06-54A47B6223E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TuanZi.FileStream", "TuanZi.FileStream\TuanZi.FileStream.csproj", "{98C034A8-5764-4440-93C2-E5C7DFC9C31B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -125,6 +127,10 @@ Global
 		{A360BE5A-2B2E-456C-BD06-54A47B6223E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A360BE5A-2B2E-456C-BD06-54A47B6223E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A360BE5A-2B2E-456C-BD06-54A47B6223E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98C034A8-5764-4440-93C2-E5C7DFC9C31B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98C034A8-5764-4440-93C2-E5C7DFC9C31B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98C034A8-5764-4440-93C2-E5C7DFC9C31B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98C034A8-5764-4440-93C2-E5C7DFC9C31B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

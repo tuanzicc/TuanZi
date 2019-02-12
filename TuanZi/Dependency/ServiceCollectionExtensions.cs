@@ -55,7 +55,7 @@ namespace TuanZi.Dependency
             var instance = services.GetSingletonInstanceOrNull<T>();
             if (instance == null)
             {
-                throw new InvalidOperationException($"无法找到单例服务：{typeof(T).AssemblyQualifiedName}");
+                throw new InvalidOperationException($"Cannot find Singleton Instance: {typeof(T).AssemblyQualifiedName}");
             }
 
             return instance;

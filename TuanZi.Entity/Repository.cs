@@ -28,9 +28,11 @@ namespace TuanZi.Entity
         private readonly DbContext _dbContext;
         private readonly DbSet<TEntity> _dbSet;
         private readonly ILogger _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         public Repository(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
             UnitOfWork = serviceProvider.GetUnitOfWork<TEntity, TKey>();
             _dbContext = (DbContext)UnitOfWork.GetDbContext<TEntity, TKey>();
             _dbSet = _dbContext.Set<TEntity>();

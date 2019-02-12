@@ -14,6 +14,9 @@ namespace TuanZi.Entity
     public partial interface IRepository<TEntity, TKey>
         where TEntity : IEntity<TKey>
     {
+
+      
+
         #region Synchronize
 
         int Recycle(params TEntity[] entities);
@@ -38,7 +41,16 @@ namespace TuanZi.Entity
         Task<int> RestoreAsync(TKey key);
         Task<int> RestoreAsync(Expression<Func<TEntity, bool>> predicate);
 
-       
+
         #endregion
+
+
+        Task<TOutput> GetOutputAsync<TOutput>(TKey id);
+        Task<TOutput> GetOutputAsync<TOutput>(Expression<Func<TEntity, bool>> predicate);
+
+        Task<int> UpdateAsync(IInputDto<TKey> dto);
+
+        Task<int> InsertAsync(IInputDto<TKey> dto);
+
     }
 }
