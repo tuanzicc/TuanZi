@@ -5,8 +5,7 @@
 @{
     ModuleMetadata module = Model;
 }
-// -----------------------------------------------------------------------
-//  <copyright file="I@(module.Name)Service.cs" company="@module.Project.Company">
+//  <copyright file="I@(module.Name)Service.generated.cs" company="@module.Project.Company">
 //      @module.Project.Copyright
 //  </copyright>
 //  <site>@module.Project.SiteUrl</site>
@@ -31,43 +30,30 @@ using @(module.Namespace).Events;
 
 namespace @(module.Namespace)
 {
-    /// <summary>
-    /// 业务实现：@(module.Display)模块
-    /// </summary>
     public partial class @(module.Name)Service : I@(module.Name)Contract
     {
         private readonly IServiceProvider _provider;
         private readonly ILogger _logger;
 
-        /// <summary>
-        /// 初始化一个<see cref="@(module.Name)Service"/>类型的新实例
-        /// </summary>
         public @(module.Name)Service(IServiceProvider provider)
         {
             _provider = provider;
-            _logger = provider.GetService<ILoggerFactory>().CreateLogger<@(module.Name)Service>();
+            _logger = provider.GetService&lt;ILoggerFactory&gt;().CreateLogger&lt;@(module.Name)Service&gt;();
         }
     
         #region 属性
+
 @foreach (EntityMetadata entity in module.Entities)
 {
     string keyType = TypeHelper.ToSingleTypeName(entity.PrimaryKeyTypeFullName);
-    <text>
-        /// &lt;summary&gt;
-        /// 获取或设置 @(entity.Display)信息仓储对象
-        /// &lt;/summary&gt;
+        <text>
         protected IRepository&lt;@(entity.Name), @(keyType)&gt; @(entity.Name)Repository => _provider.GetService&lt;IRepository&lt;@(entity.Name), @(keyType)&gt;&gt;();
-
-    </text>
+        </text>
 }
-        /// &lt;summary&gt;
-        /// 获取 事件总线
-        /// &lt;/summary&gt;
+     
         protected IEventBus EventBus => _provider.GetService&lt;IEventBus&gt;();
 
-        /// &lt;summary&gt;
-        /// 获取 设置存储对象
-        /// &lt;/summary&gt;
+       
         protected IKeyValueStore KeyValueStore => _provider.GetService&lt;IKeyValueStore&gt;();
 
         #endregion

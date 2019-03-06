@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Caching.Distributed;
 
 using TuanZi.Collections;
@@ -14,13 +15,12 @@ using TuanZi.Entity;
 using TuanZi.Exceptions;
 using TuanZi.Extensions;
 using TuanZi.Filter;
-using TuanZi.Mapping;
-using TuanZi.Properties;
+using TuanZi.Json;
 using TuanZi.Reflection;
+
 
 namespace TuanZi.Caching
 {
-   
     public static class DistributedCacheExtensions
     {
         public static void Set(this IDistributedCache cache, string key, object value, DistributedCacheEntryOptions options = null)
@@ -195,7 +195,236 @@ namespace TuanZi.Caching
             return cache.GetAsync<TResult>(key, getAsyncFunc, options);
         }
 
-       
+        public static PageResult<TResult> ToPageCache<TEntity, TResult>(this IQueryable<TEntity> source,
+            Expression<Func<TEntity, bool>> pridicate,
+            PageCondition pageCondition,
+            Expression<Func<TEntity, TResult>> selector,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, pridicate, pageCondition, selector, keyParams);
+            return cache.Get(key, () => source.ToPage(pridicate, pageCondition, selector), cacheSeconds);
+        }
+
+        public static PageResult<TResult> ToPageCache<TEntity, TResult>(this IQueryable<TEntity> source,
+            Expression<Func<TEntity, bool>> pridicate,
+            PageCondition pageCondition,
+            Expression<Func<TEntity, TResult>> selector,
+            IFunction function,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, pridicate, pageCondition, selector, keyParams);
+            return cache.Get(key, () => source.ToPage(pridicate, pageCondition, selector), function);
+        }
+
+        public static List<TResult> ToCacheList<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            Expression<Func<TSource, TResult>> selector,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheList(selector, cacheSeconds, keyParams);
+        }
+
+        public static TResult[] ToCacheArray<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            Expression<Func<TSource, TResult>> selector,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheArray(selector, cacheSeconds, keyParams);
+        }
+
+        public static List<TResult> ToCacheList<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            Expression<Func<TSource, TResult>> selector,
+            IFunction function,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheList(selector, function, keyParams);
+        }
+
+        public static TResult[] ToCacheArray<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            Expression<Func<TSource, TResult>> selector,
+            IFunction function,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheArray(selector, function, keyParams);
+        }
+
+        public static List<TResult> ToCacheList<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, TResult>> selector,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, selector, keyParams);
+            return cache.Get(key, () => source.Select(selector).ToList(), cacheSeconds);
+        }
+
+        public static TResult[] ToCacheArray<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, TResult>> selector,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, selector, keyParams);
+            return cache.Get(key, () => source.Select(selector).ToArray(), cacheSeconds);
+        }
+
+        public static List<TResult> ToCacheList<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, TResult>> selector,
+            IFunction function,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, selector, keyParams);
+            return cache.Get(key, () => source.Select(selector).ToList(), function);
+        }
+
+        public static TResult[] ToCacheArray<TSource, TResult>(this IQueryable<TSource> source,
+            Expression<Func<TSource, TResult>> selector,
+            IFunction function,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source, selector, keyParams);
+            return cache.Get(key, () => source.Select(selector).ToArray(), function);
+        }
+
+        public static List<TSource> ToCacheList<TSource>(this IQueryable<TSource> source, int cacheSeconds = 60, params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source.Expression, keyParams);
+            return cache.Get(key, source.ToList, cacheSeconds);
+        }
+
+        public static TSource[] ToCacheArray<TSource>(this IQueryable<TSource> source, int cacheSeconds = 60, params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source.Expression, keyParams);
+            return cache.Get(key, source.ToArray, cacheSeconds);
+        }
+
+        public static List<TSource> ToCacheList<TSource>(this IQueryable<TSource> source, IFunction function, params object[] keyParams)
+        {
+            if (function == null || function.CacheExpirationSeconds <= 0)
+            {
+                return source.ToList();
+            }
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source.Expression, keyParams);
+            return cache.Get(key, source.ToList, function);
+        }
+
+        public static TSource[] ToCacheArray<TSource>(this IQueryable<TSource> source, IFunction function, params object[] keyParams)
+        {
+            if (function == null || function.CacheExpirationSeconds <= 0)
+            {
+                return source.ToArray();
+            }
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey(source.Expression, keyParams);
+            return cache.Get(key, source.ToArray, function);
+        }
+
+        #region OutputDto
+
+        public static PageResult<TOutputDto> ToPageCache<TEntity, TOutputDto>(this IQueryable<TEntity> source,
+            Expression<Func<TEntity, bool>> predicate,
+            PageCondition pageCondition,
+            int cacheSeconds = 60, params object[] keyParams)
+            where TOutputDto : IOutputDto
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TEntity, TOutputDto>(source, predicate, pageCondition, keyParams);
+            return cache.Get(key, () => source.ToPage<TEntity, TOutputDto>(predicate, pageCondition), cacheSeconds);
+        }
+
+        public static PageResult<TOutputDto> ToPageCache<TEntity, TOutputDto>(this IQueryable<TEntity> source,
+            Expression<Func<TEntity, bool>> predicate,
+            PageCondition pageCondition,
+            IFunction function, params object[] keyParams)
+            where TOutputDto : IOutputDto
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TEntity, TOutputDto>(source, predicate, pageCondition, keyParams);
+            return cache.Get(key, () => source.ToPage<TEntity, TOutputDto>(predicate, pageCondition), function);
+        }
+
+        public static List<TOutputDto> ToCacheList<TSource, TOutputDto>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheList<TSource, TOutputDto>(cacheSeconds, keyParams);
+        }
+
+        public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheArray<TSource, TOutputDto>(cacheSeconds, keyParams);
+        }
+
+        public static List<TOutputDto> ToCacheList<TSource, TOutputDto>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            IFunction function,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheList<TSource, TOutputDto>(function, keyParams);
+        }
+
+        public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
+            Expression<Func<TSource, bool>> predicate,
+            IFunction function,
+            params object[] keyParams)
+        {
+            return source.Where(predicate).ToCacheArray<TSource, TOutputDto>(function, keyParams);
+        }
+
+        public static List<TOutputDto> ToCacheList<TSource, TOutputDto>(this IQueryable<TSource> source,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TSource, TOutputDto>(source, keyParams);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToList(), cacheSeconds);
+        }
+
+        public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
+            int cacheSeconds = 60,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TSource, TOutputDto>(source, keyParams);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToArray(), cacheSeconds);
+        }
+
+        public static List<TOutputDto> ToCacheList<TSource, TOutputDto>(this IQueryable<TSource> source,
+            IFunction function,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TSource, TOutputDto>(source, keyParams);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToList(), function);
+        }
+
+        public static TOutputDto[] ToCacheArray<TSource, TOutputDto>(this IQueryable<TSource> source,
+            IFunction function,
+            params object[] keyParams)
+        {
+            IDistributedCache cache = ServiceLocator.Instance.GetService<IDistributedCache>();
+            string key = GetKey<TSource, TOutputDto>(source, keyParams);
+            return cache.Get(key, () => source.ToOutput<TSource, TOutputDto>().ToArray(), function);
+        }
+
+        #endregion
+
         public static DistributedCacheEntryOptions ToCacheOptions(this IFunction function)
         {
             Check.NotNull(function, nameof(function));
@@ -278,7 +507,7 @@ namespace TuanZi.Caching
                 }
                 else
                 {
-                    throw new TuanException($"Type '{typeof(TEntity)}' did not add default sorting");
+                    throw new TuanException($"Type '{typeof(TEntity)}' does not add default sorting");
                 }
             }
             else

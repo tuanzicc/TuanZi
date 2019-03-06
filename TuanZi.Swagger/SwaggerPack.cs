@@ -19,6 +19,7 @@ using Swashbuckle.AspNetCore.Swagger;
 
 namespace TuanZi.Swagger
 {
+    [DependsOnPacks(typeof(AspNetCorePack))]
     public class SwaggerPack : AspTuanPack
     {
         private string _title, _url;

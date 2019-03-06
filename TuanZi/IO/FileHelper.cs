@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -14,6 +15,12 @@ namespace TuanZi.IO
             if (File.Exists(fileName))
             {
                 return;
+            }
+
+            string dir = Path.GetDirectoryName(fileName);
+            if (dir != null)
+            {
+                DirectoryHelper.CreateIfNotExists(dir);
             }
             File.Create(fileName);
         }
@@ -93,6 +100,66 @@ namespace TuanZi.IO
                     return sb.ToString();
                 }
             }
+        }
+
+        public static Encoding GetEncoding(string fileName)
+        {
+            return GetEncoding(fileName, Encoding.Default);
+        }
+
+        public static Encoding GetEncoding(FileStream fs)
+        {
+            return GetEncoding(fs, Encoding.Default);
+        }
+
+        public static Encoding GetEncoding(string fileName, Encoding defaultEncoding)
+        {
+            using (FileStream fs = File.Open(fileName, FileMode.Open))
+            {
+                return GetEncoding(fs, defaultEncoding);
+            }
+        }
+
+        public static Encoding GetEncoding(FileStream fs, Encoding defaultEncoding)
+        {
+            Encoding targetEncoding = defaultEncoding;
+            if (fs != null && fs.Length >= 2)
+            {
+                byte b1 = 0;
+                byte b2 = 0;
+                byte b3 = 0;
+                byte b4 = 0;
+
+                long oriPos = fs.Seek(0, SeekOrigin.Begin);
+                fs.Seek(0, SeekOrigin.Begin);
+
+                b1 = Convert.ToByte(fs.ReadByte());
+                b2 = Convert.ToByte(fs.ReadByte());
+                if (fs.Length > 2)
+                {
+                    b3 = Convert.ToByte(fs.ReadByte());
+                }
+                if (fs.Length > 3)
+                {
+                    b4 = Convert.ToByte(fs.ReadByte());
+                }
+
+                if (b1 == 0xFE && b2 == 0xFF)
+                {
+                    targetEncoding = Encoding.BigEndianUnicode;
+                }
+                if (b1 == 0xFF && b2 == 0xFE && b3 != 0xFF)
+                {
+                    targetEncoding = Encoding.Unicode;
+                }
+                if (b1 == 0xEF && b2 == 0xBB && b3 == 0xBF)
+                {
+                    targetEncoding = Encoding.UTF8;
+                }
+
+                fs.Seek(0, SeekOrigin.Begin);
+            }
+            return targetEncoding;
         }
     }
 }

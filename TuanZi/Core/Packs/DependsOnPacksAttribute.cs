@@ -5,11 +5,11 @@ namespace TuanZi.Core.Packs
 {
     public class DependsOnPacksAttribute : Attribute
     {
-        public DependsOnPacksAttribute(params Type[] dependedModuleTypes)
+        public DependsOnPacksAttribute(params Type[] dependedPackTypes)
         {
-            DependedModuleTypes = dependedModuleTypes;
+            DependedPackTypes = dependedPackTypes;
         }
 
-        public Type[] DependedModuleTypes { get; }
+        public Type[] DependedPackTypes { get; }
     }
 }

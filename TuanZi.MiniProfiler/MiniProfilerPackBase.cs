@@ -11,6 +11,7 @@ using StackExchange.Profiling;
 
 namespace TuanZi.MiniProfiler
 {
+    [DependsOnPacks(typeof(AspNetCorePack))]
     public abstract class MiniProfilerPackBase : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Application;

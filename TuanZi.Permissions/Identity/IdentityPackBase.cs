@@ -9,10 +9,11 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using TuanZi.AspNetCore;
 using TuanZi.Core;
 using TuanZi.Core.Packs;
-
+using TuanZi.EventBuses;
 
 namespace TuanZi.Identity
 {
+    [DependsOnPacks(typeof(EventBusPack), typeof(AspNetCorePack))]
     public abstract class IdentityPackBase<TUserStore, TRoleStore, TUser, TRole, TUserKey, TRoleKey> : AspTuanPack
         where TUserStore : class, IUserStore<TUser>
         where TRoleStore : class, IRoleStore<TRole>

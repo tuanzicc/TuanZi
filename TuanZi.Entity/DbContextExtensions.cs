@@ -39,7 +39,7 @@ namespace TuanZi.Entity
             {
                 dbContext.Database.Migrate();
                 ILoggerFactory loggerFactory = dbContext.GetService<ILoggerFactory>();
-                ILogger logger = loggerFactory.CreateLogger("OSharp.Entity.DbContextExtensions");
+                ILogger logger = loggerFactory.CreateLogger("TuanZi.Entity.DbContextExtensions");
                 logger.LogInformation($"A pending migration record for {migrations.Length} has been submitted:{migrations.ExpandAndToString()}");
             }
         }

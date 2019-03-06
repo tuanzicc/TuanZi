@@ -13,8 +13,6 @@ namespace TuanZi.AspNetCore
 
         public override int Order => 2;
 
-        #region Overrides of TuanPack
-
         public override IServiceCollection AddServices(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
@@ -27,7 +25,5 @@ namespace TuanZi.AspNetCore
 
             return services;
         }
-
-        #endregion
     }
 }

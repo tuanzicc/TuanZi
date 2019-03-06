@@ -9,10 +9,12 @@ using TuanZi.Core.Functions;
 using TuanZi.Core.Modules;
 using TuanZi.Core.Packs;
 using TuanZi.Entity;
+using TuanZi.EventBuses;
 using TuanZi.Secutiry;
 
 namespace TuanZi.Security
 {
+    [DependsOnPacks(typeof(EventBusPack))]
     public abstract class SecurityPackBase<TSecurityManager, TFunctionAuthorization, TFunctionAuthCache, TDataAuthCache, TModuleHandler, TFunction, TFunctionInputDto, TEntityInfo,
        TEntityInfoInputDto, TModule, TModuleInputDto, TModuleKey, TModuleFunction, TModuleRole, TModuleUser, TEntityRole, TEntityRoleInputDto, TRoleKey, TUserKey> : TuanPack
        where TSecurityManager : class, IFunctionStore<TFunction, TFunctionInputDto>,

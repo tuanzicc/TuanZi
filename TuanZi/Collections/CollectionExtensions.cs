@@ -9,10 +9,11 @@ namespace TuanZi.Collections
 {
     public static class CollectionExtensions
     {
-        public static void AddIfNotExist<T>(this ICollection<T> collection, T value)
+        public static void AddIfNotExist<T>(this ICollection<T> collection, T value, Func<T, bool> existFunc = null)
         {
             Check.NotNull(collection, nameof(collection));
-            if (!collection.Contains(value))
+            bool exists = existFunc == null ? collection.Contains(value) : existFunc(value);
+            if (!exists)
             {
                 collection.Add(value);
             }

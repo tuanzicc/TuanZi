@@ -19,20 +19,13 @@ using System.ComponentModel;
 
 namespace @(entity.Module.Namespace).Entities
 {
-    /// &lt;summary&gt;
-    /// 实体类：@(entity.Display)信息
-    /// &lt;/summary&gt;
-    [Description("@(entity.Display)信息")]
     public class @entity.Name : EntityBase<@(keyType)>
     {
 @foreach (var prop in entity.Properties)
 {
     <text>
-        /// &lt;summary&gt;
-        /// 获取或设置 @prop.Display
-        /// &lt;/summary&gt;
         [DisplayName("@prop.Display")]
-        public string @prop.Name { get; set; }
+        public @TypeHelper.ToSingleTypeName(prop.TypeName) @prop.Name { get; set; }
     </text>
 }
 

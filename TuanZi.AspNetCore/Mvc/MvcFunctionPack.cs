@@ -10,6 +10,7 @@ using TuanZi.Dependency;
 
 namespace TuanZi.AspNetCore.Mvc
 {
+    [DependsOnPacks(typeof(AspNetCorePack))]
     public class MvcFunctionPack : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Application;

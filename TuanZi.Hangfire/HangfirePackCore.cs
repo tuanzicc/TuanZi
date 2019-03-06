@@ -15,6 +15,7 @@ using TuanZi.Extensions;
 
 namespace TuanZi.Hangfire
 {
+    [DependsOnPacks(typeof(AspNetCorePack))]
     public abstract class HangfirePackCore : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Framework;

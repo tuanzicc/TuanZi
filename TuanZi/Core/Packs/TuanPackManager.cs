@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TuanZi.Collections;
 using TuanZi.Core.Builders;
 using TuanZi.Dependency;
-
+using TuanZi.Exceptions;
 
 namespace TuanZi.Core.Packs
 {
@@ -36,9 +37,23 @@ namespace TuanZi.Core.Packs
             if (builder.Packs.Any())
             {
                 packs = _sourcePacks.Where(m => m.Level == PackLevel.Core)
-                    .Union(_sourcePacks.Where(m => builder.Packs.Contains(m.GetType()))).Distinct().ToList();
-                IEnumerable<Type> dependModuleTypes = packs.SelectMany(m => m.GetDependModuleTypes());
-                packs = packs.Union(_sourcePacks.Where(m => dependModuleTypes.Contains(m.GetType()))).Distinct().ToList();
+                    .Union(_sourcePacks.Where(m => builder.Packs.Contains(m.GetType()))).Distinct()
+                    .OrderBy(m => m.Level).ThenBy(m => m.Order).ToList();
+                List<TuanPack> dependPacks = new List<TuanPack>();
+                foreach (TuanPack pack in packs)
+                {
+                    Type[] dependPackTypes = pack.GetDependPackTypes();
+                    foreach (Type dependPackType in dependPackTypes)
+                    {
+                        TuanPack dependPack = _sourcePacks.Find(m => m.GetType() == dependPackType);
+                        if (dependPack == null)
+                        {
+                            throw new TuanException($"Could not find dependency module {dependPackType.FullName} when loading module {pack.GetType().FullName}");
+                        }
+                        dependPacks.AddIfNotExist(dependPack);
+                    }
+                }
+                packs = packs.Union(dependPacks).Distinct().ToList();
             }
             else
             {
@@ -72,4 +87,6 @@ namespace TuanZi.Core.Packs
             logger.LogInformation($"Tuan framework is initialized and takes time:{ts:g}");
         }
     }
+
+
 }

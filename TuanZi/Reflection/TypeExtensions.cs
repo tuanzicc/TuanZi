@@ -53,13 +53,13 @@ namespace TuanZi.Reflection
             return type;
         }
 
-        public static string GetDescription(this Type type, bool inherit = false)
+        public static string GetDescription(this Type type, bool inherit = true)
         {
             DescriptionAttribute desc = type.GetAttribute<DescriptionAttribute>(inherit);
             return desc == null ? type.FullName : desc.Description;
         }
 
-        public static string GetDescription(this MemberInfo member, bool inherit = false)
+        public static string GetDescription(this MemberInfo member, bool inherit = true)
         {
             DescriptionAttribute desc = member.GetAttribute<DescriptionAttribute>(inherit);
             if (desc != null)
@@ -84,13 +84,13 @@ namespace TuanZi.Reflection
             return memberInfo.IsDefined(typeof(T), inherit);
         }
 
-        public static T GetAttribute<T>(this MemberInfo memberInfo, bool inherit = false) where T : Attribute
+        public static T GetAttribute<T>(this MemberInfo memberInfo, bool inherit = true) where T : Attribute
         {
-            var descripts = memberInfo.GetCustomAttributes(typeof(T), inherit);
-            return descripts.FirstOrDefault() as T;
+            var attributes = memberInfo.GetCustomAttributes(typeof(T), inherit);
+            return attributes.FirstOrDefault() as T;
         }
 
-        public static T[] GetAttributes<T>(this MemberInfo memberInfo, bool inherit = false) where T : Attribute
+        public static T[] GetAttributes<T>(this MemberInfo memberInfo, bool inherit = true) where T : Attribute
         {
             return memberInfo.GetCustomAttributes(typeof(T), inherit).Cast<T>().ToArray();
         }

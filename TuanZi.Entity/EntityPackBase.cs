@@ -4,9 +4,11 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using TuanZi.Core.Packs;
 using TuanZi.Entity.Transactions;
+using TuanZi.EventBuses;
 
 namespace TuanZi.Entity
 {
+    [DependsOnPacks(typeof(EventBusPack))]
     public abstract class EntityPackBase : TuanPack
     {
         public override PackLevel Level => PackLevel.Framework;

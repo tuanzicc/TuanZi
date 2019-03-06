@@ -22,6 +22,10 @@ namespace TuanZi.AspNetCore.Mvc
         protected override ModuleInfo[] GetModules(Type type, string[] existPaths)
         {
             ModuleInfoAttribute infoAttr = type.GetAttribute<ModuleInfoAttribute>();
+            if (infoAttr == null)
+            {
+                return new ModuleInfo[0];
+            }
             ModuleInfo info = new ModuleInfo()
             {
                 Name = infoAttr.Name ?? GetName(type),
@@ -44,7 +48,7 @@ namespace TuanZi.AspNetCore.Mvc
                     infos.Insert(0, info);
                 }
             }
-            string area = type.GetAttribute<AreaAttribute>(true)?.RouteValue ?? "Site";
+            string area = type.GetAttribute<AreaAttribute>()?.RouteValue ?? "Site";
             string name = area;
             info = new ModuleInfo()
             {
@@ -64,15 +68,19 @@ namespace TuanZi.AspNetCore.Mvc
         protected override ModuleInfo GetModule(MethodInfo method, ModuleInfo typeInfo, int index)
         {
             ModuleInfoAttribute infoAttr = method.GetAttribute<ModuleInfoAttribute>();
+            if (infoAttr == null)
+            {
+                return null;
+            }
             ModuleInfo info = new ModuleInfo()
             {
                 Name = infoAttr.Name ?? method.GetDescription() ?? method.Name,
                 Code = infoAttr.Code ?? method.Name,
                 Order = infoAttr.Order > 0 ? infoAttr.Order : index + 1,
             };
-            string controller = method.DeclaringType?.Name.Replace("Controller", "");
+            string controller = method.DeclaringType?.Name.Replace("ControllerBase", string.Empty).Replace("Controller", string.Empty);
             info.Position = $"{typeInfo.Position}.{controller}";
-            string area = method.DeclaringType.GetAttribute<AreaAttribute>(true)?.RouteValue;
+            string area = method.DeclaringType.GetAttribute<AreaAttribute>()?.RouteValue;
             List<IFunction> dependOnFunctions = new List<IFunction>()
             {
                 FunctionHandler.GetFunction(area, controller, method.Name)
@@ -110,7 +118,7 @@ namespace TuanZi.AspNetCore.Mvc
 
         private static string GetPosition(Type type, string attrPosition)
         {
-            string area = type.GetAttribute<AreaAttribute>(true)?.RouteValue;
+            string area = type.GetAttribute<AreaAttribute>()?.RouteValue;
             if (area == null)
             {
                 return attrPosition == null

@@ -54,7 +54,7 @@ namespace TuanZi.Core.Modules
                 for (int index = 0; index < methods.Length; index++)
                 {
                     ModuleInfo methodInfo = GetModule(methods[index], typeInfos.Last(), index);
-                    infos.Add(methodInfo);
+                    infos.AddIfNotNull(methodInfo);
                 }
             }
             return infos.ToArray();

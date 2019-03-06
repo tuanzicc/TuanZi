@@ -12,6 +12,7 @@ using TuanZi.Core.Packs;
 
 namespace TuanZi.AspNetCore.SignalR
 {
+    [DependsOnPacks(typeof(AspNetCorePack))]
     public abstract class SignalRPackBase : AspTuanPack
     {
         public override PackLevel Level => PackLevel.Application;

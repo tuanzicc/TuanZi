@@ -1,5 +1,7 @@
 ﻿
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
@@ -10,6 +12,23 @@ namespace TuanZi.Data
     public static class SerializeHelper
     {
         #region Binary Serialization
+
+        public static byte[] ToBytes(object value)
+        {
+            byte[] bytes = new byte[Marshal.SizeOf(value)];
+            IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+            Marshal.StructureToPtr(value, ptr, true);
+            return bytes;
+        }
+
+        public static T FromBytes<T>(byte[] bytes)
+        {
+            Type type = typeof(T);
+            IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+            object obj = Marshal.PtrToStructure(ptr, type);
+            return (T)obj;
+        }
+
 
         public static byte[] ToBinary(object data)
         {
