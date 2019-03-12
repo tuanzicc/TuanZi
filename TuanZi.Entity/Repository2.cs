@@ -10,6 +10,7 @@ using TuanZi.Collections;
 using TuanZi.Data;
 using TuanZi.Extensions;
 using TuanZi.Mapping;
+using TuanZi.Reflection;
 using TuanZi.Secutiry;
 using Z.EntityFramework.Plus;
 
@@ -152,32 +153,10 @@ namespace TuanZi.Entity
 
                 if (checkPostFiles)
                 {
-                    var context = _serviceProvider.GetService(typeof(HttpContext)) as HttpContext;
-                    if (context != null && context.Request.Method == "POST")
-                    {
-                        var files = context.Request.Form.Files;
-                        if (files.Count > 0)
-                        {
-                            var fileRepository = _serviceProvider.GetService(typeof(Repository<File,Guid>)) as HttpContext;
-                            foreach (var file in files)
-                            {
-                                if (file.Length > 0)
-                                {
-                                    if (target.HasProperty(file.Name))
-                                    {
-                                        var value = AsyncRunner.RunSync(() => fileManager.NewAsync(file));
-                                        target.SetPropertyValue(file.Name, value);
-                                    }
-                                }
-
-                            }
-                        }
-                    }
+                    await CheckPostFiles(dto);
                 }
-                else
-                {
-                    entity = entity.MapTo(entity);
-                }
+                ewafwefawef
+                entity = entity.MapTo(entity);
 
                 _dbContext.Update<TEntity, TKey>(entity);
                 result = await _dbContext.SaveChangesAsync();
@@ -186,14 +165,65 @@ namespace TuanZi.Entity
 
         }
 
-        public async Task<int> InsertAsync(IInputDto<TKey> dto)
+        public async Task<int> InsertAsync(IInputDto<TKey> dto, bool checkPostFiles = true)
         {
             var entity = dto.MapTo<TEntity>();
             entity.CheckICreatedTime<TEntity, TKey>();
+
+            if (checkPostFiles)
+            {
+                await CheckPostFiles(dto);
+            }
+
+            entity = entity.MapTo(entity);
+
             await _dbSet.AddAsync(entity);
             return await _dbContext.SaveChangesAsync();
+
         }
 
+
+        private async Task CheckPostFiles(IInputDto<TKey> dto)
+        {
+            var context = _serviceProvider.GetService(typeof(HttpContext)) as HttpContext;
+            if (context != null && context.Request.Method == "POST")
+            {
+                var files = context.Request.Form.Files;
+                if (files.Count > 0)
+                {
+                    var fileRepository = _serviceProvider.GetService(typeof(Repository<File, Guid>)) as Repository<File, Guid>;
+                    foreach (var file in files)
+                    {
+                        if (file.Length > 0)
+                        {
+                            if (dto.HasProperty(file.Name))
+                            {
+
+                                var obj = new File();
+                                //if (context.User.Identity.IsAuthenticated)
+                                //{
+                                //    obj.AppId = context.User.GetAppId<Guid>();
+                                //    obj.UserId = context.User.GetUserId<Guid>();
+                                //}
+                                obj.Name = file.FileName;
+                                obj.ContentType = file.ContentType;
+                                obj.ContentLength = file.Length;
+                                obj.Extension = System.IO.Path.GetExtension(file.FileName);
+
+                                using (var ms = new System.IO.MemoryStream())
+                                {
+                                    file.CopyTo(ms);
+                                    obj.Binary = ms.ToArray();
+                                }
+                                await fileRepository.InsertAsync(obj);
+                                dto.SetPropertyValue(file.Name, obj.Id);
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
     }
 
 }

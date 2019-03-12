@@ -10,18 +10,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using TuanZi.AspNetCore.Http;
 using TuanZi.Data;
+using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Extensions;
 
-namespace TuanZi.Entity
+namespace TuanZi.Web
 {
-    public abstract class FileStoreBase<TFile>
+    [Dependency(ServiceLifetime.Scoped, AddSelf = true)]
+    public abstract class FileManager<TFile>: Managers<File, Guid>
         where TFile : FileBase
     {
         private readonly IRepository<TFile, Guid> _FileRepository;
         private readonly IServiceProvider _ServiceProvider;
 
-        protected FileStoreBase(IRepository<TFile, Guid> fileRepository, IServiceProvider serviceProvider)
+        protected FileManager(IRepository<TFile, Guid> fileRepository, IServiceProvider serviceProvider)
         { 
             _FileRepository = fileRepository;
             _ServiceProvider = serviceProvider;

@@ -21,6 +21,19 @@ namespace TuanZi.Entity
         }
 
 
+        public static TEntity CheckIUpdatedTime<TEntity, TKey>(this TEntity entity)
+            where TEntity : IEntity<TKey>
+            where TKey : IEquatable<TKey>
+        {
+            if (!(entity is IUpdatedTime))
+            {
+                return entity;
+            }
+            IUpdatedTime entity1 = (IUpdatedTime)entity;
+            entity1.UpdatedTime = DateTime.Now;
+            return (TEntity)entity1;
+        }
+
         public static bool IsEntityType(this Type type)
         {
             Check.NotNull(type, nameof(type));
