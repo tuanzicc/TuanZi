@@ -1,23 +1,6 @@
-﻿
-using AutoMapper;
-using FuqLink.Managers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using TuanZi;
-using TuanZi.AspNetCore.Http;
-using TuanZi.Collections;
-using TuanZi.Data;
-using TuanZi.Dependency;
-using TuanZi.Entity;
-using TuanZi.Extensions;
-using TuanZi.Mapping;
-using TuanZi.Reflection;
-using TuanZi.Threading.Asyncs;
 
 namespace TuanZi.Web
 {
@@ -80,11 +63,9 @@ namespace TuanZi.Web
                     }
                 }
             }
-            
+
             return target;
         }
     }
 
-    
-    
 }

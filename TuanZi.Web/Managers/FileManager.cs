@@ -13,14 +13,14 @@ using TuanZi.Data;
 using TuanZi.Dependency;
 using TuanZi.Entity;
 using TuanZi.Extensions;
+using TuanZi.Web.Managers;
+using File = TuanZi.Entity.File;
 
 namespace TuanZi.Web
 {
     [Dependency(ServiceLifetime.Scoped, AddSelf = true)]
-    public abstract class FileManager<TFile>: Managers<File, Guid>
-        where TFile : FileBase
+    public abstract class FileManager: Manager<File, Guid>
     {
-        private readonly IRepository<TFile, Guid> _FileRepository;
         private readonly IServiceProvider _ServiceProvider;
 
         protected FileManager(IRepository<TFile, Guid> fileRepository, IServiceProvider serviceProvider)

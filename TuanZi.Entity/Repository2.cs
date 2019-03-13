@@ -132,15 +132,17 @@ namespace TuanZi.Entity
         #endregion
 
 
-        public async Task<TOutput> GetAsync<TOutput>(TKey key)
+        public async Task<TOutput> GetAsync<TOutput>(TKey key, bool filterByDataAuth = false)
         {
             CheckEntityKey(key, nameof(key));
 
-            return await _dbSet.Where(m => m.Id.Equals(key)).ToOutput<TOutput>().FirstOrDefaultAsync();
+            return await Query(m => m.Id.Equals(key), filterByDataAuth).ToOutput<TOutput>().FirstOrDefaultAsync();
         }
-        public async Task<TOutput> GetFirstAsync<TOutput>(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TOutput> GetFirstAsync<TOutput>(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth = false)
         {
-            return await _dbSet.Where(predicate).ToOutput<TOutput>().FirstOrDefaultAsync();
+            predicate.CheckNotNull(nameof(predicate));
+
+            return await Query(predicate, filterByDataAuth).ToOutput<TOutput>().FirstOrDefaultAsync();
         }
 
         public async Task<int> UpdateAsync(IInputDto<TKey> dto, bool checkPostFiles = true)
@@ -150,14 +152,14 @@ namespace TuanZi.Entity
             if (entity != null)
             {
                 CheckDataAuth(DataAuthOperation.Update, entity);
+                entity = dto.MapTo(entity);
+                entity.CheckIUpdatedTime<TEntity, TKey>();
 
                 if (checkPostFiles)
                 {
-                    await CheckPostFiles(dto);
+                    await CheckPostFiles(entity);
                 }
-                ewafwefawef
-                entity = entity.MapTo(entity);
-
+                
                 _dbContext.Update<TEntity, TKey>(entity);
                 result = await _dbContext.SaveChangesAsync();
             }
@@ -172,10 +174,8 @@ namespace TuanZi.Entity
 
             if (checkPostFiles)
             {
-                await CheckPostFiles(dto);
+                await CheckPostFiles(entity);
             }
-
-            entity = entity.MapTo(entity);
 
             await _dbSet.AddAsync(entity);
             return await _dbContext.SaveChangesAsync();
@@ -183,7 +183,7 @@ namespace TuanZi.Entity
         }
 
 
-        private async Task CheckPostFiles(IInputDto<TKey> dto)
+        private async Task CheckPostFiles(TEntity entity)
         {
             var context = _serviceProvider.GetService(typeof(HttpContext)) as HttpContext;
             if (context != null && context.Request.Method == "POST")
@@ -196,7 +196,7 @@ namespace TuanZi.Entity
                     {
                         if (file.Length > 0)
                         {
-                            if (dto.HasProperty(file.Name))
+                            if (entity.HasProperty(file.Name))
                             {
 
                                 var obj = new File();
@@ -216,7 +216,7 @@ namespace TuanZi.Entity
                                     obj.Binary = ms.ToArray();
                                 }
                                 await fileRepository.InsertAsync(obj);
-                                dto.SetPropertyValue(file.Name, obj.Id);
+                                entity.SetPropertyValue(file.Name, obj.Id);
                             }
                         }
 

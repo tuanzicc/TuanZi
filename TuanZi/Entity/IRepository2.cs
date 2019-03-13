@@ -45,8 +45,8 @@ namespace TuanZi.Entity
         #endregion
 
 
-        Task<TOutput> GetOutputAsync<TOutput>(TKey id);
-        Task<TOutput> GetOutputAsync<TOutput>(Expression<Func<TEntity, bool>> predicate);
+        Task<TOutput> GetAsync<TOutput>(TKey key, bool filterByDataAuth = false);
+        Task<TOutput> GetFirstAsync<TOutput>(Expression<Func<TEntity, bool>> predicate, bool filterByDataAuth = false);
 
         Task<int> UpdateAsync(IInputDto<TKey> dto);
 
